@@ -4756,6 +4756,11 @@ void ShaderConverter::Process_GENERIC_LOOP()
 	integerType.PrimaryType = spv::OpTypeInt;
 	uint32_t integerTypeId = GetSpirVTypeId(integerType);
 
+	TypeDescription integerPointerType;
+	integerPointerType.PrimaryType = spv::OpTypePointer;
+	integerPointerType.PrimaryType = spv::OpTypeInt;
+	uint32_t integerPointerTypeId = GetSpirVTypeId(integerPointerType);
+
 	TypeDescription booleanType;
 	booleanType.PrimaryType = spv::OpTypeBool;
 	uint32_t booleanTypeId = GetSpirVTypeId(booleanType);
@@ -4792,7 +4797,7 @@ void ShaderConverter::Process_GENERIC_LOOP()
 
 	// Loop
 	Push(spv::OpLabel, loopIds.PreMergeLabelId);
-	Push(spv::OpPhi. counterId, m0Id, loopIds.PreLoopId, loopIds.VariableId, loopIds.PreExecuteLabelId);
+	Push(spv::OpPhi, loopIds.CounterId, m0Id, loopIds.PreLoopId, loopIds.VariableId, loopIds.PreExecuteLabelId);
 
 	//Check condition
 	uint32_t resultId = GetNextId();
