@@ -579,7 +579,11 @@ private:
 
 	uint32_t mTemp = 0;
 
-	//
+	uint32_t mNumberOfIntegerVectorsInUbo = 16;
+	uint32_t mNumberOfBooleansInUbo = 16;
+	uint32_t mNumberOfFloatVectorsInUbo = 256;
+	uint32_t mUboPointerId = 0;
+
 	uint32_t mTextures[12] = {};
 
 	Token GetNextToken();
