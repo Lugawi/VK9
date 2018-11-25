@@ -57,8 +57,5 @@ void main()
 	diffuseColor = color.Diffuse;
 	specularColor = color.Specular;
 
-	if(renderState.lighting==1)
-	{
-		globalIllumination = GetGlobalIllumination(attr1, position);	
-	}
+	globalIllumination = color.GlobalIllumination;
 }

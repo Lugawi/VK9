@@ -56,5 +56,6 @@ void main()
 
 	diffuseColor = color.Diffuse;
 	specularColor = color.Specular;
-	globalIllumination = vec4(1.0);
+
+	globalIllumination = color.GlobalIllumination;
 }
