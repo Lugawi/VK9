@@ -496,7 +496,7 @@ boost::log::basic_record_ostream<char>& operator<< (boost::log::basic_record_ost
 			else
 			{
 				return os << "*vec" << typeDescription.ComponentCount;
-			}			
+			}
 		case spv::OpTypeMatrix:
 			if (typeDescription.TernaryType == spv::OpTypeInt)
 			{
@@ -1104,28 +1104,118 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 		}
 
 		break;
+	case D3DSPR_CONSTBOOL:
+	{
+		id = GetNextId();
+
+		TypeDescription integerType;
+		integerType.PrimaryType = spv::OpTypeInt;
+		uint32_t integerTypeId = GetSpirVTypeId(integerType);
+
+		mIdsByRegister[registerType][registerNumber] = id;
+		mRegistersById[registerType][id] = registerNumber;
+		mIdTypePairs[id] = integerType;
+
+		TypeDescription integerPointerType;
+		integerPointerType.PrimaryType = spv::OpTypePointer;
+		integerPointerType.SecondaryType = spv::OpTypeInt;
+		uint32_t integerPointerTypeId = GetSpirVTypeId(integerPointerType);
+
+		uint32_t memberIndexId = GetNextId();
+		mIdTypePairs[memberIndexId] = integerType;
+		mTypeInstructions.push_back(Pack(3 + 1, spv::OpConstant)); //size,Type
+		mTypeInstructions.push_back(integerTypeId); //Result Type (Id)
+		mTypeInstructions.push_back(memberIndexId); //Result (Id)
+		mTypeInstructions.push_back(registerNumber); //Literal Value
+
+		uint32_t chainId = GetNextId();
+		mIdTypePairs[chainId] = integerPointerType;
+
+		PushAccessChain(integerPointerTypeId, chainId, mUboPointerId, memberIndexId);
+		PushLoad(integerTypeId, id, chainId);
+	}
+	break;
+	case D3DSPR_CONSTINT:
+	{
+		id = GetNextId();
+
+		TypeDescription integerVectorType;
+		integerVectorType.PrimaryType = spv::OpTypeVector;
+		integerVectorType.SecondaryType = spv::OpTypeInt;
+		integerVectorType.ComponentCount = 4;
+		uint32_t integerVectorTypeId = GetSpirVTypeId(integerVectorType);
+
+		mIdsByRegister[registerType][registerNumber] = id;
+		mRegistersById[registerType][id] = registerNumber;
+		mIdTypePairs[id] = integerVectorType;
+
+		TypeDescription integerVectorPointerType;
+		integerVectorPointerType.PrimaryType = spv::OpTypePointer;
+		integerVectorPointerType.SecondaryType = spv::OpTypeVector;
+		integerVectorPointerType.TernaryType = spv::OpTypeInt;
+		integerVectorPointerType.ComponentCount = 4;
+		uint32_t integerVectorPointerTypeId = GetSpirVTypeId(integerVectorPointerType);
+
+		TypeDescription integerType;
+		integerType.PrimaryType = spv::OpTypeInt;
+		uint32_t integerTypeId = GetSpirVTypeId(integerType);
+
+		uint32_t memberIndexId = GetNextId();
+		mIdTypePairs[memberIndexId] = integerType;
+		mTypeInstructions.push_back(Pack(3 + 1, spv::OpConstant)); //size,Type
+		mTypeInstructions.push_back(integerTypeId); //Result Type (Id)
+		mTypeInstructions.push_back(memberIndexId); //Result (Id)
+		mTypeInstructions.push_back(registerNumber); //Literal Value
+
+		uint32_t chainId = GetNextId();
+		mIdTypePairs[chainId] = integerVectorPointerType;
+
+		PushAccessChain(integerVectorPointerTypeId, chainId, mUboPointerId, memberIndexId);
+		PushLoad(integerVectorTypeId, id, chainId);
+	}
+	break;
 	case D3DSPR_CONST:
 	case D3DSPR_CONST2:
 	case D3DSPR_CONST3:
 	case D3DSPR_CONST4:
+	{
 		id = GetNextId();
-		description.PrimaryType = spv::OpTypePointer;
-		description.SecondaryType = spv::OpTypeVector;
-		description.TernaryType = spv::OpTypeFloat; //TODO: find a way to tell if this is an integer or float.
-		description.ComponentCount = 4;
-		description.StorageClass = spv::StorageClassInput;
-		typeId = GetSpirVTypeId(description);
+
+		TypeDescription floatVectorType;
+		floatVectorType.PrimaryType = spv::OpTypeVector;
+		floatVectorType.SecondaryType = spv::OpTypeFloat;
+		floatVectorType.ComponentCount = 4;
+		uint32_t floatVectorTypeId = GetSpirVTypeId(floatVectorType);
 
 		mIdsByRegister[registerType][registerNumber] = id;
 		mRegistersById[registerType][id] = registerNumber;
-		mIdTypePairs[id] = description;
+		mIdTypePairs[id] = floatVectorType;
 
-		mTypeInstructions.push_back(Pack(4, spv::OpVariable)); //size,Type
-		mTypeInstructions.push_back(typeId); //ResultType (Id) Must be OpTypePointer with the pointer's type being what you care about.
-		mTypeInstructions.push_back(id); //Result (Id)
-		mTypeInstructions.push_back(spv::StorageClassPushConstant); //Storage Class
-		break;
+		TypeDescription floatVectorPointerType;
+		floatVectorPointerType.PrimaryType = spv::OpTypePointer;
+		floatVectorPointerType.SecondaryType = spv::OpTypeVector;
+		floatVectorPointerType.TernaryType = spv::OpTypeFloat;
+		floatVectorPointerType.ComponentCount = 4;
+		uint32_t floatVectorPointerTypeId = GetSpirVTypeId(floatVectorPointerType);
 
+		TypeDescription integerType;
+		integerType.PrimaryType = spv::OpTypeInt;
+		uint32_t integerTypeId = GetSpirVTypeId(integerType);
+
+		uint32_t memberIndexId = GetNextId();
+		mIdTypePairs[memberIndexId] = integerType;
+		mTypeInstructions.push_back(Pack(3 + 1, spv::OpConstant)); //size,Type
+		mTypeInstructions.push_back(integerTypeId); //Result Type (Id)
+		mTypeInstructions.push_back(memberIndexId); //Result (Id)
+		mTypeInstructions.push_back(registerNumber); //Literal Value
+
+		uint32_t chainId = GetNextId();
+		mIdTypePairs[chainId] = floatVectorPointerType;
+
+		PushAccessChain(floatVectorPointerTypeId, chainId, mUboPointerId, memberIndexId);
+		PushLoad(floatVectorTypeId, id, chainId);
+	}
+	break;
 	case D3DSPR_SAMPLER:
 		id = GetNextId();
 		description.PrimaryType = spv::OpTypePointer;
@@ -2870,7 +2960,7 @@ void ShaderConverter::GenerateConstantBlock()
 	floatVectorType.SecondaryType = spv::OpTypeFloat;
 	floatVectorType.ComponentCount = 4;
 	uint32_t floatVectorTypeId = GetSpirVTypeId(floatVectorType);
-	
+
 	//Generate Ids up front.
 	uint32_t uboStructureTypeId = GetNextId();
 	uint32_t uboStructurePointerTypeId = GetNextId();
@@ -2900,7 +2990,7 @@ void ShaderConverter::GenerateConstantBlock()
 
 	mTypeInstructions.push_back(Pack(2 + (mNumberOfIntegerVectorsInUbo + mNumberOfBooleansInUbo + mNumberOfFloatVectorsInUbo), spv::OpTypeStruct)); //size,Type
 	mTypeInstructions.push_back(uboStructureTypeId); //Result (Id)
-	
+
 	uint32_t memberIndex = 0;
 	uint32_t memberOffset = 0;
 	for (size_t i = 0; i < mNumberOfIntegerVectorsInUbo; i++)
@@ -2956,226 +3046,6 @@ void ShaderConverter::GenerateConstantBlock()
 	mTypeInstructions.push_back(uboStructurePointerTypeId); //ResultType (Id) Must be OpTypePointer with the pointer's type being what you care about.
 	mTypeInstructions.push_back(mUboPointerId); //Result (Id)
 	mTypeInstructions.push_back(spv::StorageClassUniform); //Storage Class
-
-
-	//TypeDescription typeDescription; //OpTypeVoid isn't 0 so ={} borks things.
-	//TypeDescription componentTypeDescription; //OpTypeVoid isn't 0 so ={} borks things.
-	//uint32_t typeId = 0;
-	//uint32_t componentTypeId = 0;
-	//uint32_t specId = 0;
-
-	////--------------Integer-----------------------------
-	//typeDescription.PrimaryType = spv::OpTypeVector;
-	//typeDescription.SecondaryType = spv::OpTypeInt;
-	//typeDescription.ComponentCount = 4;
-	//typeId = GetSpirVTypeId(typeDescription);
-
-	//componentTypeDescription.PrimaryType = spv::OpTypeInt;
-	//componentTypeDescription.SecondaryType = spv::OpTypeVoid;
-	//componentTypeDescription.ComponentCount = 0; //default is 0 so using 1 will mess up compare.
-	//componentTypeId = GetSpirVTypeId(componentTypeDescription);
-
-	//for (size_t i = 0; i < 16; i++)
-	//{
-	//	uint32_t id;
-	//	uint32_t ids[4];
-
-	//	id = GetNextId();
-	//	for (size_t j = 0; j < 4; j++)
-	//	{
-	//		ids[j] = GetNextId();
-	//		mTypeInstructions.push_back(Pack(3 + 1, spv::OpSpecConstant)); //size,Type
-	//		mTypeInstructions.push_back(componentTypeId); //Result Type (Id)
-	//		mTypeInstructions.push_back(ids[j]); //Result (Id)
-	//		mTypeInstructions.push_back(0); //Literal Value
-
-	//		mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-	//		mDecorateInstructions.push_back(ids[j]); //target (Id)
-	//		mDecorateInstructions.push_back(spv::DecorationSpecId); //Decoration Type (Id)
-	//		mDecorateInstructions.push_back(specId++);
-	//	}
-
-	//	mTypeInstructions.push_back(Pack(3 + 4, spv::OpSpecConstantComposite)); //size,Type
-	//	mTypeInstructions.push_back(typeId); //Result Type (Id)
-	//	mTypeInstructions.push_back(id); //Result (Id)
-	//	for (size_t j = 0; j < 4; j++)
-	//	{
-	//		mTypeInstructions.push_back(ids[j]); //Constituents
-	//	}
-
-	//	std::string registerName = "i" + std::to_string(i);
-	//	PushName(id, registerName);
-
-	//	mIdTypePairs[id] = componentTypeDescription;
-
-	//	mIdsByRegister[D3DSPR_CONSTINT][i] = id;
-	//	mRegistersById[D3DSPR_CONSTINT][id] = i;
-	//}
-
-	////---------------Boolean------------------------------------
-	//typeDescription.PrimaryType = spv::OpTypeBool;
-	//typeDescription.SecondaryType = spv::OpTypeVoid;
-	//typeDescription.ComponentCount = 0; //default is 0 so using 1 will mess up compare.
-	//typeId = GetSpirVTypeId(typeDescription);
-
-	//for (size_t i = 0; i < 16; i++)
-	//{
-	//	uint32_t id;
-
-	//	id = GetNextId();
-
-	//	mTypeInstructions.push_back(Pack(3 + 1, spv::OpSpecConstant)); //size,Type
-	//	//This is setup as a int because Spir-V doesn't like Bool for some reason.
-	//	mTypeInstructions.push_back(componentTypeId); //Result Type (Id) 
-	//	mTypeInstructions.push_back(id); //Result (Id)
-	//	mTypeInstructions.push_back(0); //Literal Value
-
-	//	std::string registerName = "b" + std::to_string(i);
-	//	PushName(id, registerName);
-
-	//	mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-	//	mDecorateInstructions.push_back(id); //target (Id)
-	//	mDecorateInstructions.push_back(spv::DecorationSpecId); //Decoration Type (Id)
-	//	mDecorateInstructions.push_back(specId++);
-
-	//	mIdTypePairs[id] = componentTypeDescription;
-
-	//	mIdsByRegister[D3DSPR_CONSTBOOL][i] = id;
-	//	mRegistersById[D3DSPR_CONSTBOOL][id] = i;
-	//}
-
-	////--------------Float-----------------------------
-	//typeDescription.PrimaryType = spv::OpTypeVector;
-	//typeDescription.SecondaryType = spv::OpTypeFloat;
-
-	//typeDescription.ComponentCount = 3;
-	//TypeDescription vector3Type = typeDescription;
-	//uint32_t vector3TypeId = GetSpirVTypeId(vector3Type);
-
-	//typeDescription.ComponentCount = 4;
-	//TypeDescription vector4Type = typeDescription;
-	//uint32_t vector4TypeId = GetSpirVTypeId(vector4Type);
-
-	//componentTypeDescription.PrimaryType = spv::OpTypeFloat;
-	//componentTypeDescription.SecondaryType = spv::OpTypeVoid;
-	//componentTypeDescription.ComponentCount = 0; //default is 0 so using 1 will mess up compare.
-	//componentTypeId = GetSpirVTypeId(componentTypeDescription);
-
-	//for (size_t i = 0; i < 256; i++)
-	//{
-	//	uint32_t id;
-	//	uint32_t ids[4];
-	//	std::string registerName;
-
-	//	for (size_t j = 0; j < 4; j++)
-	//	{
-	//		ids[j] = GetNextId();
-	//		mTypeInstructions.push_back(Pack(3 + 1, spv::OpSpecConstant)); //size,Type
-	//		mTypeInstructions.push_back(componentTypeId); //Result Type (Id)
-	//		mTypeInstructions.push_back(ids[j]); //Result (Id)
-	//		//mTypeInstructions.push_back(bit_cast(1.0f)); //Literal Value
-	//		mTypeInstructions.push_back(bit_cast(0.0f)); //Literal Value
-
-	//		mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-	//		mDecorateInstructions.push_back(ids[j]); //target (Id)
-	//		mDecorateInstructions.push_back(spv::DecorationSpecId); //Decoration Type (Id)
-	//		mDecorateInstructions.push_back(specId++);
-	//	}
-
-	//	//vec3
-	//	uint32_t vector3Id = GetNextId();
-	//	mTypeInstructions.push_back(Pack(3 + 3, spv::OpSpecConstantComposite)); //size,Type
-	//	mTypeInstructions.push_back(vector3TypeId); //Result Type (Id)
-	//	mTypeInstructions.push_back(vector3Id); //Result (Id)
-	//	for (size_t j = 0; j < 3; j++)
-	//	{
-	//		mTypeInstructions.push_back(ids[j]); //Constituents
-	//	}
-
-	//	registerName = "c_vec3_" + std::to_string(i);
-	//	PushName(vector3Id, registerName);
-
-	//	//vec4
-	//	uint32_t vector4Id = GetNextId();
-	//	mTypeInstructions.push_back(Pack(3 + 4, spv::OpSpecConstantComposite)); //size,Type
-	//	mTypeInstructions.push_back(vector4TypeId); //Result Type (Id)
-	//	mTypeInstructions.push_back(vector4Id); //Result (Id)
-	//	for (size_t j = 0; j < 4; j++)
-	//	{
-	//		mTypeInstructions.push_back(ids[j]); //Constituents
-	//	}
-
-	//	registerName = "c_vec4_" + std::to_string(i);
-	//	PushName(vector4Id, registerName);
-
-	//	id = vector4Id;
-
-	//	mIdTypePairs[vector3Id] = vector3Type;
-	//	mIdTypePairs[vector4Id] = vector4Type;
-
-	//	mIdsByRegister[D3DSPR_CONST][i] = id;
-	//	mRegistersById[D3DSPR_CONST][id] = i;
-
-	//	mVector4Vector3Pairs[vector4Id] = vector3Id;
-	//}
-
-	//typeDescription.PrimaryType = spv::OpTypeMatrix;
-	//typeDescription.SecondaryType = spv::OpTypeVector;
-	//typeDescription.TernaryType = spv::OpTypeFloat;
-
-	////mat3
-	//typeDescription.ComponentCount = 3;
-	//TypeDescription matrix3Type = typeDescription;
-	//uint32_t matrix3TypeId = GetSpirVTypeId(matrix3Type);
-
-	////mat4
-	//typeDescription.ComponentCount = 4;
-	//TypeDescription matrix4Type = typeDescription;
-	//uint32_t matrix4TypeId = GetSpirVTypeId(matrix4Type);
-
-	//for (size_t i = 0; i < 64; i++)
-	//{
-	//	std::string registerName;
-
-	//	uint32_t matrix3Id = GetNextId();
-	//	uint32_t matrix4Id = GetNextId();
-	//	uint32_t id = matrix4Id;
-
-	//	//mat3
-	//	mTypeInstructions.push_back(Pack(3 + 3, spv::OpSpecConstantComposite)); //size,Type
-	//	mTypeInstructions.push_back(matrix3TypeId); //Result Type (Id)
-	//	mTypeInstructions.push_back(matrix3Id); //Result (Id)
-	//	for (size_t j = 0; j < 3; j++)
-	//	{
-	//		//keep * 4 because vectors are still laid out the same.
-	//		//vec3 is one id below vec4
-	//		mTypeInstructions.push_back(mIdsByRegister[D3DSPR_CONST][i * 4 + j] - 1); //Constituents
-	//	}
-
-	//	registerName = "c_mat3_" + std::to_string(i);
-	//	PushName(matrix3Id, registerName);
-
-	//	//mat4
-	//	mTypeInstructions.push_back(Pack(3 + 4, spv::OpSpecConstantComposite)); //size,Type
-	//	mTypeInstructions.push_back(matrix4TypeId); //Result Type (Id)
-	//	mTypeInstructions.push_back(matrix4Id); //Result (Id)
-	//	for (size_t j = 0; j < 4; j++)
-	//	{
-	//		mTypeInstructions.push_back(mIdsByRegister[D3DSPR_CONST][i * 4 + j]); //Constituents
-	//	}
-
-	//	registerName = "c_mat4_" + std::to_string(i);
-	//	PushName(matrix4Id, registerName);
-
-	//	mVector4Matrix3X3Pairs[mIdsByRegister[D3DSPR_CONST][i * 4]] = matrix3Id;
-	//	mVector4Matrix4X4Pairs[mIdsByRegister[D3DSPR_CONST][i * 4]] = matrix4Id;
-
-	//	mIdTypePairs[matrix3Id] = matrix3Type;
-	//	mIdTypePairs[matrix4Id] = matrix4Type;
-
-	//	mIdsByRegister[(_D3DSHADER_PARAM_REGISTER_TYPE)1337][i * 4] = id;
-	//	mRegistersById[(_D3DSHADER_PARAM_REGISTER_TYPE)1337][id] = i * 4;
-	//}
 }
 
 void ShaderConverter::CombineSpirVOpCodes()
@@ -3231,18 +3101,18 @@ void ShaderConverter::CombineSpirVOpCodes()
 
 void ShaderConverter::CreateSpirVModule()
 {
-//#ifdef _EXTRA_SHADER_DEBUG_INFO
-//	if (!mIsVertexShader)
-//	{
-//		std::ofstream outFile("fragment_" + std::to_string((uint32_t)mInstructions.data()) + ".spv", std::ios::out | std::ios::binary);
-//		outFile.write((char*)mInstructions.data(), mInstructions.size() * sizeof(uint32_t));
-//	}
-//	else
-//	{
-//		std::ofstream outFile("vertex_" + std::to_string((uint32_t)mInstructions.data()) + ".spv", std::ios::out | std::ios::binary);
-//		outFile.write((char*)mInstructions.data(), mInstructions.size() * sizeof(uint32_t));
-//	}
-//#endif
+	//#ifdef _EXTRA_SHADER_DEBUG_INFO
+	//	if (!mIsVertexShader)
+	//	{
+	//		std::ofstream outFile("fragment_" + std::to_string((uint32_t)mInstructions.data()) + ".spv", std::ios::out | std::ios::binary);
+	//		outFile.write((char*)mInstructions.data(), mInstructions.size() * sizeof(uint32_t));
+	//	}
+	//	else
+	//	{
+	//		std::ofstream outFile("vertex_" + std::to_string((uint32_t)mInstructions.data()) + ".spv", std::ios::out | std::ios::binary);
+	//		outFile.write((char*)mInstructions.data(), mInstructions.size() * sizeof(uint32_t));
+	//	}
+	//#endif
 
 	vk::Result result;
 	vk::ShaderModuleCreateInfo moduleCreateInfo;
@@ -4187,7 +4057,7 @@ void ShaderConverter::Process_DCL_Pixel()
 		mTypeInstructions.push_back(Pack(4, spv::OpVariable)); //size,Type
 		mTypeInstructions.push_back(resultTypeId); //ResultType (Id) Must be OpTypePointer with the pointer's type being what you care about.
 		mTypeInstructions.push_back(tokenId); //Result (Id)
-		
+
 		if (registerNumber) //r0 is used for pixel shader color output because reasons.
 		{
 			mTypeInstructions.push_back(spv::StorageClassPrivate); //Storage Class
@@ -4824,7 +4694,7 @@ OpLoopMerge %13 %14 None
 OpBranchConditional %19 %14 %13
 
 %14 = OpLabel
-    (Logic goes here)
+	(Logic goes here)
 ; i++
 %24 = OpIAdd %int %16 %int_1
 OpBranch %11
@@ -4858,7 +4728,7 @@ void ShaderConverter::Process_GENERIC_LOOP()
 	if (typeDescription.PrimaryType == spv::OpTypeMatrix || typeDescription.PrimaryType == spv::OpTypeVector)
 	{
 		dataType = typeDescription.SecondaryType;
-	}	
+	}
 
 	TypeDescription integerType;
 	integerType.PrimaryType = spv::OpTypeInt;
@@ -7264,12 +7134,12 @@ ConvertedShader ShaderConverter::Convert(uint32_t* shader)
 		case D3DSIO_PHASE:
 			if (!mIsVertexShader)
 			{
-				if(mMajorVersion == 1 && mMinorVersion == 4)
+				if (mMajorVersion == 1 && mMinorVersion == 4)
 				{
 					mMajorVersion = 2;
 					mMinorVersion = 0;
 				}
-			}		
+			}
 			break;
 		case D3DSIO_RET:
 			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_RET.";
