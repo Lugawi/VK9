@@ -1104,37 +1104,6 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 		}
 
 		break;
-	case D3DSPR_CONSTBOOL:
-	{
-		id = GetNextId();
-
-		TypeDescription integerType;
-		integerType.PrimaryType = spv::OpTypeInt;
-		uint32_t integerTypeId = GetSpirVTypeId(integerType);
-
-		mIdsByRegister[registerType][registerNumber] = id;
-		mRegistersById[registerType][id] = registerNumber;
-		mIdTypePairs[id] = integerType;
-
-		TypeDescription integerPointerType;
-		integerPointerType.PrimaryType = spv::OpTypePointer;
-		integerPointerType.SecondaryType = spv::OpTypeInt;
-		uint32_t integerPointerTypeId = GetSpirVTypeId(integerPointerType);
-
-		uint32_t memberIndexId = GetNextId();
-		mIdTypePairs[memberIndexId] = integerType;
-		mTypeInstructions.push_back(Pack(3 + 1, spv::OpConstant)); //size,Type
-		mTypeInstructions.push_back(integerTypeId); //Result Type (Id)
-		mTypeInstructions.push_back(memberIndexId); //Result (Id)
-		mTypeInstructions.push_back(registerNumber); //Literal Value
-
-		uint32_t chainId = GetNextId();
-		mIdTypePairs[chainId] = integerPointerType;
-
-		PushAccessChain(integerPointerTypeId, chainId, mUboPointerId, memberIndexId);
-		PushLoad(integerTypeId, id, chainId);
-	}
-	break;
 	case D3DSPR_CONSTINT:
 	{
 		id = GetNextId();
@@ -1174,6 +1143,37 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 		PushLoad(integerVectorTypeId, id, chainId);
 	}
 	break;
+	case D3DSPR_CONSTBOOL:
+	{
+		id = GetNextId();
+
+		TypeDescription integerType;
+		integerType.PrimaryType = spv::OpTypeInt;
+		uint32_t integerTypeId = GetSpirVTypeId(integerType);
+
+		mIdsByRegister[registerType][registerNumber] = id;
+		mRegistersById[registerType][id] = registerNumber;
+		mIdTypePairs[id] = integerType;
+
+		TypeDescription integerPointerType;
+		integerPointerType.PrimaryType = spv::OpTypePointer;
+		integerPointerType.SecondaryType = spv::OpTypeInt;
+		uint32_t integerPointerTypeId = GetSpirVTypeId(integerPointerType);
+
+		uint32_t memberIndexId = GetNextId();
+		mIdTypePairs[memberIndexId] = integerType;
+		mTypeInstructions.push_back(Pack(3 + 1, spv::OpConstant)); //size,Type
+		mTypeInstructions.push_back(integerTypeId); //Result Type (Id)
+		mTypeInstructions.push_back(memberIndexId); //Result (Id)
+		mTypeInstructions.push_back(mNumberOfIntegerVectorsInUbo + registerNumber); //Literal Value
+
+		uint32_t chainId = GetNextId();
+		mIdTypePairs[chainId] = integerPointerType;
+
+		PushAccessChain(integerPointerTypeId, chainId, mUboPointerId, memberIndexId);
+		PushLoad(integerTypeId, id, chainId);
+	}
+	break;
 	case D3DSPR_CONST:
 	case D3DSPR_CONST2:
 	case D3DSPR_CONST3:
@@ -1207,7 +1207,7 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 		mTypeInstructions.push_back(Pack(3 + 1, spv::OpConstant)); //size,Type
 		mTypeInstructions.push_back(integerTypeId); //Result Type (Id)
 		mTypeInstructions.push_back(memberIndexId); //Result (Id)
-		mTypeInstructions.push_back(registerNumber); //Literal Value
+		mTypeInstructions.push_back(mNumberOfIntegerVectorsInUbo + mNumberOfBooleansInUbo + registerNumber); //Literal Value
 
 		uint32_t chainId = GetNextId();
 		mIdTypePairs[chainId] = floatVectorPointerType;
@@ -1217,6 +1217,9 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 	}
 	break;
 	case D3DSPR_SAMPLER:
+
+		//TODO: handle an array of samplers.
+
 		id = GetNextId();
 		description.PrimaryType = spv::OpTypePointer;
 		description.SecondaryType = spv::OpTypeImage;
@@ -1235,7 +1238,7 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 		mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
 		mDecorateInstructions.push_back(id); //target (Id)
 		mDecorateInstructions.push_back(spv::DecorationBinding); //Decoration Type (Id)
-		mDecorateInstructions.push_back(registerNumber); //Location offset
+		mDecorateInstructions.push_back(7); //Location offset
 
 		mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
 		mDecorateInstructions.push_back(id); //target (Id)
@@ -1354,6 +1357,41 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 		{
 			originalId = matrixId;
 		}
+		else
+		{
+			/*
+				In DXBC you can use a float register as a mat4 even though it's really a vec4.
+				The way it works is the next 3 registers are combined with the one you requested into a mat4.
+				We use composite construct to emulate that dark magic.
+				Then we throw the id translation in a map so we don't convert it again if it's used later.
+			*/
+			Token token1 = token;
+			token1.DestinationParameterToken.RegisterNumber += 1;
+			uint32_t c1 = GetIdByRegister(token1);
+
+			Token token2 = token;
+			token2.DestinationParameterToken.RegisterNumber += 2;
+			uint32_t c2 = GetIdByRegister(token2);
+
+			Token token3 = token;
+			token3.DestinationParameterToken.RegisterNumber += 3;
+			uint32_t c3 = GetIdByRegister(token3);
+
+			TypeDescription matrixType;
+			matrixType.PrimaryType = spv::OpTypeMatrix;
+			matrixType.SecondaryType = spv::OpTypeVector;
+			matrixType.TernaryType = spv::OpTypeFloat;
+			matrixType.ComponentCount = 4;
+			uint32_t matrixTypeId = GetSpirVTypeId(matrixType);
+
+			uint32_t matrixId = GetNextId();
+
+			mIdTypePairs[matrixId] = matrixType;
+			Push(spv::OpCompositeConstruct, matrixTypeId, matrixId, originalId, c1, c2, c3);
+			mVector4Matrix4X4Pairs[originalId] = matrixId;
+
+			originalId = matrixId;
+		}
 	}
 	else if (lookingFor == GIVE_ME_MATRIX_3X3)
 	{
@@ -1369,10 +1407,11 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 			uint32_t matrixId = mVector4Matrix4X4Pairs[originalId];
 			if (matrixId)
 			{
-				originalId = matrixId;
-
 				//Couldn't find mat3 version so create one quick and return that instead.
-				originalId = ConvertMat4ToMat3(originalId);
+				matrixId = ConvertMat4ToMat3(originalId);
+				mVector4Matrix3X3Pairs[originalId] = matrixId;
+
+				originalId = matrixId;
 			}
 		}
 	}
@@ -1388,7 +1427,10 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 		else
 		{
 			//Couldn't find vec3 version so create one quick and return that instead.
-			originalId = ConvertVec4ToVec3(originalId);
+			vectorId = ConvertVec4ToVec3(originalId);
+			mVector4Vector3Pairs[originalId] = vectorId;
+
+			originalId = vectorId;
 		}
 
 		outputComponentCount = 3;
@@ -1424,7 +1466,7 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 		loadedTypeId = originalTypeId;
 	}
 
-	//Turns out it's nota compiler bug just variable shadowing.
+	//Turns out it's not a compiler bug just variable shadowing.
 
 	/*
 	Check for modifiers and if found apply them to the interim result.
@@ -1453,6 +1495,7 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 		}
 		break;
 	case D3DSPSM_BIAS:
+		//Nobody seems to know what bias does.
 		BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::GetSwizzledId - Unsupported modifier type D3DSPSM_BIAS";
 		break;
 	case D3DSPSM_BIASNEG:
