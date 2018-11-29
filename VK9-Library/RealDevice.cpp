@@ -172,7 +172,7 @@ RealDevice::RealDevice(vk::Instance instance, vk::PhysicalDevice physicalDevice,
 	vkEnumerateDeviceExtensionProperties((VkPhysicalDevice)physicalDevice, nullptr, &supportedExtensionsCount, supportedExtensions.data());
 
 	extensionNames.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-	extensionNames.push_back("VK_KHR_push_descriptor");
+	//extensionNames.push_back("VK_KHR_push_descriptor");
 
 	for (auto& supportedExtension : supportedExtensions)
 	{
@@ -474,7 +474,7 @@ RealDevice::RealDevice(vk::Instance instance, vk::PhysicalDevice physicalDevice,
 
 	mDescriptorSetLayoutCreateInfo.bindingCount = 8;
 	mDescriptorSetLayoutCreateInfo.pBindings = mDescriptorSetLayoutBinding;
-	mDescriptorSetLayoutCreateInfo.flags = vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR;
+	//mDescriptorSetLayoutCreateInfo.flags = vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR;
 
 	result = mDevice.createDescriptorSetLayout(&mDescriptorSetLayoutCreateInfo, nullptr, &mDescriptorSetLayout);
 	if (result != vk::Result::eSuccess)

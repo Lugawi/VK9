@@ -198,7 +198,7 @@ void RenderManager::UpdateBuffer(std::shared_ptr<RealDevice> realDevice)
 					pair1.second.m[0][1], pair1.second.m[1][1], pair1.second.m[2][1], pair1.second.m[3][1],
 					pair1.second.m[0][2], pair1.second.m[1][2], pair1.second.m[2][2], pair1.second.m[3][2],
 					pair1.second.m[0][3], pair1.second.m[1][3], pair1.second.m[2][3], pair1.second.m[3][3];
-				
+
 				break;
 			case D3DTS_PROJECTION:
 
@@ -405,6 +405,8 @@ vk::Result RenderManager::Present(std::shared_ptr<RealDevice> realDevice, const 
 		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::Present RGNDATA not supported.";
 	}
 
+	realDevice->mDescriptorSetIndex = 0;
+
 	//Print(mDeviceState.mTransforms);
 
 	return result;
@@ -595,7 +597,7 @@ void RenderManager::UpdateTexture(std::shared_ptr<RealDevice> realDevice, IDirec
 
 void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::shared_ptr<DrawContext> context, std::shared_ptr<ResourceContext> resourceContext, D3DPRIMITIVETYPE type)
 {
-	VkResult result = VK_SUCCESS;
+	vk::Result result;
 	uint32_t textureCount = 0;
 	//std::unordered_map<D3DRENDERSTATETYPE, DWORD>::const_iterator searchResult;
 	auto& currentBuffer = realDevice->mCommandBuffers[realDevice->mCurrentCommandBuffer];
@@ -824,31 +826,50 @@ void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::share
 	}
 
 	/**********************************************
-	* Check for existing DescriptorSet. Create one if there isn't a matching one.
+	* Check for existing DescriptorSet. Create one if there isn't one.
 	**********************************************/
-	if (realDevice->mDescriptorSetLayout != vk::DescriptorSetLayout())
+	vk::DescriptorSet descriptorSet;
+
+	if (realDevice->mDescriptorSetIndex >= realDevice->mDescriptorSets.size())
 	{
-		//std::copy(std::begin(deviceState.mDescriptorImageInfo), std::end(deviceState.mDescriptorImageInfo), std::begin(resourceContext->DescriptorImageInfo));
+		vk::DescriptorSetAllocateInfo descriptorSetInfo(realDevice->mDescriptorPool, 1, &realDevice->mDescriptorSetLayout);
 
-		//realDevice->mWriteDescriptorSet[0].dstSet = resourceContext->DescriptorSet;
-		//realDevice->mWriteDescriptorSet[1].dstSet = resourceContext->DescriptorSet;
-		//realDevice->mWriteDescriptorSet[2].dstSet = resourceContext->DescriptorSet;
-		//realDevice->mWriteDescriptorSet[3].dstSet = resourceContext->DescriptorSet;
-		//realDevice->mWriteDescriptorSet[4].dstSet = resourceContext->DescriptorSet;
-		//realDevice->mWriteDescriptorSet[5].dstSet = resourceContext->DescriptorSet;
-		//realDevice->mWriteDescriptorSet[6].dstSet = resourceContext->DescriptorSet;
-		//realDevice->mWriteDescriptorSet[7].dstSet = resourceContext->DescriptorSet;
-		//realDevice->mWriteDescriptorSet[7].pImageInfo = device->mDescriptorImageInfo;
-
-		//if (deviceRenderState.textureCount)
-		//{
-			currentBuffer.pushDescriptorSetKHR(vk::PipelineBindPoint::eGraphics, context->PipelineLayout, 0, 8, realDevice->mWriteDescriptorSet);
-		//}
-		//else
-		//{
-		//	currentBuffer.pushDescriptorSetKHR(vk::PipelineBindPoint::eGraphics, context->PipelineLayout, 0, 7, realDevice->mWriteDescriptorSet);
-		//}
+		result = realDevice->mDevice.allocateDescriptorSets(&descriptorSetInfo, &descriptorSet);
+		if (result != vk::Result::eSuccess)
+		{
+			BOOST_LOG_TRIVIAL(fatal) << "RenderManager::BeginDraw vkAllocateDescriptorSets failed with return code of " << GetResultString((VkResult)result);
+			return;
+		}
+		realDevice->mDescriptorSets.push_back(descriptorSet);
 	}
+	else
+	{
+		descriptorSet = realDevice->mDescriptorSets[realDevice->mDescriptorSetIndex];
+	}
+	realDevice->mDescriptorSetIndex++;
+
+	realDevice->mWriteDescriptorSet[0].dstSet = descriptorSet;
+	realDevice->mWriteDescriptorSet[1].dstSet = descriptorSet;
+	realDevice->mWriteDescriptorSet[2].dstSet = descriptorSet;
+	realDevice->mWriteDescriptorSet[3].dstSet = descriptorSet;
+	realDevice->mWriteDescriptorSet[4].dstSet = descriptorSet;
+	realDevice->mWriteDescriptorSet[5].dstSet = descriptorSet;
+	realDevice->mWriteDescriptorSet[6].dstSet = descriptorSet;
+	realDevice->mWriteDescriptorSet[7].dstSet = descriptorSet;
+	realDevice->mWriteDescriptorSet[7].pImageInfo = realDevice->mDescriptorImageInfo;
+
+	realDevice->mDevice.updateDescriptorSets(8, &realDevice->mWriteDescriptorSet[0],0,nullptr);
+	currentBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, context->PipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+
+	//currentBuffer.
+	//if (deviceRenderState.textureCount)
+	//{
+	//currentBuffer.pushDescriptorSetKHR(vk::PipelineBindPoint::eGraphics, context->PipelineLayout, 0, 8, realDevice->mWriteDescriptorSet);
+	//}
+	//else
+	//{
+	//	currentBuffer.pushDescriptorSetKHR(vk::PipelineBindPoint::eGraphics, context->PipelineLayout, 0, 7, realDevice->mWriteDescriptorSet);
+	//}
 
 	realDevice->mIsDirty = false;
 }

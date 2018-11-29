@@ -73,6 +73,9 @@ struct RealDevice
 	vk::DescriptorSetLayout mDescriptorSetLayout;
 	vk::DescriptorImageInfo mDescriptorImageInfo[16];
 
+	std::vector< vk::DescriptorSet > mDescriptorSets;
+	size_t mDescriptorSetIndex = 0;
+
 	//Memory Management
 	VmaAllocator mAllocator;
 
