@@ -928,11 +928,12 @@ std::shared_ptr<RealSwapChain> StateManager::GetSwapChain(std::shared_ptr<RealDe
 		vk::PhysicalDevice physicalDevice = realDevice->mPhysicalDevice;
 		vk::Device device = realDevice->mDevice;
 		HWND windowHandle = handle;
+		auto& deviceState = realDevice->mDeviceState;
 
-		if (realDevice->mDeviceState.mRenderTarget != nullptr && realDevice->mDeviceState.mRenderTarget->mColorSurface != nullptr)
+		if (deviceState.mRenderTarget != nullptr && deviceState.mRenderTarget->mColorSurface != nullptr)
 		{
-			width = realDevice->mDeviceState.mRenderTarget->mColorSurface->mExtent.width;
-			height = realDevice->mDeviceState.mRenderTarget->mColorSurface->mExtent.height;
+			width = deviceState.mRenderTarget->mColorSurface->mExtent.width;
+			height = deviceState.mRenderTarget->mColorSurface->mExtent.height;
 		}
 
 		auto output = std::make_shared<RealSwapChain>(instance, physicalDevice, device, windowHandle, width, height, useVsync);

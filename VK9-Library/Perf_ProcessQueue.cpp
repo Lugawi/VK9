@@ -2179,19 +2179,21 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 
 				if (realDevice->mCurrentStateRecording != nullptr)
 				{
+					auto& deviceState = realDevice->mCurrentStateRecording->mDeviceState;
 					//BOOST_LOG_TRIVIAL(info) << "Recorded VertexShader";
-					realDevice->mCurrentStateRecording->mDeviceState.mVertexShader = (CVertexShader9*)pShader;
-					realDevice->mCurrentStateRecording->mDeviceState.mHasVertexShader = true;
+					deviceState.mVertexShader = (CVertexShader9*)pShader;
+					deviceState.mHasVertexShader = true;
 				}
 				else
 				{
-					if (realDevice->mDeviceState.mVertexShader != nullptr)
+					auto& deviceState = realDevice->mDeviceState;
+					if (deviceState.mVertexShader != nullptr)
 					{
-						realDevice->mDeviceState.mVertexShader->Release();
+						deviceState.mVertexShader->Release();
 					}
 
-					realDevice->mDeviceState.mVertexShader = (CVertexShader9*)pShader;
-					realDevice->mDeviceState.mHasVertexShader = true;
+					deviceState.mVertexShader = (CVertexShader9*)pShader;
+					deviceState.mHasVertexShader = true;
 				}
 			}
 			break;
