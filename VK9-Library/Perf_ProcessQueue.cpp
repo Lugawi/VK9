@@ -1934,8 +1934,9 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					state = &realDevice->mDeviceState;
 				}
 
-				state->mIsRenderStateDirty = true;
-				state->mAreTextureStagesDirty = true;
+				//state->mIsRenderStateDirty = true;
+				//state->mAreTextureStagesDirty = true;
+				state->mAreTexturesDirty = true;
 
 				state->mTextures[Sampler] = pTexture;
 			}

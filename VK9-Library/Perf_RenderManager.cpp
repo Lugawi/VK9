@@ -406,7 +406,9 @@ vk::Result RenderManager::Present(std::shared_ptr<RealDevice> realDevice, const 
 	}
 
 	realDevice->mDescriptorSetIndex = 0;
-
+	realDevice->mLastVkPipeline = vk::Pipeline();
+	realDevice->mLastIndexBuffer = nullptr;
+	deviceState.mAreTexturesDirty = true;	
 	//Print(mDeviceState.mTransforms);
 
 	return result;
@@ -802,20 +804,18 @@ void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::share
 	/**********************************************
 	* Setup bindings
 	**********************************************/
-
-	//TODO: I need to find a way to prevent binding on every draw call.
-
-	//if (!mIsDirty || mLastVkPipeline != context->Pipeline)
-	//{
-	currentBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, context->Pipeline);
-	//	mLastVkPipeline = context->Pipeline;
-	//}
+	if (realDevice->mLastVkPipeline != context->Pipeline)
+	{
+		currentBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, context->Pipeline);
+		realDevice->mLastVkPipeline = context->Pipeline;
+	}
 
 	realDevice->mVertexCount = 0;
 
-	if (deviceState.mIndexBuffer != nullptr)
+	if (deviceState.mIndexBuffer != nullptr && deviceState.mIndexBuffer != realDevice->mLastIndexBuffer)
 	{
 		currentBuffer.bindIndexBuffer(deviceState.mIndexBuffer->mBuffer, 0, deviceState.mIndexBuffer->mIndexType);
+		realDevice->mLastIndexBuffer = deviceState.mIndexBuffer;
 	}
 
 	for (auto& source : deviceState.mStreamSources)
@@ -828,48 +828,44 @@ void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::share
 	/**********************************************
 	* Check for existing DescriptorSet. Create one if there isn't one.
 	**********************************************/
-	vk::DescriptorSet descriptorSet;
-
-	if (realDevice->mDescriptorSetIndex >= realDevice->mDescriptorSets.size())
+	if (deviceState.mAreTexturesDirty)
 	{
-		vk::DescriptorSetAllocateInfo descriptorSetInfo(realDevice->mDescriptorPool, 1, &realDevice->mDescriptorSetLayout);
+		vk::DescriptorSet descriptorSet;
 
-		result = realDevice->mDevice.allocateDescriptorSets(&descriptorSetInfo, &descriptorSet);
-		if (result != vk::Result::eSuccess)
+		if (realDevice->mDescriptorSetIndex >= realDevice->mDescriptorSets.size())
 		{
-			BOOST_LOG_TRIVIAL(fatal) << "RenderManager::BeginDraw vkAllocateDescriptorSets failed with return code of " << GetResultString((VkResult)result);
-			return;
+			vk::DescriptorSetAllocateInfo descriptorSetInfo(realDevice->mDescriptorPool, 1, &realDevice->mDescriptorSetLayout);
+
+			result = device.allocateDescriptorSets(&descriptorSetInfo, &descriptorSet);
+			if (result != vk::Result::eSuccess)
+			{
+				BOOST_LOG_TRIVIAL(fatal) << "RenderManager::BeginDraw vkAllocateDescriptorSets failed with return code of " << GetResultString((VkResult)result);
+				return;
+			}
+			realDevice->mDescriptorSets.push_back(descriptorSet);
 		}
-		realDevice->mDescriptorSets.push_back(descriptorSet);
+		else
+		{
+			descriptorSet = realDevice->mDescriptorSets[realDevice->mDescriptorSetIndex];
+		}
+		realDevice->mDescriptorSetIndex++;
+
+		realDevice->mWriteDescriptorSet[0].dstSet = descriptorSet;
+		realDevice->mWriteDescriptorSet[1].dstSet = descriptorSet;
+		realDevice->mWriteDescriptorSet[2].dstSet = descriptorSet;
+		realDevice->mWriteDescriptorSet[3].dstSet = descriptorSet;
+		realDevice->mWriteDescriptorSet[4].dstSet = descriptorSet;
+		realDevice->mWriteDescriptorSet[5].dstSet = descriptorSet;
+		realDevice->mWriteDescriptorSet[6].dstSet = descriptorSet;
+		realDevice->mWriteDescriptorSet[7].dstSet = descriptorSet;
+		realDevice->mWriteDescriptorSet[7].pImageInfo = realDevice->mDescriptorImageInfo;
+
+		device.updateDescriptorSets(8, &realDevice->mWriteDescriptorSet[0], 0, nullptr);
+		currentBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, context->PipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+
+		deviceState.mAreTexturesDirty = false;
 	}
-	else
-	{
-		descriptorSet = realDevice->mDescriptorSets[realDevice->mDescriptorSetIndex];
-	}
-	realDevice->mDescriptorSetIndex++;
 
-	realDevice->mWriteDescriptorSet[0].dstSet = descriptorSet;
-	realDevice->mWriteDescriptorSet[1].dstSet = descriptorSet;
-	realDevice->mWriteDescriptorSet[2].dstSet = descriptorSet;
-	realDevice->mWriteDescriptorSet[3].dstSet = descriptorSet;
-	realDevice->mWriteDescriptorSet[4].dstSet = descriptorSet;
-	realDevice->mWriteDescriptorSet[5].dstSet = descriptorSet;
-	realDevice->mWriteDescriptorSet[6].dstSet = descriptorSet;
-	realDevice->mWriteDescriptorSet[7].dstSet = descriptorSet;
-	realDevice->mWriteDescriptorSet[7].pImageInfo = realDevice->mDescriptorImageInfo;
-
-	realDevice->mDevice.updateDescriptorSets(8, &realDevice->mWriteDescriptorSet[0],0,nullptr);
-	currentBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, context->PipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
-
-	//currentBuffer.
-	//if (deviceRenderState.textureCount)
-	//{
-	//currentBuffer.pushDescriptorSetKHR(vk::PipelineBindPoint::eGraphics, context->PipelineLayout, 0, 8, realDevice->mWriteDescriptorSet);
-	//}
-	//else
-	//{
-	//	currentBuffer.pushDescriptorSetKHR(vk::PipelineBindPoint::eGraphics, context->PipelineLayout, 0, 7, realDevice->mWriteDescriptorSet);
-	//}
 
 	realDevice->mIsDirty = false;
 }

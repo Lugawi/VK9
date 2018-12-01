@@ -272,6 +272,8 @@ struct DeviceState
 	BOOL mAreLightsDirty = true;
 	BOOL mIsMaterialDirty = true;
 
+	BOOL mAreTexturesDirty = true;
+
 	//IDirect3DDevice9::LightEnable
 	//IDirect3DDevice9::SetClipPlane
 	//IDirect3DDevice9::SetCurrentTexturePalette

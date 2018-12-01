@@ -1248,6 +1248,10 @@ struct RealDevice
 	vk::CommandBufferBeginInfo mBeginInfo;
 	vk::SubmitInfo mSubmitInfo;
 
+	//Bind Tracking
+	vk::Pipeline mLastVkPipeline;
+	RealIndexBuffer* mLastIndexBuffer = nullptr;
+
 	RealDevice(vk::Instance instance, vk::PhysicalDevice physicalDevice,int32_t width, int32_t height, bool usingRenderDoc);
 	~RealDevice();
 
