@@ -681,7 +681,7 @@ RealDevice::RealDevice(vk::Instance instance, vk::PhysicalDevice physicalDevice,
 
 	//FF Buffers
 	CreateBuffer(sizeof(RenderState), vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, mRenderStateBuffer, mRenderStateBufferMemory);
-	CreateBuffer(sizeof(TextureStage)*9, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, mTextureStageBuffer, mTextureStageBufferMemory);
+	CreateBuffer(sizeof(TextureStage)*16, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, mTextureStageBuffer, mTextureStageBufferMemory);
 	CreateBuffer(sizeof(Light)*8, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, mLightBuffer, mLightBufferMemory);
 	CreateBuffer(sizeof(D3DMATERIAL9), vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, mMaterialBuffer, mMaterialBufferMemory);
 	CreateBuffer(sizeof(Transformations), vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, mMatrixBuffer, mMatrixBufferMemory);
@@ -708,7 +708,7 @@ RealDevice::RealDevice(vk::Instance instance, vk::PhysicalDevice physicalDevice,
 	//Texture Stages
 	mDescriptorBufferInfo[1].buffer = mTextureStageBuffer;
 	mDescriptorBufferInfo[1].offset = 0;
-	mDescriptorBufferInfo[1].range = sizeof(TextureStage) * 9;
+	mDescriptorBufferInfo[1].range = sizeof(TextureStage) * 16;
 
 	mWriteDescriptorSet[1].dstBinding = 1;
 	mWriteDescriptorSet[1].dstArrayElement = 0;

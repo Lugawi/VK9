@@ -632,16 +632,6 @@ void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::share
 		textureCount = ConvertFormat(deviceState.mFVF);
 	}
 
-	/**********************************************
-	* Update the stuff that need to be done outside of a render pass.
-	**********************************************/
-	if (deviceState.mIsRenderStateDirty || deviceState.mAreTextureStagesDirty || deviceState.mAreLightsDirty || deviceState.mIsMaterialDirty || deviceState.mAreVertexShaderSlotsDirty || deviceState.mArePixelShaderSlotsDirty || deviceState.mHasTransformsChanged)
-	{
-		currentBuffer.endRenderPass();
-		UpdateBuffer(realDevice);
-		currentBuffer.beginRenderPass(&deviceState.mRenderTarget->mRenderPassBeginInfo, vk::SubpassContents::eInline);
-	}
-
 	/*
 	https://msdn.microsoft.com/en-us/library/windows/desktop/bb205599(v=vs.85).aspx
 	The units for the D3DRS_DEPTHBIAS and D3DRS_SLOPESCALEDEPTHBIAS render states depend on whether z-buffering or w-buffering is enabled.
@@ -730,11 +720,13 @@ void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::share
 					&& request->MaxAnisotropy == storedRequest->MaxAnisotropy
 					&& request->MipmapMode == storedRequest->MipmapMode
 					&& request->MipLodBias == storedRequest->MipLodBias
-					&& request->MaxLod == storedRequest->MaxLod)
+					&& request->MaxLod == storedRequest->MaxLod
+					&& storedRequest->LastIndex >= i)
 				{
 					request->Sampler = storedRequest->Sampler;
 					request->mRealDevice = nullptr; //Not owner.
 					storedRequest->LastUsed = std::chrono::steady_clock::now();
+					storedRequest->LastIndex = i;
 				}
 			}
 
@@ -755,6 +747,16 @@ void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::share
 	}
 
 	deviceRenderState.textureCount = std::max(deviceRenderState.textureCount, textureCount);
+
+	/**********************************************
+	* Update the stuff that need to be done outside of a render pass.
+	**********************************************/
+	if (deviceState.mIsRenderStateDirty || deviceState.mAreTextureStagesDirty || deviceState.mAreLightsDirty || deviceState.mIsMaterialDirty || deviceState.mAreVertexShaderSlotsDirty || deviceState.mArePixelShaderSlotsDirty || deviceState.mHasTransformsChanged)
+	{
+		currentBuffer.endRenderPass();
+		UpdateBuffer(realDevice);
+		currentBuffer.beginRenderPass(&deviceState.mRenderTarget->mRenderPassBeginInfo, vk::SubpassContents::eInline);
+	}
 
 	/**********************************************
 	* Setup context.
@@ -823,6 +825,7 @@ void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::share
 		realDevice->mLastIndexBuffer = deviceState.mIndexBuffer;
 	}
 
+	//TODO: check to make sure the vertex binding really changed. Re-writting the vertex buffer seems to be more common at least with UT99.
 	for (auto& source : deviceState.mStreamSources)
 	{
 		auto& buffer = mStateManager.mVertexBuffers[source.second.StreamData->mId];

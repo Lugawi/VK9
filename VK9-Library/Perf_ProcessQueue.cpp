@@ -3076,8 +3076,10 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					//{
 					//	SetAlpha((char*)surface.mData, surface9->mHeight, surface9->mWidth, surface.mLayouts[0].rowPitch);
 					//}
-					vmaFlushAllocation(realDevice->mAllocator, surface.mImageAllocation, 0, VK_WHOLE_SIZE);
+					
 					vmaUnmapMemory(realDevice->mAllocator, surface.mImageAllocation);
+					vmaFlushAllocation(realDevice->mAllocator, surface.mImageAllocation, 0, VK_WHOLE_SIZE);
+
 					surface.mData = nullptr;
 				}
 
@@ -3095,6 +3097,12 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 
 				auto& realDevice = surface.mRealDevice;
 				CSurface9* surface9 = bit_cast<CSurface9*>(workItem->Argument1);
+
+				if (surface9->mTextureId == -1)
+				{
+					break;
+				}
+
 				auto& texture = (*commandStreamManager->mRenderManager.mStateManager.mTextures[surface9->mTextureId]);
 				auto& device = realDevice->mDevice;
 

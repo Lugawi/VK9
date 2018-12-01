@@ -238,7 +238,7 @@ struct RenderState
 struct ShaderState
 {
 	RenderState mRenderState;
-	TextureStage mTextureStages[9];
+	TextureStage mTextureStages[16];
 	Light mLights[8];
 	D3DMATERIAL9 mMaterial = 
 	{
@@ -257,7 +257,7 @@ struct DeviceState
 {
 	DeviceState()
 	{
-		for (size_t i = 1; i < 9; i++)
+		for (size_t i = 1; i < 16; i++)
 		{
 			mShaderState.mTextureStages[i].colorOperation = D3DTOP_DISABLE;
 			mShaderState.mTextureStages[i].alphaOperation = D3DTOP_DISABLE;
