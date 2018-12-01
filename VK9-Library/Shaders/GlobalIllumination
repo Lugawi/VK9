@@ -79,7 +79,7 @@ vec4 GetGlobalIllumination(vec4 inNormal, vec4 inPosition)
 		norm = normalize(norm);
 	}
 
-	vectorPosition = ubo.world * inPosition;
+	vectorPosition = ubo.world * vec4(inPosition.xyz,1);
 	vectorPosition *= vec4(1.0,-1.0,1.0,1.0);
 
 	//https://msdn.microsoft.com/en-us/library/windows/desktop/bb172279(v=vs.85).aspx
@@ -87,10 +87,10 @@ vec4 GetGlobalIllumination(vec4 inNormal, vec4 inPosition)
 	{		
 		if(lights[i].IsEnabled==1)
 		{		
-			lightPosition = ubo.world * lights[i].Position;
+			lightPosition = vec4(lights[i].Position.xyz,1); 
 			lightPosition *= vec4(1.0,-1.0,1.0,1.0);
 
-			lightDirection = lights[i].Direction;
+			lightDirection = vec4(lights[i].Direction.xyz,0);
 			lightDirection *= vec4(1.0,-1.0,1.0,1.0);
 
 			lightDistance = abs(distance(vectorPosition.xyz,lightPosition.xyz));
@@ -142,7 +142,7 @@ vec4 GetGlobalIllumination(vec4 inNormal, vec4 inPosition)
 				vec3 halfway;
 				if(renderState.localViewer==1)
 				{
-					halfway = normalize(normalize(cameraPosition - inPosition.xyz) + ldir.xyz);			
+					halfway = normalize(normalize(cameraPosition - vectorPosition.xyz) + ldir.xyz);			
 				}
 				else
 				{
