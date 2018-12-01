@@ -409,6 +409,7 @@ vk::Result RenderManager::Present(std::shared_ptr<RealDevice> realDevice, const 
 	realDevice->mLastVkPipeline = vk::Pipeline();
 	realDevice->mLastIndexBuffer = nullptr;
 	deviceState.mAreTexturesDirty = true;	
+	deviceState.mIsZBiasDirty = true;
 	//Print(mDeviceState.mTransforms);
 
 	return result;
@@ -646,13 +647,17 @@ void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::share
 	The units for the D3DRS_DEPTHBIAS and D3DRS_SLOPESCALEDEPTHBIAS render states depend on whether z-buffering or w-buffering is enabled.
 	The bias is not applied to any line and point primitive.
 	*/
-	if (deviceRenderState.zEnable != D3DZB_FALSE && type > 3)
+	if (deviceState.mIsZBiasDirty)
 	{
-		currentBuffer.setDepthBias(deviceRenderState.depthBias, 0.0f, deviceRenderState.slopeScaleDepthBias);
-	}
-	else
-	{
-		currentBuffer.setDepthBias(0.0f, 0.0f, 0.0f);
+		if (deviceRenderState.zEnable != D3DZB_FALSE && type > 3)
+		{
+			currentBuffer.setDepthBias(deviceRenderState.depthBias, 0.0f, deviceRenderState.slopeScaleDepthBias);
+		}
+		else
+		{
+			currentBuffer.setDepthBias(0.0f, 0.0f, 0.0f);
+		}
+		deviceState.mIsZBiasDirty = false;
 	}
 
 	/**********************************************

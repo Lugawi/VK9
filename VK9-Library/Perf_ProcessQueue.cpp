@@ -1423,6 +1423,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					constants->mRenderState.zEnable = Value;
 					state->wasDsaGroupModified = true;
 					state->wasMultisampleGroupModified = true;
+					state->mIsZBiasDirty = true;
 					break;
 				case D3DRS_FILLMODE:
 					constants->mRenderState.fillMode = Value;
@@ -1716,6 +1717,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				case D3DRS_SLOPESCALEDEPTHBIAS:
 					constants->mRenderState.slopeScaleDepthBias = bit_cast(Value);
 					state->wasRasterizerGroupModified = true;
+					state->mIsZBiasDirty = true;
 					break;
 				case D3DRS_ANTIALIASEDLINEENABLE:
 					constants->mRenderState.antiAliasedLineEnable = Value;
@@ -1792,6 +1794,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				case D3DRS_DEPTHBIAS:
 					constants->mRenderState.depthBias = bit_cast(Value);
 					state->wasRasterizerGroupModified = true;
+					state->mIsZBiasDirty = true;
 					break;
 				case D3DRS_WRAP8:
 					constants->mRenderState.wrap8 = Value;
