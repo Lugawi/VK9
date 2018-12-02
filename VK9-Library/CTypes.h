@@ -273,6 +273,7 @@ struct DeviceState
 	BOOL mIsMaterialDirty = true;
 	BOOL mAreTexturesDirty = true;
 	BOOL mIsZBiasDirty = true;
+	BOOL mAreStreamSourcesDirty = true;
 
 	//IDirect3DDevice9::LightEnable
 	//IDirect3DDevice9::SetClipPlane

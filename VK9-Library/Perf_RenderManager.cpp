@@ -410,6 +410,7 @@ vk::Result RenderManager::Present(std::shared_ptr<RealDevice> realDevice, const 
 	realDevice->mLastIndexBuffer = nullptr;
 	deviceState.mAreTexturesDirty = true;	
 	deviceState.mIsZBiasDirty = true;
+	deviceState.mAreStreamSourcesDirty = true;
 	//Print(mDeviceState.mTransforms);
 
 	return result;
@@ -651,114 +652,6 @@ void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::share
 	}
 
 	/**********************************************
-	* Update the textures that are currently mapped.
-	**********************************************/
-
-	context->StreamCount = deviceState.mStreamSources.size();
-	//context->Bindings = {};
-	memset(&context->Bindings, 0, sizeof(UINT) * 64);
-
-	int i = 0;
-	for (auto& source : deviceState.mStreamSources)
-	{
-		realDevice->mVertexInputBindingDescription[i].binding = source.first;
-		realDevice->mVertexInputBindingDescription[i].stride = source.second.Stride;
-		realDevice->mVertexInputBindingDescription[i].inputRate = vk::VertexInputRate::eVertex;
-
-		context->Bindings[source.first] = source.second.Stride;
-
-		i++;
-	}
-
-	deviceRenderState.textureCount = 0;
-	for (size_t i = 0; i < 16; i++)
-	{
-		auto& targetSampler = realDevice->mDescriptorImageInfo[i];
-
-		if (deviceState.mTextures[i] != nullptr)
-		{
-			deviceRenderState.textureCount++;
-
-			std::shared_ptr<SamplerRequest> request = std::make_shared<SamplerRequest>(realDevice.get());
-			auto& currentSampler = deviceSamplerStates[request->SamplerIndex];
-
-			if (deviceState.mTextures[i]->GetType() == D3DRTYPE_CUBETEXTURE)
-			{
-				CCubeTexture9* texture9 = (CCubeTexture9*)deviceState.mTextures[i];
-				auto& texture = mStateManager.mTextures[texture9->mId];
-
-				request->MaxLod = texture9->mLevels;
-				targetSampler.imageView = texture->mImageView;
-			}
-			else
-			{
-				CTexture9* texture9 = (CTexture9*)deviceState.mTextures[i];
-				auto& texture = mStateManager.mTextures[texture9->mId];
-
-				request->MaxLod = texture9->mLevels;
-				targetSampler.imageView = texture->mImageView;
-			}
-
-			request->MagFilter = (D3DTEXTUREFILTERTYPE)currentSampler[D3DSAMP_MAGFILTER];
-			request->MinFilter = (D3DTEXTUREFILTERTYPE)currentSampler[D3DSAMP_MINFILTER];
-			request->AddressModeU = (D3DTEXTUREADDRESS)currentSampler[D3DSAMP_ADDRESSU];
-			request->AddressModeV = (D3DTEXTUREADDRESS)currentSampler[D3DSAMP_ADDRESSV];
-			request->AddressModeW = (D3DTEXTUREADDRESS)currentSampler[D3DSAMP_ADDRESSW];
-			request->MaxAnisotropy = currentSampler[D3DSAMP_MAXANISOTROPY];
-			request->MipmapMode = (D3DTEXTUREFILTERTYPE)currentSampler[D3DSAMP_MIPFILTER];
-			request->MipLodBias = currentSampler[D3DSAMP_MIPMAPLODBIAS]; //bit_cast();
-
-
-			for (size_t i = 0; i < realDevice->mSamplerRequests.size(); i++)
-			{
-				auto& storedRequest = realDevice->mSamplerRequests[i];
-				if (request->MagFilter == storedRequest->MagFilter
-					&& request->MinFilter == storedRequest->MinFilter
-					&& request->AddressModeU == storedRequest->AddressModeU
-					&& request->AddressModeV == storedRequest->AddressModeV
-					&& request->AddressModeW == storedRequest->AddressModeW
-					&& request->MaxAnisotropy == storedRequest->MaxAnisotropy
-					&& request->MipmapMode == storedRequest->MipmapMode
-					&& request->MipLodBias == storedRequest->MipLodBias
-					&& request->MaxLod == storedRequest->MaxLod
-					&& storedRequest->LastIndex >= i)
-				{
-					request->Sampler = storedRequest->Sampler;
-					request->mRealDevice = nullptr; //Not owner.
-					storedRequest->LastUsed = std::chrono::steady_clock::now();
-					storedRequest->LastIndex = i;
-				}
-			}
-
-			if (request->Sampler == vk::Sampler())
-			{
-				CreateSampler(realDevice, request);
-			}
-
-			targetSampler.sampler = request->Sampler;
-			targetSampler.imageLayout = vk::ImageLayout::eGeneral;
-		}
-		else
-		{
-			targetSampler.sampler = realDevice->mSampler;
-			targetSampler.imageView = realDevice->mImageView;
-			targetSampler.imageLayout = vk::ImageLayout::eGeneral;
-		}
-	}
-
-	deviceRenderState.textureCount = std::max(deviceRenderState.textureCount, textureCount);
-
-	/**********************************************
-	* Update the stuff that need to be done outside of a render pass.
-	**********************************************/
-	if (deviceState.mIsRenderStateDirty || deviceState.mAreTextureStagesDirty || deviceState.mAreLightsDirty || deviceState.mIsMaterialDirty || deviceState.mAreVertexShaderSlotsDirty || deviceState.mArePixelShaderSlotsDirty || deviceState.mHasTransformsChanged)
-	{
-		currentBuffer.endRenderPass();
-		UpdateBuffer(realDevice);
-		currentBuffer.beginRenderPass(&deviceState.mRenderTarget->mRenderPassBeginInfo, vk::SubpassContents::eInline);
-	}
-
-	/**********************************************
 	* Setup context.
 	**********************************************/
 	context->PrimitiveType = type;
@@ -773,6 +666,33 @@ void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::share
 	context->mPixelShaderConstantSlots = deviceState.mPixelShaderConstantSlots;
 
 	context->mShaderState = deviceState.mShaderState;
+
+	/**********************************************
+	* Update the vertex binding if it changed.
+	**********************************************/
+	context->StreamCount = deviceState.mStreamSources.size();	
+	if (deviceState.mAreStreamSourcesDirty)
+	{
+		memset(&context->Bindings, 0, sizeof(UINT) * 64);
+
+		int i = 0;
+		for (auto& source : deviceState.mStreamSources)
+		{
+			realDevice->mVertexInputBindingDescription[i].binding = source.first;
+			realDevice->mVertexInputBindingDescription[i].stride = source.second.Stride;
+			realDevice->mVertexInputBindingDescription[i].inputRate = vk::VertexInputRate::eVertex;
+
+			context->Bindings[source.first] = source.second.Stride;
+
+			auto& buffer = mStateManager.mVertexBuffers[source.second.StreamData->mId];
+			currentBuffer.bindVertexBuffers(source.first, 1, &buffer->mBuffer, &source.second.OffsetInBytes);
+			realDevice->mVertexCount += source.second.StreamData->mSize;
+
+			i++;
+		}
+
+		deviceState.mAreStreamSourcesDirty = false;
+	}
 
 	/**********************************************
 	* Check for existing pipeline. Create one if there isn't a matching one.
@@ -809,35 +729,86 @@ void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::share
 	}
 
 	/**********************************************
-	* Setup bindings
-	**********************************************/
-	if (realDevice->mLastVkPipeline != context->Pipeline)
-	{
-		currentBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, context->Pipeline);
-		realDevice->mLastVkPipeline = context->Pipeline;
-	}
-
-	realDevice->mVertexCount = 0;
-
-	if (deviceState.mIndexBuffer != nullptr && deviceState.mIndexBuffer != realDevice->mLastIndexBuffer)
-	{
-		currentBuffer.bindIndexBuffer(deviceState.mIndexBuffer->mBuffer, 0, deviceState.mIndexBuffer->mIndexType);
-		realDevice->mLastIndexBuffer = deviceState.mIndexBuffer;
-	}
-
-	//TODO: check to make sure the vertex binding really changed. Re-writting the vertex buffer seems to be more common at least with UT99.
-	for (auto& source : deviceState.mStreamSources)
-	{
-		auto& buffer = mStateManager.mVertexBuffers[source.second.StreamData->mId];
-		currentBuffer.bindVertexBuffers(source.first, 1, &buffer->mBuffer, &source.second.OffsetInBytes);
-		realDevice->mVertexCount += source.second.StreamData->mSize;
-	}
-
-	/**********************************************
-	* Check for existing DescriptorSet. Create one if there isn't one.
+	* Update the textures that are currently mapped.
 	**********************************************/
 	if (deviceState.mAreTexturesDirty)
 	{
+		deviceRenderState.textureCount = 0;
+		for (size_t i = 0; i < 16; i++)
+		{
+			auto& targetSampler = realDevice->mDescriptorImageInfo[i];
+
+			if (deviceState.mTextures[i] != nullptr)
+			{
+				deviceRenderState.textureCount++;
+
+				std::shared_ptr<SamplerRequest> request = std::make_shared<SamplerRequest>(realDevice.get());
+				auto& currentSampler = deviceSamplerStates[request->SamplerIndex];
+
+				if (deviceState.mTextures[i]->GetType() == D3DRTYPE_CUBETEXTURE)
+				{
+					CCubeTexture9* texture9 = (CCubeTexture9*)deviceState.mTextures[i];
+					auto& texture = mStateManager.mTextures[texture9->mId];
+
+					request->MaxLod = texture9->mLevels;
+					targetSampler.imageView = texture->mImageView;
+				}
+				else
+				{
+					CTexture9* texture9 = (CTexture9*)deviceState.mTextures[i];
+					auto& texture = mStateManager.mTextures[texture9->mId];
+
+					request->MaxLod = texture9->mLevels;
+					targetSampler.imageView = texture->mImageView;
+				}
+
+				request->MagFilter = (D3DTEXTUREFILTERTYPE)currentSampler[D3DSAMP_MAGFILTER];
+				request->MinFilter = (D3DTEXTUREFILTERTYPE)currentSampler[D3DSAMP_MINFILTER];
+				request->AddressModeU = (D3DTEXTUREADDRESS)currentSampler[D3DSAMP_ADDRESSU];
+				request->AddressModeV = (D3DTEXTUREADDRESS)currentSampler[D3DSAMP_ADDRESSV];
+				request->AddressModeW = (D3DTEXTUREADDRESS)currentSampler[D3DSAMP_ADDRESSW];
+				request->MaxAnisotropy = currentSampler[D3DSAMP_MAXANISOTROPY];
+				request->MipmapMode = (D3DTEXTUREFILTERTYPE)currentSampler[D3DSAMP_MIPFILTER];
+				request->MipLodBias = currentSampler[D3DSAMP_MIPMAPLODBIAS]; //bit_cast();
+
+
+				for (size_t i = 0; i < realDevice->mSamplerRequests.size(); i++)
+				{
+					auto& storedRequest = realDevice->mSamplerRequests[i];
+					if (request->MagFilter == storedRequest->MagFilter
+						&& request->MinFilter == storedRequest->MinFilter
+						&& request->AddressModeU == storedRequest->AddressModeU
+						&& request->AddressModeV == storedRequest->AddressModeV
+						&& request->AddressModeW == storedRequest->AddressModeW
+						&& request->MaxAnisotropy == storedRequest->MaxAnisotropy
+						&& request->MipmapMode == storedRequest->MipmapMode
+						&& request->MipLodBias == storedRequest->MipLodBias
+						&& request->MaxLod == storedRequest->MaxLod
+						)
+					{
+						request->Sampler = storedRequest->Sampler;
+						request->mRealDevice = nullptr; //Not owner.
+						storedRequest->LastUsed = std::chrono::steady_clock::now();
+						storedRequest->LastIndex = i;
+					}
+				}
+
+				if (request->Sampler == vk::Sampler())
+				{
+					CreateSampler(realDevice, request);
+				}
+
+				targetSampler.sampler = request->Sampler;
+				targetSampler.imageLayout = vk::ImageLayout::eGeneral;
+			}
+			else
+			{
+				targetSampler.sampler = realDevice->mSampler;
+				targetSampler.imageView = realDevice->mImageView;
+				targetSampler.imageLayout = vk::ImageLayout::eGeneral;
+			}
+		}
+
 		vk::DescriptorSet descriptorSet;
 
 		if (realDevice->mDescriptorSetIndex >= realDevice->mDescriptorSets.size())
@@ -872,6 +843,35 @@ void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::share
 		currentBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, context->PipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
 
 		deviceState.mAreTexturesDirty = false;
+	}
+
+	deviceRenderState.textureCount = std::max(deviceRenderState.textureCount, textureCount);
+
+	/**********************************************
+	* Update the stuff that need to be done outside of a render pass.
+	**********************************************/
+	if (deviceState.mIsRenderStateDirty || deviceState.mAreTextureStagesDirty || deviceState.mAreLightsDirty || deviceState.mIsMaterialDirty || deviceState.mAreVertexShaderSlotsDirty || deviceState.mArePixelShaderSlotsDirty || deviceState.mHasTransformsChanged)
+	{
+		currentBuffer.endRenderPass();
+		UpdateBuffer(realDevice);
+		currentBuffer.beginRenderPass(&deviceState.mRenderTarget->mRenderPassBeginInfo, vk::SubpassContents::eInline);
+	}
+
+	/**********************************************
+	* Setup bindings
+	**********************************************/
+	if (realDevice->mLastVkPipeline != context->Pipeline)
+	{
+		currentBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, context->Pipeline);
+		realDevice->mLastVkPipeline = context->Pipeline;
+	}
+
+	realDevice->mVertexCount = 0;
+
+	if (deviceState.mIndexBuffer != nullptr && deviceState.mIndexBuffer != realDevice->mLastIndexBuffer)
+	{
+		currentBuffer.bindIndexBuffer(deviceState.mIndexBuffer->mBuffer, 0, deviceState.mIndexBuffer->mIndexType);
+		realDevice->mLastIndexBuffer = deviceState.mIndexBuffer;
 	}
 
 

@@ -1912,11 +1912,17 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 
 				if (realDevice->mCurrentStateRecording != nullptr)
 				{
-					realDevice->mCurrentStateRecording->mDeviceState.mStreamSources[StreamNumber] = StreamSource(StreamNumber, streamData, OffsetInBytes, Stride);
+					auto& deviceState = realDevice->mCurrentStateRecording->mDeviceState;
+
+					deviceState.mStreamSources[StreamNumber] = StreamSource(StreamNumber, streamData, OffsetInBytes, Stride);
+					deviceState.mAreStreamSourcesDirty = true;
 				}
 				else
 				{
-					realDevice->mDeviceState.mStreamSources[StreamNumber] = StreamSource(StreamNumber, streamData, OffsetInBytes, Stride);
+					auto& deviceState = realDevice->mDeviceState;
+
+					deviceState.mStreamSources[StreamNumber] = StreamSource(StreamNumber, streamData, OffsetInBytes, Stride);
+					deviceState.mAreStreamSourcesDirty = true;
 				}
 			}
 			break;
