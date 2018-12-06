@@ -2459,6 +2459,9 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					auto& oldRealVertexBuffer = (*commandStreamManager->mRenderManager.mStateManager.mVertexBuffers[lastId]);
 
 					realVertexBuffer.mRealDevice->CopyBuffer(oldRealVertexBuffer.mBuffer, realVertexBuffer.mBuffer, realVertexBuffer.mAllocationInfo.size);
+
+					//Make sure new buffer gets bound.
+					realVertexBuffer.mRealDevice->mDeviceState.mAreStreamSourcesDirty = true;
 				}
 
 				if (realVertexBuffer.mData == nullptr)
