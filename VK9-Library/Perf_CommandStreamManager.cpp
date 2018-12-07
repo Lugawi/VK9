@@ -125,13 +125,6 @@ CommandStreamManager::CommandStreamManager()
 
 	boost::log::core::get()->set_filter(boost::log::trivial::severity >= logLevel);
 
-	//size_t count = 0;
-	//auto items = new WorkItem[TINY_QUEUE_MAX_SIZE];
-	//for (size_t i = 0; i < TINY_QUEUE_MAX_SIZE; i++)
-	//{
-	//	mUnusedWorkItems.Push(&items[i], count);
-	//}
-
 	BOOST_LOG_TRIVIAL(info) << "CommandStreamManager::CommandStreamManager";
 }
 
@@ -198,10 +191,10 @@ size_t CommandStreamManager::RequestWork(WorkItem* workItem)
 
 size_t CommandStreamManager::RequestWorkAndWait(WorkItem* workItem)
 {
-	size_t result = this->RequestWork(workItem);
+	workItem->WillWait = true;
 
-	std::unique_lock<std::mutex> lk(workItem->Mutex);
-	workItem->ConditionVariable.wait(lk, [workItem]() {return workItem->HasBeenProcessed; });
+	size_t result = this->RequestWork(workItem);	
+	workItem->WaitHandle.wait();
 
 	return result;
 }
@@ -210,14 +203,6 @@ WorkItem* CommandStreamManager::GetWorkItem(IUnknown* caller)
 {
 	WorkItem* returnValue = nullptr;
 
-	//if (!mUnusedWorkItems.try_dequeue(returnValue))
-	//{
-	//	returnValue = new WorkItem();
-	//}
-	//else
-	//{
-	//	returnValue->HasBeenProcessed = false;
-	//}
 	size_t count = 0;
 	if (!mUnusedWorkItems.Pop(returnValue, count))
 	{
@@ -225,7 +210,7 @@ WorkItem* CommandStreamManager::GetWorkItem(IUnknown* caller)
 	}
 	else
 	{
-		returnValue->HasBeenProcessed = false;
+		returnValue->WillWait = false;
 	}
 
 	returnValue->Caller = caller;

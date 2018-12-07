@@ -19,8 +19,9 @@ misrepresented as being the original software.
 */
 
 #include <atomic>
-#include <mutex>
-#include <condition_variable>
+//#include <mutex>
+//#include <condition_variable>
+#include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include "WorkItemType.h"
 #include "d3d9.h"
 
@@ -40,9 +41,14 @@ struct WorkItem
 
 	IUnknown* Caller = nullptr;
 
-	bool HasBeenProcessed = false;
-	std::mutex Mutex;
-	std::condition_variable ConditionVariable;
+	bool WillWait = false;
+	boost::interprocess::interprocess_semaphore WaitHandle;
+
+	WorkItem()
+		: WaitHandle(0)
+	{
+
+	}
 };
 
 #endif //WORKITEM_H

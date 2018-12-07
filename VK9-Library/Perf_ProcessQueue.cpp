@@ -26,6 +26,9 @@ misrepresented as being the original software.
 #define NOMINMAX
 #endif // NOMINMAX
 
+#include <chrono>
+#include <thread>
+
 #include "Perf_ProcessQueue.h"
 #include "Perf_CommandStreamManager.h"
 
@@ -54,7 +57,6 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 
 		if (commandStreamManager->mWorkItems.Pop(workItem, count))
 		{
-			std::lock_guard<std::mutex> lk(workItem->Mutex);
 			//try
 			//{
 			switch (workItem->WorkItemType)
@@ -3085,7 +3087,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					//{
 					//	SetAlpha((char*)surface.mData, surface9->mHeight, surface9->mWidth, surface.mLayouts[0].rowPitch);
 					//}
-					
+
 					vmaUnmapMemory(realDevice->mAllocator, surface.mImageAllocation);
 					vmaFlushAllocation(realDevice->mAllocator, surface.mImageAllocation, 0, VK_WHOLE_SIZE);
 
@@ -3498,8 +3500,10 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 			//	BOOST_LOG_TRIVIAL(warning) << "ProcessQueue - " << workItem->WorkItemType;
 			//}
 
-			workItem->HasBeenProcessed = true;
-			workItem->ConditionVariable.notify_all();
+			if (workItem->WillWait)
+			{
+				workItem->WaitHandle.post();
+			}
 
 			if (workItem->Caller != nullptr)
 			{
