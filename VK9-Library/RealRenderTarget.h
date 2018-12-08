@@ -41,6 +41,7 @@ struct RealRenderTarget
 	~RealRenderTarget();
 
 	bool mIsSceneStarted = false;
+	bool mWasUsed = false;
 
 	vk::RenderPass mStoreRenderPass;
 	vk::RenderPass mClearColorRenderPass;

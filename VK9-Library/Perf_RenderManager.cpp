@@ -362,6 +362,12 @@ void RenderManager::Clear(std::shared_ptr<RealDevice> realDevice, DWORD Count, c
 	auto& currentBuffer = realDevice->mCommandBuffers[realDevice->mCurrentCommandBuffer];
 	auto& deviceState = realDevice->mDeviceState;
 
+	if (Count > 0 && pRects != nullptr)
+	{
+		BOOST_LOG_TRIVIAL(warning) << "RenderManager::Clear is not fully implemented!";
+		return;
+	}
+
 	realDevice->mDeviceState.mRenderTarget->Clear(currentBuffer, deviceState, Count, pRects, Flags, Color, Z, Stencil);
 }
 

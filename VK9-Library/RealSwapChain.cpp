@@ -288,7 +288,7 @@ void RealSwapChain::InitSwapChain()
 		color_image_view.components.r = vk::ComponentSwizzle::eIdentity;
 		color_image_view.components.g = vk::ComponentSwizzle::eIdentity;
 		color_image_view.components.b = vk::ComponentSwizzle::eIdentity;
-		color_image_view.components.a = vk::ComponentSwizzle::eIdentity;
+		color_image_view.components.a = vk::ComponentSwizzle::eOne; //Should the window background ever be transparent?
 		color_image_view.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
 		color_image_view.subresourceRange.baseMipLevel = 0;
 		color_image_view.subresourceRange.levelCount = 1;

@@ -103,7 +103,10 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealTexture* colorTexture,
 
 	//Set color to clear but leave depth as store.
 	mRenderAttachments[0].loadOp = vk::AttachmentLoadOp::eClear;
-	mRenderAttachments[0].stencilLoadOp = vk::AttachmentLoadOp::eClear;
+	mRenderAttachments[0].stencilLoadOp = vk::AttachmentLoadOp::eLoad;
+
+	mRenderAttachments[1].loadOp = vk::AttachmentLoadOp::eLoad;
+	mRenderAttachments[1].stencilLoadOp = vk::AttachmentLoadOp::eLoad;
 
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mClearColorRenderPass);
 	if (result != vk::Result::eSuccess)
@@ -113,7 +116,11 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealTexture* colorTexture,
 	}
 
 	//Set depth to clear but leave stencil as store
+	mRenderAttachments[0].loadOp = vk::AttachmentLoadOp::eClear;
+	mRenderAttachments[0].stencilLoadOp = vk::AttachmentLoadOp::eLoad;
+
 	mRenderAttachments[1].loadOp = vk::AttachmentLoadOp::eClear;
+	mRenderAttachments[1].stencilLoadOp = vk::AttachmentLoadOp::eLoad;
 
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mClearColorDepthRenderPass);
 	if (result != vk::Result::eSuccess)
@@ -123,6 +130,10 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealTexture* colorTexture,
 	}
 
 	//Set stencil to clear so all are now clear.
+	mRenderAttachments[0].loadOp = vk::AttachmentLoadOp::eClear;
+	mRenderAttachments[0].stencilLoadOp = vk::AttachmentLoadOp::eClear;
+
+	mRenderAttachments[1].loadOp = vk::AttachmentLoadOp::eClear;
 	mRenderAttachments[1].stencilLoadOp = vk::AttachmentLoadOp::eClear;
 
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mClearAllRenderPass);
@@ -147,6 +158,9 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealTexture* colorTexture,
 	}
 
 	//Set stencil to clear and depth to load so only stencil is cleared.
+	mRenderAttachments[0].loadOp = vk::AttachmentLoadOp::eLoad;
+	mRenderAttachments[0].stencilLoadOp = vk::AttachmentLoadOp::eLoad; //No stencil in color
+
 	mRenderAttachments[1].loadOp = vk::AttachmentLoadOp::eLoad;
 	mRenderAttachments[1].stencilLoadOp = vk::AttachmentLoadOp::eClear;
 
@@ -276,7 +290,10 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealSurface* colorSurface,
 
 	//Set color to clear but leave depth as store.
 	mRenderAttachments[0].loadOp = vk::AttachmentLoadOp::eClear;
-	mRenderAttachments[0].stencilLoadOp = vk::AttachmentLoadOp::eClear;
+	mRenderAttachments[0].stencilLoadOp = vk::AttachmentLoadOp::eLoad;
+
+	mRenderAttachments[1].loadOp = vk::AttachmentLoadOp::eLoad;
+	mRenderAttachments[1].stencilLoadOp = vk::AttachmentLoadOp::eLoad;
 
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mClearColorRenderPass);
 	if (result != vk::Result::eSuccess)
@@ -286,7 +303,11 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealSurface* colorSurface,
 	}
 
 	//Set depth to clear but leave stencil as store
+	mRenderAttachments[0].loadOp = vk::AttachmentLoadOp::eClear;
+	mRenderAttachments[0].stencilLoadOp = vk::AttachmentLoadOp::eLoad;
+
 	mRenderAttachments[1].loadOp = vk::AttachmentLoadOp::eClear;
+	mRenderAttachments[1].stencilLoadOp = vk::AttachmentLoadOp::eLoad;
 
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mClearColorDepthRenderPass);
 	if (result != vk::Result::eSuccess)
@@ -296,6 +317,10 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealSurface* colorSurface,
 	}
 
 	//Set stencil to clear so all are now clear.
+	mRenderAttachments[0].loadOp = vk::AttachmentLoadOp::eClear;
+	mRenderAttachments[0].stencilLoadOp = vk::AttachmentLoadOp::eClear;
+
+	mRenderAttachments[1].loadOp = vk::AttachmentLoadOp::eClear;
 	mRenderAttachments[1].stencilLoadOp = vk::AttachmentLoadOp::eClear;
 
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mClearAllRenderPass);
@@ -319,7 +344,10 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealSurface* colorSurface,
 		return;
 	}
 
-	//Set stencil to clear so only stencil is cleared.
+	//Set stencil to clear and depth to load so only stencil is cleared.
+	mRenderAttachments[0].loadOp = vk::AttachmentLoadOp::eLoad;
+	mRenderAttachments[0].stencilLoadOp = vk::AttachmentLoadOp::eLoad; //No stencil in color
+
 	mRenderAttachments[1].loadOp = vk::AttachmentLoadOp::eLoad;
 	mRenderAttachments[1].stencilLoadOp = vk::AttachmentLoadOp::eClear;
 
@@ -434,7 +462,15 @@ void RealRenderTarget::StartScene(vk::CommandBuffer command, DeviceState& device
 	command.setViewport(0, 1, &deviceState.mViewport);
 	command.setScissor(0, 1, &deviceState.mScissor);
 
-	ReallySetImageLayout(command, mColorSurface->mStagingImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, 1, 0, 1); //ePresentSrcKHR
+	//This little check allows us to transition from source optimal rather than unknown without causing a spec violation on the first use.
+	if (mWasUsed)
+	{
+		ReallySetImageLayout(command, mColorSurface->mStagingImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eGeneral, 1, 0, 1); //ePresentSrcKHR
+	}
+	else
+	{
+		mWasUsed = true;
+	}
 
 	auto& realFormat = mDepthSurface->mRealFormat;
 	if (realFormat == vk::Format::eD16UnormS8Uint || realFormat == vk::Format::eD24UnormS8Uint || realFormat == vk::Format::eD32SfloatS8Uint)
@@ -467,21 +503,6 @@ void RealRenderTarget::StopScene(vk::CommandBuffer command, vk::Queue queue)
 
 void RealRenderTarget::Clear(vk::CommandBuffer command, DeviceState& deviceState, DWORD Count, const D3DRECT *pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
 {
-	if ((Flags & D3DCLEAR_TARGET) == D3DCLEAR_TARGET)
-	{
-		//VK_FORMAT_B8G8R8A8_UNORM 
-		//Revisit the byte order could be difference based on the surface format so I need a better way to handle this.
-		mClearColorValue.float32[3] = D3DCOLOR_A(Color); //FLT_MAX; 
-		mClearColorValue.float32[2] = D3DCOLOR_B(Color);
-		mClearColorValue.float32[1] = D3DCOLOR_G(Color);
-		mClearColorValue.float32[0] = D3DCOLOR_R(Color);
-	}
-
-	if ((Flags & D3DCLEAR_STENCIL) == D3DCLEAR_STENCIL || (Flags & D3DCLEAR_ZBUFFER) == D3DCLEAR_ZBUFFER)
-	{
-		mClearDepthValue = vk::ClearDepthStencilValue(Z, Stencil);
-	}
-
 	if (Count > 0 && pRects != nullptr)
 	{
 		BOOST_LOG_TRIVIAL(warning) << "RealRenderTarget::Clear is not fully implemented!";
@@ -502,6 +523,13 @@ void RealRenderTarget::Clear(vk::CommandBuffer command, DeviceState& deviceState
 		{
 			subResourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
 
+			//VK_FORMAT_B8G8R8A8_UNORM 
+			//Revisit the byte order could be difference based on the surface format so I need a better way to handle this.
+			mClearColorValue.float32[3] = D3DCOLOR_A(Color); //FLT_MAX; 
+			mClearColorValue.float32[2] = D3DCOLOR_B(Color);
+			mClearColorValue.float32[1] = D3DCOLOR_G(Color);
+			mClearColorValue.float32[0] = D3DCOLOR_R(Color);
+
 			ReallySetImageLayout(command, mColorSurface->mStagingImage, subResourceRange.aspectMask, vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferDstOptimal, 1, 0, 1);
 			command.clearColorImage(mColorSurface->mStagingImage, vk::ImageLayout::eTransferDstOptimal, &mClearColorValue, 1, &subResourceRange);
 			ReallySetImageLayout(command, mColorSurface->mStagingImage, subResourceRange.aspectMask, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eGeneral, 1, 0, 1);
@@ -509,6 +537,8 @@ void RealRenderTarget::Clear(vk::CommandBuffer command, DeviceState& deviceState
 
 		if (((Flags & D3DCLEAR_STENCIL) == D3DCLEAR_STENCIL) || ((Flags & D3DCLEAR_ZBUFFER) == D3DCLEAR_ZBUFFER))
 		{
+			mClearDepthValue = vk::ClearDepthStencilValue(Z, Stencil);
+
 			auto& realFormat = mDepthSurface->mRealFormat;
 			vk::ImageAspectFlags formatAspectMask;
 
@@ -560,6 +590,21 @@ void RealRenderTarget::Clear(vk::CommandBuffer command, DeviceState& deviceState
 		bool clearColor = ((Flags & D3DCLEAR_TARGET) == D3DCLEAR_TARGET);
 		bool clearDepth = ((Flags & D3DCLEAR_ZBUFFER) == D3DCLEAR_ZBUFFER);
 		bool clearStencil = ((Flags & D3DCLEAR_STENCIL) == D3DCLEAR_STENCIL);
+
+		if (clearColor)
+		{
+			//VK_FORMAT_B8G8R8A8_UNORM 
+			//Revisit the byte order could be difference based on the surface format so I need a better way to handle this.
+			mClearColorValue.float32[3] = D3DCOLOR_A(Color); //FLT_MAX; 
+			mClearColorValue.float32[2] = D3DCOLOR_B(Color);
+			mClearColorValue.float32[1] = D3DCOLOR_G(Color);
+			mClearColorValue.float32[0] = D3DCOLOR_R(Color);
+		}
+
+		if (clearDepth || clearStencil)
+		{
+			mClearDepthValue = vk::ClearDepthStencilValue(Z, Stencil);
+		}
 
 		this->StartScene(command, deviceState, clearColor, clearDepth, clearStencil, deviceState.hasPresented);
 		deviceState.hasPresented = false;
