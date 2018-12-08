@@ -1871,6 +1871,9 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				}
 
 				state->mSamplerStates[Sampler][Type] = Value;
+
+				//Mark the index as updated.
+				state->mSamplerStates[Sampler][0] = 1;
 			}
 			break;
 			case Device_SetScissorRect:

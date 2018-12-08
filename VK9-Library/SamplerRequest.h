@@ -42,9 +42,6 @@ struct SamplerRequest
 	float MipLodBias = 0.0f;
 	float MaxLod = 1.0f;
 
-	//Reuse Check
-	size_t LastIndex = 0;
-
 	//Resource Handling.
 	std::chrono::steady_clock::time_point LastUsed = std::chrono::steady_clock::now();
 	RealDevice* mRealDevice = nullptr; //null if not owner.

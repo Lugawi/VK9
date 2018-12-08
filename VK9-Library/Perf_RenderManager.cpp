@@ -737,14 +737,14 @@ void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::share
 		for (size_t i = 0; i < 16; i++)
 		{
 			auto& targetSampler = realDevice->mDescriptorImageInfo[i];
+			auto& currentSampler = deviceSamplerStates[i];
 
 			if (deviceState.mTextures[i] != nullptr)
 			{
 				deviceRenderState.textureCount++;
 
 				std::shared_ptr<SamplerRequest> request = std::make_shared<SamplerRequest>(realDevice.get());
-				auto& currentSampler = deviceSamplerStates[request->SamplerIndex];
-
+				
 				if (deviceState.mTextures[i]->GetType() == D3DRTYPE_CUBETEXTURE)
 				{
 					CCubeTexture9* texture9 = (CCubeTexture9*)deviceState.mTextures[i];
@@ -771,10 +771,8 @@ void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::share
 				request->MipmapMode = (D3DTEXTUREFILTERTYPE)currentSampler[D3DSAMP_MIPFILTER];
 				request->MipLodBias = currentSampler[D3DSAMP_MIPMAPLODBIAS]; //bit_cast();
 
-
-				for (size_t i = 0; i < realDevice->mSamplerRequests.size(); i++)
+				for (auto& storedRequest : realDevice->mSamplerRequests)
 				{
-					auto& storedRequest = realDevice->mSamplerRequests[i];
 					if (request->MagFilter == storedRequest->MagFilter
 						&& request->MinFilter == storedRequest->MinFilter
 						&& request->AddressModeU == storedRequest->AddressModeU
@@ -789,7 +787,6 @@ void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::share
 						request->Sampler = storedRequest->Sampler;
 						request->mRealDevice = nullptr; //Not owner.
 						storedRequest->LastUsed = std::chrono::steady_clock::now();
-						storedRequest->LastIndex = i;
 					}
 				}
 

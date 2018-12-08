@@ -616,46 +616,43 @@ void MergeState(const DeviceState& sourceState, DeviceState& targetState, D3DSTA
 	}
 
 	//IDirect3DDevice9::SetSamplerState
-	if (sourceState.mSamplerStates.size())
+	//if (!onlyIfExists || (targetSamplerState.count(pair.first) > 0))
+	for (size_t i = 0; i < 16; i++)
 	{
-		for (const auto& pair1 : sourceState.mSamplerStates)
+		if (sourceState.mSamplerStates[i][0])
 		{
-			for (const auto& pair2 : pair1.second)
+			if (!onlyIfExists || targetState.mSamplerStates[i][0])
 			{
-				if (!onlyIfExists || (targetState.mSamplerStates.count(pair1.first) > 0 && targetState.mSamplerStates[pair1.first].count(pair2.first) > 0))
-				{
-					if
-						(
-						(type == D3DSBT_ALL || type == D3DSBT_FORCE_DWORD) ||
-							(type == D3DSBT_VERTEXSTATE &&
-							(
-								pair2.first == D3DSAMP_DMAPOFFSET
+				targetState.mSamplerStates[i][0] = 1;
 
-								)) ||
-								(type == D3DSBT_PIXELSTATE &&
-							(
-								pair2.first == D3DSAMP_ADDRESSU ||
-								pair2.first == D3DSAMP_ADDRESSV ||
-								pair2.first == D3DSAMP_ADDRESSW ||
-								pair2.first == D3DSAMP_BORDERCOLOR ||
-								pair2.first == D3DSAMP_MAGFILTER ||
-								pair2.first == D3DSAMP_MINFILTER ||
-								pair2.first == D3DSAMP_MIPFILTER ||
-								pair2.first == D3DSAMP_MIPMAPLODBIAS ||
-								pair2.first == D3DSAMP_MAXMIPLEVEL ||
-								pair2.first == D3DSAMP_MAXANISOTROPY ||
-								pair2.first == D3DSAMP_SRGBTEXTURE ||
-								pair2.first == D3DSAMP_ELEMENTINDEX
-								))
-							)
+				for (size_t j = 0; j < 14; j++)
+				{
+					if (type == D3DSBT_ALL
+						|| (type == D3DSBT_FORCE_DWORD)
+						|| (type == D3DSBT_VERTEXSTATE && j == D3DSAMP_DMAPOFFSET)
+						|| (type == D3DSBT_PIXELSTATE &&
+						(
+							j == D3DSAMP_ADDRESSU ||
+							j == D3DSAMP_ADDRESSV ||
+							j == D3DSAMP_ADDRESSW ||
+							j == D3DSAMP_BORDERCOLOR ||
+							j == D3DSAMP_MAGFILTER ||
+							j == D3DSAMP_MINFILTER ||
+							j == D3DSAMP_MIPFILTER ||
+							j == D3DSAMP_MIPMAPLODBIAS ||
+							j == D3DSAMP_MAXMIPLEVEL ||
+							j == D3DSAMP_MAXANISOTROPY ||
+							j == D3DSAMP_SRGBTEXTURE ||
+							j == D3DSAMP_ELEMENTINDEX
+							))
+						)
 					{
-						targetState.mSamplerStates[pair1.first][pair2.first] = pair2.second;
+						targetState.mSamplerStates[i][j] = sourceState.mSamplerStates[i][j];
 					}
 				}
 			}
 		}
 	}
-	//targetState.mSamplerStates = sourceState.mSamplerStates;
 
 	//IDirect3DDevice9::SetScissorRect
 	if ((sourceState.m9Scissor.right != 0 || sourceState.m9Scissor.left != 0) && (!onlyIfExists || targetState.mHasIndexBuffer) && (type == D3DSBT_ALL || type == D3DSBT_FORCE_DWORD))
@@ -692,8 +689,8 @@ void MergeState(const DeviceState& sourceState, DeviceState& targetState, D3DSTA
 		for (size_t i = 0; i < 16; i++)
 		{
 
-			targetState.mTextures[i] = sourceState.mTextures[i];		
-		}	
+			targetState.mTextures[i] = sourceState.mTextures[i];
+		}
 	}
 
 	//IDirect3DDevice9::SetTextureStageState
