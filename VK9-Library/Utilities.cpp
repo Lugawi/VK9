@@ -748,6 +748,9 @@ void MergeState(const DeviceState& sourceState, DeviceState& targetState, D3DSTA
 	{
 		targetState.m9Viewport = sourceState.m9Viewport;
 		targetState.mViewport = sourceState.mViewport;
+
+		targetState.mIsScissorDirty = true;
+		targetState.mIsViewportDirty = true;
 	}
 
 	//IDirect3DDevice9::SetVertexShader

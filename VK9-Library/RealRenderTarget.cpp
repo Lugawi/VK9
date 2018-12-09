@@ -459,9 +459,6 @@ void RealRenderTarget::StartScene(vk::CommandBuffer command, DeviceState& device
 		}
 	}
 
-	command.setViewport(0, 1, &deviceState.mViewport);
-	command.setScissor(0, 1, &deviceState.mScissor);
-
 	//This little check allows us to transition from source optimal rather than unknown without causing a spec violation on the first use.
 	if (mWasUsed)
 	{

@@ -417,6 +417,8 @@ vk::Result RenderManager::Present(std::shared_ptr<RealDevice> realDevice, const 
 	deviceState.mAreTexturesDirty = true;	
 	deviceState.mIsZBiasDirty = true;
 	deviceState.mAreStreamSourcesDirty = true;
+	deviceState.mIsScissorDirty = true;
+	deviceState.mIsViewportDirty = true;
 	//Print(mDeviceState.mTransforms);
 
 	return result;
@@ -656,6 +658,18 @@ void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::share
 		}
 		deviceState.mIsZBiasDirty = false;
 	}
+
+	//Update view port if it changed.
+	if (deviceState.mIsScissorDirty)
+	{
+		currentBuffer.setScissor(0, 1, &deviceState.mScissor);
+		deviceState.mIsScissorDirty = false;
+	}
+	if (deviceState.mIsViewportDirty)
+	{
+		currentBuffer.setViewport(0, 1, &deviceState.mViewport);
+		deviceState.mIsViewportDirty = false;
+	}	
 
 	/**********************************************
 	* Setup context.

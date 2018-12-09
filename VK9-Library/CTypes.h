@@ -443,6 +443,7 @@ struct DeviceState
 	//IDirect3DDevice9::SetScissorRect
 	RECT m9Scissor = {};
 	vk::Rect2D mScissor;
+	BOOL mIsScissorDirty = true;
 
 	//IDirect3DDevice9::SetStreamSource
 	std::unordered_map<UINT, StreamSource> mStreamSources;
@@ -462,6 +463,7 @@ struct DeviceState
 	//IDirect3DDevice9::SetViewport
 	D3DVIEWPORT9 m9Viewport = {};
 	vk::Viewport mViewport;
+	BOOL mIsViewportDirty = true;
 
 	//IDirect3DDevice9::SetVertexDeclaration
 	CVertexDeclaration9* mVertexDeclaration = nullptr;

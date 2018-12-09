@@ -1891,6 +1891,8 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					deviceState.mScissor.extent.height = deviceState.m9Scissor.bottom;
 					deviceState.mScissor.offset.x = deviceState.m9Scissor.left;
 					deviceState.mScissor.offset.y = deviceState.m9Scissor.top;
+
+					deviceState.mIsScissorDirty = true;
 				}
 				else
 				{
@@ -1902,7 +1904,9 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					deviceState.mScissor.extent.height = deviceState.m9Scissor.bottom;
 					deviceState.mScissor.offset.x = deviceState.m9Scissor.left;
 					deviceState.mScissor.offset.y = deviceState.m9Scissor.top;
-				}
+
+					deviceState.mIsScissorDirty = true;
+				}			
 			}
 			break;
 			case Device_SetStreamSource:
@@ -2283,6 +2287,8 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					deviceState.mViewport.height = (float)deviceState.m9Viewport.Height;
 					deviceState.mViewport.minDepth = deviceState.m9Viewport.MinZ;
 					deviceState.mViewport.maxDepth = deviceState.m9Viewport.MaxZ;
+
+					deviceState.mIsViewportDirty = true;
 				}
 				else
 				{
@@ -2297,6 +2303,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					deviceState.mViewport.minDepth = deviceState.m9Viewport.MinZ;
 					deviceState.mViewport.maxDepth = deviceState.m9Viewport.MaxZ;
 
+					deviceState.mIsViewportDirty = true;
 				}
 			}
 			break;
