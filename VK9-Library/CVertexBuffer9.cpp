@@ -218,16 +218,18 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLoc
 	}
 	else
 	{
-		if (mFrameBit != mCommandStreamManager->mFrameBit)
-		{
-			mIndex = 0;
-			mFrameBit = mCommandStreamManager->mFrameBit;
-		}
-		else
-		{
-			mLastIndex = mIndex;
-			mIndex++;
-		}
+
+	}
+
+	if (mFrameBit != mCommandStreamManager->mFrameBit)
+	{
+		mIndex = 0;
+		mFrameBit = mCommandStreamManager->mFrameBit;
+	}
+	else
+	{
+		mLastIndex = mIndex;
+		mIndex++;
 	}
 
 	if (mIndex > mIds.size() - 1)
