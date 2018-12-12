@@ -198,65 +198,62 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::GetDesc(D3DVERTEXBUFFER_DESC* pDesc)
 
 HRESULT STDMETHODCALLTYPE CVertexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLock, VOID** ppbData, DWORD Flags)
 {
+	InterlockedIncrement(&mLockCount);
+
 	if (mPool == D3DPOOL_MANAGED)
 	{
 		if (!(Flags & D3DLOCK_READONLY))
 		{ //If the lock allows write mark the buffer as dirty.
 			mIsDirty = true;
 		}
-	}
+	}	
 
-	InterlockedIncrement(&mLockCount);
-
-	/*
-	Unless the caller indicates that they have not overwritten anything used by a previous draw call then we have to assume they have.
-	Because the draw may not have happened we need to check to see if presentation has occured and if not flip to the next vertex
-	*/
-	if ( ((Flags & D3DLOCK_NOOVERWRITE) == D3DLOCK_NOOVERWRITE) || ((Flags & D3DLOCK_READONLY) == D3DLOCK_READONLY) )
-	{
-		//This is best case the caller says they didn't modify anything used in a draw call.
-	}
-	else
-	{
-
-	}
-
-	if (mFrameBit != mCommandStreamManager->mFrameBit)
-	{
-		mIndex = 0;
-		mFrameBit = mCommandStreamManager->mFrameBit;
-	}
-	else
-	{
-		mLastIndex = mIndex;
-		mIndex++;
-	}
-
-	if (mIndex > mIds.size() - 1)
-	{
-		Init();
-	}
-	else
-	{
-		mId = mIds[mIndex];
-	}
-
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::VertexBuffer_Lock;
-	workItem->Id = mId;
-	workItem->Argument1 = (void*)OffsetToLock;
-	workItem->Argument2 = (void*)SizeToLock;
-	workItem->Argument3 = (void*)ppbData;
-	workItem->Argument4 = (void*)Flags;
-	workItem->Argument5 = (void*)mIds[mLastIndex];
-	mCommandStreamManager->RequestWorkAndWait(workItem);
-
-	mLastIndex = mIndex;
+	mOffsetToLock = OffsetToLock;
+	mSizeToLock = SizeToLock;
 
 	if ((Flags & D3DLOCK_DISCARD) == D3DLOCK_DISCARD)
-	{		
-		memset((*ppbData), OffsetToLock, SizeToLock);
+	{
+		if (mFrameBit != mCommandStreamManager->mFrameBit)
+		{
+			mIndex = 0;
+			mFrameBit = mCommandStreamManager->mFrameBit;
+		}
+		else
+		{
+			mLastIndex = mIndex;
+			mIndex++;
+		}
+
+		if (mIndex > mIds.size() - 1)
+		{
+			Init();
+		}
+		else
+		{
+			mId = mIds[mIndex];
+		}
 	}
+
+	//The caller says they didn't modify anything used in a draw call. (they lie)
+	//The caller also claims they'll only write to this buffer so lets hope that is at least true.
+	if (((mUsage & D3DUSAGE_WRITEONLY) == D3DUSAGE_WRITEONLY) && ((Flags & D3DLOCK_NOOVERWRITE) == D3DLOCK_NOOVERWRITE) && SizeToLock > 0 && SizeToLock <= 512 && (OffsetToLock % 4 == 0) && (SizeToLock % 4 == 0))
+	{
+		(*ppbData) = (void*)mBuffer;
+	}
+	else
+	{
+		WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
+		workItem->WorkItemType = WorkItemType::VertexBuffer_Lock;
+		workItem->Id = mId;
+		workItem->Argument1 = (void*)OffsetToLock;
+		workItem->Argument2 = (void*)SizeToLock;
+		workItem->Argument3 = (void*)ppbData;
+		workItem->Argument4 = (void*)Flags;
+		workItem->Argument5 = (void*)mIds[mLastIndex];
+		mCommandStreamManager->RequestWorkAndWait(workItem);
+	}
+
+	mLastIndex = mIndex;
 
 	return S_OK;	
 }

@@ -211,7 +211,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 						{
 							if (deviceState.mRenderTarget != nullptr && deviceState.mRenderTarget->mIsSceneStarted)
 							{
-								renderManager.StopScene(realDevice);
+								renderManager.StopScene(realDevice.get());
 							}
 
 							depthSurface = deviceState.mRenderTarget->mDepthSurface;
@@ -239,7 +239,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 							{
 								if (deviceState.mRenderTarget->mIsSceneStarted)
 								{
-									renderManager.StopScene(realDevice);
+									renderManager.StopScene(realDevice.get());
 								}
 								depthSurface = deviceState.mRenderTarget->mDepthSurface;
 							}
@@ -297,7 +297,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					{
 						if (renderTarget->mIsSceneStarted)
 						{
-							renderManager.StopScene(realDevice);
+							renderManager.StopScene(realDevice.get());
 						}
 
 						colorSurface = renderTarget->mColorSurface;
@@ -336,7 +336,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				auto& realDevice = renderManager.mStateManager.mDevices[workItem->Id];
 				if (!realDevice->mDeviceState.mRenderTarget->mIsSceneStarted)
 				{
-					renderManager.StartScene(realDevice, false, false, false);
+					renderManager.StartScene(realDevice.get(), false, false, false);
 				}
 			}
 			break;
@@ -2468,10 +2468,6 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 
 				if (lastId != workItem->Id)
 				{
-					auto& oldRealVertexBuffer = (*commandStreamManager->mRenderManager.mStateManager.mVertexBuffers[lastId]);
-
-					realVertexBuffer.mRealDevice->CopyBuffer(oldRealVertexBuffer.mBuffer, realVertexBuffer.mBuffer, realVertexBuffer.mAllocationInfo.size);
-
 					//Make sure new buffer gets bound.
 					realVertexBuffer.mRealDevice->mDeviceState.mAreStreamSourcesDirty = true;
 				}
@@ -2497,11 +2493,12 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 			case VertexBuffer_Unlock:
 			{
 				auto& realVertexBuffer = (*commandStreamManager->mRenderManager.mStateManager.mVertexBuffers[workItem->Id]);
+				auto& realDevice = realVertexBuffer.mRealDevice;
 
 				if (realVertexBuffer.mData != nullptr)
 				{
-					vmaFlushAllocation(realVertexBuffer.mRealDevice->mAllocator, realVertexBuffer.mAllocation, 0, VK_WHOLE_SIZE);
-					vmaUnmapMemory(realVertexBuffer.mRealDevice->mAllocator, realVertexBuffer.mAllocation);
+					vmaFlushAllocation(realDevice->mAllocator, realVertexBuffer.mAllocation, 0, VK_WHOLE_SIZE);
+					vmaUnmapMemory(realDevice->mAllocator, realVertexBuffer.mAllocation);
 					realVertexBuffer.mData = nullptr;
 
 					//if (realVertexBuffer.mRealDevice->mDeviceState.mRenderTarget->mIsSceneStarted)
@@ -2512,6 +2509,21 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					//	auto& currentBuffer = realVertexBuffer.mRealDevice->mCommandBuffers[realVertexBuffer.mRealDevice->mCurrentCommandBuffer];
 					//	currentBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlags(), 0, nullptr, 1, &uboBarrier, 0, nullptr);
 					//}
+				}
+				else
+				{
+					CVertexBuffer9* caller = (CVertexBuffer9*)workItem->Caller;
+					
+					auto deviceState = realDevice->mDeviceState;
+					if (!deviceState.mRenderTarget->mIsSceneStarted)
+					{
+						commandStreamManager->mRenderManager.StartScene(realDevice, false, false, false);
+					}
+
+					auto& currentBuffer = realDevice->mCommandBuffers[realDevice->mCurrentCommandBuffer];
+					currentBuffer.endRenderPass();
+					currentBuffer.updateBuffer(realVertexBuffer.mBuffer, caller->mOffsetToLock, caller->mSizeToLock, &caller->mBuffer);
+					currentBuffer.beginRenderPass(&deviceState.mRenderTarget->mRenderPassBeginInfo, vk::SubpassContents::eInline);
 				}
 			}
 			break;

@@ -53,6 +53,10 @@ public:
 	size_t mLastIndex = 0;
 	std::vector<size_t> mIds;
 
+	char mBuffer[256] = {};
+	UINT mOffsetToLock=0;
+	UINT mSizeToLock = 0;
+
 	bool mIsUsed = false; //Only used for temp buffers.
 
 public:

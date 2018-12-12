@@ -73,7 +73,7 @@ void RenderManager::UpdateBuffer(std::shared_ptr<RealDevice> realDevice)
 
 	if (!deviceState.mRenderTarget->mIsSceneStarted)
 	{
-		this->StartScene(realDevice, false, false, false);
+		this->StartScene(realDevice.get(), false, false, false);
 	}
 
 	auto& currentBuffer = realDevice->mCommandBuffers[realDevice->mCurrentCommandBuffer];
@@ -277,7 +277,7 @@ void RenderManager::UpdateBuffer(std::shared_ptr<RealDevice> realDevice)
 	}
 }
 
-void RenderManager::StartScene(std::shared_ptr<RealDevice> realDevice, bool clearColor, bool clearDepth, bool clearStencil)
+void RenderManager::StartScene(RealDevice* realDevice, bool clearColor, bool clearDepth, bool clearStencil)
 {
 	auto& device = realDevice->mDevice;
 	auto& deviceState = realDevice->mDeviceState;
@@ -287,7 +287,7 @@ void RenderManager::StartScene(std::shared_ptr<RealDevice> realDevice, bool clea
 	deviceState.hasPresented = false;
 }
 
-void RenderManager::StopScene(std::shared_ptr<RealDevice> realDevice)
+void RenderManager::StopScene(RealDevice* realDevice)
 {
 	auto& currentBuffer = realDevice->mCommandBuffers[realDevice->mCurrentCommandBuffer];
 
@@ -375,9 +375,9 @@ vk::Result RenderManager::Present(std::shared_ptr<RealDevice> realDevice, const 
 {
 	if (!realDevice->mDeviceState.mRenderTarget->mIsSceneStarted)
 	{
-		this->StartScene(realDevice, false, false, false);
+		this->StartScene(realDevice.get(), false, false, false);
 	}
-	this->StopScene(realDevice);
+	this->StopScene(realDevice.get());
 
 	//vk::Result result;
 	auto& device = realDevice->mDevice;
@@ -438,7 +438,7 @@ void RenderManager::DrawIndexedPrimitive(std::shared_ptr<RealDevice> realDevice,
 
 	if (!realDevice->mDeviceState.mRenderTarget->mIsSceneStarted)
 	{
-		this->StartScene(realDevice, false, false, false);
+		this->StartScene(realDevice.get(), false, false, false);
 	}
 
 	std::shared_ptr<DrawContext> context = std::make_shared<DrawContext>(realDevice.get());
@@ -464,7 +464,7 @@ void RenderManager::DrawPrimitive(std::shared_ptr<RealDevice> realDevice, D3DPRI
 
 	if (!realDevice->mDeviceState.mRenderTarget->mIsSceneStarted)
 	{
-		this->StartScene(realDevice, false, false, false);
+		this->StartScene(realDevice.get(), false, false, false);
 	}
 
 	std::shared_ptr<DrawContext> context = std::make_shared<DrawContext>(realDevice.get());
