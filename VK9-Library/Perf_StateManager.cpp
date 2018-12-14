@@ -325,24 +325,7 @@ void StateManager::CreateVertexBuffer(size_t id, void* argument1)
 	vk::Result result;
 	auto device = mDevices[id];
 	CVertexBuffer9* vertexBuffer9 = bit_cast<CVertexBuffer9*>(argument1);
-	auto ptr = std::make_shared<RealVertexBuffer>(device.get());
-
-	vk::BufferCreateInfo bufferCreateInfo;
-	bufferCreateInfo.size = vertexBuffer9->mLength;
-	bufferCreateInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst;
-	//bufferCreateInfo.flags = 0;									 
-
-	VmaAllocationCreateInfo allocInfo = {};
-	allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-	allocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
-
-	result = (vk::Result)vmaCreateBuffer(ptr->mRealDevice->mAllocator, (VkBufferCreateInfo*)&bufferCreateInfo, &allocInfo, (VkBuffer*)&ptr->mBuffer, &ptr->mAllocation, &ptr->mAllocationInfo);
-
-	//d3d9 apps assume memory is cleared
-	result = (vk::Result)vmaMapMemory(ptr->mRealDevice->mAllocator, ptr->mAllocation, &ptr->mData);
-	memset(ptr->mData, 0, vertexBuffer9->mLength);
-	vmaUnmapMemory(ptr->mRealDevice->mAllocator, ptr->mAllocation);
-	ptr->mData = nullptr;
+	auto ptr = std::make_shared<RealVertexBuffer>(device.get(), vertexBuffer9->mLength, false); //(vertexBuffer9->mUsage & D3DUSAGE_DYNAMIC) == D3DUSAGE_DYNAMIC
 
 	uint32_t attributeStride = 0;
 

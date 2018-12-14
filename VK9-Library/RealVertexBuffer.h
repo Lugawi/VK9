@@ -29,14 +29,25 @@ misrepresented as being the original software.
 struct RealVertexBuffer
 {
 	VmaAllocationInfo mAllocationInfo = {};
+	
+	VmaAllocation mStagingAllocation = {};
+	vk::Buffer mStagingBuffer;
+
 	VmaAllocation mAllocation = {};
 	vk::Buffer mBuffer;
+
 	void* mData = nullptr;
 	int32_t mSize;
+	size_t mLength;
+	bool mIsDynamic;
 
 	RealDevice* mRealDevice = nullptr; //null if not owner.
-	RealVertexBuffer(RealDevice* realDevice);
+	RealVertexBuffer(RealDevice* realDevice, size_t length, bool isDynamic);
 	~RealVertexBuffer();
+
+	void* Lock(size_t offset);
+	void Unlock();
+
 };
 
 #endif // REALVERTEXBUFFER_H

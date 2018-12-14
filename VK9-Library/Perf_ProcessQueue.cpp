@@ -2468,26 +2468,11 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 
 				if (lastId != workItem->Id)
 				{
-					//Make sure new buffer gets bound.
+					//Make sure buffer gets bound because it could be new.
 					realVertexBuffer.mRealDevice->mDeviceState.mAreStreamSourcesDirty = true;
 				}
 
-				if (realVertexBuffer.mData == nullptr)
-				{
-					vk::Result result = (vk::Result)vmaMapMemory(realVertexBuffer.mRealDevice->mAllocator, realVertexBuffer.mAllocation, &realVertexBuffer.mData);
-					if (realVertexBuffer.mData == nullptr)
-					{
-						*ppbData = nullptr;
-					}
-					else
-					{
-						*ppbData = (char *)realVertexBuffer.mData + OffsetToLock;
-					}
-				}
-				else
-				{
-					*ppbData = (char *)realVertexBuffer.mData + OffsetToLock;
-				}
+				(*ppbData) = realVertexBuffer.Lock(OffsetToLock);
 			}
 			break;
 			case VertexBuffer_Unlock:
@@ -2495,36 +2480,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				auto& realVertexBuffer = (*commandStreamManager->mRenderManager.mStateManager.mVertexBuffers[workItem->Id]);
 				auto& realDevice = realVertexBuffer.mRealDevice;
 
-				if (realVertexBuffer.mData != nullptr)
-				{
-					vmaFlushAllocation(realDevice->mAllocator, realVertexBuffer.mAllocation, 0, VK_WHOLE_SIZE);
-					vmaUnmapMemory(realDevice->mAllocator, realVertexBuffer.mAllocation);
-					realVertexBuffer.mData = nullptr;
-
-					//if (realVertexBuffer.mRealDevice->mDeviceState.mRenderTarget->mIsSceneStarted)
-					//{
-					//	vk::BufferMemoryBarrier uboBarrier(vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eShaderRead, 0, 0, 0, VK_WHOLE_SIZE);
-					//	uboBarrier.buffer = realVertexBuffer.mBuffer;
-
-					//	auto& currentBuffer = realVertexBuffer.mRealDevice->mCommandBuffers[realVertexBuffer.mRealDevice->mCurrentCommandBuffer];
-					//	currentBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlags(), 0, nullptr, 1, &uboBarrier, 0, nullptr);
-					//}
-				}
-				else
-				{
-					CVertexBuffer9* caller = (CVertexBuffer9*)workItem->Caller;
-					
-					auto deviceState = realDevice->mDeviceState;
-					if (!deviceState.mRenderTarget->mIsSceneStarted)
-					{
-						commandStreamManager->mRenderManager.StartScene(realDevice, false, false, false);
-					}
-
-					auto& currentBuffer = realDevice->mCommandBuffers[realDevice->mCurrentCommandBuffer];
-					currentBuffer.endRenderPass();
-					currentBuffer.updateBuffer(realVertexBuffer.mBuffer, caller->mOffsetToLock, caller->mSizeToLock, &caller->mBuffer);
-					currentBuffer.beginRenderPass(&deviceState.mRenderTarget->mRenderPassBeginInfo, vk::SubpassContents::eInline);
-				}
+				realVertexBuffer.Unlock();
 			}
 			break;
 			case IndexBuffer_Lock:

@@ -21,7 +21,7 @@ appreciated but is not required.
 misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
- 
+
 #include "CVertexBuffer9.h"
 #include "CDevice9.h"
 
@@ -47,7 +47,7 @@ CVertexBuffer9::CVertexBuffer9(CDevice9* device, UINT Length, DWORD Usage, DWORD
 }
 
 CVertexBuffer9::~CVertexBuffer9()
-{	
+{
 	for (size_t id : mIds)
 	{
 		WorkItem* workItem = mCommandStreamManager->GetWorkItem(nullptr);
@@ -58,7 +58,7 @@ CVertexBuffer9::~CVertexBuffer9()
 }
 
 void CVertexBuffer9::Init()
-{	
+{
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
 	workItem->Id = this->mDevice->mId;
 	workItem->WorkItemType = WorkItemType::VertexBuffer_Create;
@@ -72,7 +72,7 @@ ULONG STDMETHODCALLTYPE CVertexBuffer9::AddRef(void)
 	return InterlockedIncrement(&mReferenceCount);
 }
 
-HRESULT STDMETHODCALLTYPE CVertexBuffer9::QueryInterface(REFIID riid,void  **ppv)
+HRESULT STDMETHODCALLTYPE CVertexBuffer9::QueryInterface(REFIID riid, void  **ppv)
 {
 	if (ppv == nullptr)
 	{
@@ -116,10 +116,10 @@ ULONG STDMETHODCALLTYPE CVertexBuffer9::Release(void)
 }
 
 HRESULT STDMETHODCALLTYPE CVertexBuffer9::GetDevice(IDirect3DDevice9** ppDevice)
-{ 
-	mDevice->AddRef(); 
-	(*ppDevice) = (IDirect3DDevice9*)mDevice; 
-	return S_OK; 
+{
+	mDevice->AddRef();
+	(*ppDevice) = (IDirect3DDevice9*)mDevice;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CVertexBuffer9::FreePrivateData(REFGUID refguid)
@@ -166,7 +166,7 @@ void STDMETHODCALLTYPE CVertexBuffer9::PreLoad()
 
 	BOOST_LOG_TRIVIAL(warning) << "CVertexBuffer9::PreLoad is not implemented!";
 
-	return; 
+	return;
 }
 
 DWORD STDMETHODCALLTYPE CVertexBuffer9::SetPriority(DWORD PriorityNew)
@@ -206,7 +206,7 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLoc
 		{ //If the lock allows write mark the buffer as dirty.
 			mIsDirty = true;
 		}
-	}	
+	}
 
 	mOffsetToLock = OffsetToLock;
 	mSizeToLock = SizeToLock;
@@ -234,28 +234,19 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLoc
 		}
 	}
 
-	//The caller says they didn't modify anything used in a draw call. (they lie)
-	//The caller also claims they'll only write to this buffer so lets hope that is at least true.
-	if (((mUsage & D3DUSAGE_WRITEONLY) == D3DUSAGE_WRITEONLY) && ((Flags & D3DLOCK_NOOVERWRITE) == D3DLOCK_NOOVERWRITE) && SizeToLock > 0 && SizeToLock <= 512 && (OffsetToLock % 4 == 0) && (SizeToLock % 4 == 0))
-	{
-		(*ppbData) = (void*)mBuffer;
-	}
-	else
-	{
-		WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-		workItem->WorkItemType = WorkItemType::VertexBuffer_Lock;
-		workItem->Id = mId;
-		workItem->Argument1 = (void*)OffsetToLock;
-		workItem->Argument2 = (void*)SizeToLock;
-		workItem->Argument3 = (void*)ppbData;
-		workItem->Argument4 = (void*)Flags;
-		workItem->Argument5 = (void*)mIds[mLastIndex];
-		mCommandStreamManager->RequestWorkAndWait(workItem);
-	}
+	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
+	workItem->WorkItemType = WorkItemType::VertexBuffer_Lock;
+	workItem->Id = mId;
+	workItem->Argument1 = (void*)OffsetToLock;
+	workItem->Argument2 = (void*)SizeToLock;
+	workItem->Argument3 = (void*)ppbData;
+	workItem->Argument4 = (void*)Flags;
+	workItem->Argument5 = (void*)mIds[mLastIndex];
+	mCommandStreamManager->RequestWorkAndWait(workItem);
 
 	mLastIndex = mIndex;
 
-	return S_OK;	
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CVertexBuffer9::Unlock()
@@ -263,9 +254,9 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::Unlock()
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
 	workItem->WorkItemType = WorkItemType::VertexBuffer_Unlock;
 	workItem->Id = mId;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
+	mCommandStreamManager->RequestWork(workItem); //RequestWorkAndWait
 
 	InterlockedDecrement(&mLockCount);
 
-	return S_OK;	
+	return S_OK;
 }
