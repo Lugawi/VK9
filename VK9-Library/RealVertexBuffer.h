@@ -30,12 +30,10 @@ struct RealVertexBuffer
 {
 	VmaAllocationInfo mAllocationInfo = {};
 	
-	VmaAllocation mStagingAllocation = {};
-	vk::Buffer mStagingBuffer;
-
 	VmaAllocation mAllocation = {};
 	vk::Buffer mBuffer;
 
+	void* mPersistentData = nullptr;
 	void* mData = nullptr;
 	int32_t mSize;
 	size_t mLength;

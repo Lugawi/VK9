@@ -2470,6 +2470,11 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				{
 					//Make sure buffer gets bound because it could be new.
 					realVertexBuffer.mRealDevice->mDeviceState.mAreStreamSourcesDirty = true;
+
+					auto& oldVertexBuffer = (*commandStreamManager->mRenderManager.mStateManager.mVertexBuffers[lastId]);
+
+					oldVertexBuffer.mRealDevice->CopyBuffer(oldVertexBuffer.mBuffer, realVertexBuffer.mBuffer, realVertexBuffer.mAllocationInfo.size);
+
 				}
 
 				(*ppbData) = realVertexBuffer.Lock(OffsetToLock);

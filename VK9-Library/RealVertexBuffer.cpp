@@ -24,6 +24,8 @@ misrepresented as being the original software.
 
 #include "RealVertexBuffer.h"
 
+#include "RealRenderTarget.h"
+
 RealVertexBuffer::RealVertexBuffer(RealDevice* realDevice, size_t length, bool isDynamic)
 	: mRealDevice(realDevice),
 	mLength(length),
@@ -35,39 +37,19 @@ RealVertexBuffer::RealVertexBuffer(RealDevice* realDevice, size_t length, bool i
 	
 	VmaAllocationCreateInfo allocInfo = {};
 	
-	/*
-	I use the stagingAllocation variable whichever buffer will be mapped. That way I can skip a branch in the lock and unlock.
-	*/
-	if (mIsDynamic)
-	{
-		bufferCreateInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst;
-		allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+	bufferCreateInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst; //
+	allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+	//if (isDynamic)
+	//{
+	//	allocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+	//	vmaCreateBuffer(mRealDevice->mAllocator, (VkBufferCreateInfo*)&bufferCreateInfo, &allocInfo, (VkBuffer*)&mBuffer, &mAllocation, &mAllocationInfo);
+	//	mPersistentData = mAllocationInfo.pMappedData;
+	//}
+	//else
+	//{
+		allocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
 		vmaCreateBuffer(mRealDevice->mAllocator, (VkBufferCreateInfo*)&bufferCreateInfo, &allocInfo, (VkBuffer*)&mBuffer, &mAllocation, &mAllocationInfo);
-
-		bufferCreateInfo.usage = vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst;
-		allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
-		allocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
-		vmaCreateBuffer(mRealDevice->mAllocator, (VkBufferCreateInfo*)&bufferCreateInfo, &allocInfo, (VkBuffer*)&mStagingBuffer, &mStagingAllocation, &mAllocationInfo);
-
-		//d3d9 apps assume memory is cleared
-		vmaMapMemory(mRealDevice->mAllocator, mStagingAllocation, &mData);
-		memset(mData, 0, length);
-		vmaUnmapMemory(mRealDevice->mAllocator, mStagingAllocation);
-		mData = nullptr;
-	}
-	else
-	{
-		bufferCreateInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst;
-		allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-		allocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
-		vmaCreateBuffer(mRealDevice->mAllocator, (VkBufferCreateInfo*)&bufferCreateInfo, &allocInfo, (VkBuffer*)&mBuffer, &mStagingAllocation, &mAllocationInfo);
-
-		//d3d9 apps assume memory is cleared
-		vmaMapMemory(mRealDevice->mAllocator, mStagingAllocation, &mData);
-		memset(mData, 0, length);
-		vmaUnmapMemory(mRealDevice->mAllocator, mStagingAllocation);
-		mData = nullptr;
-	}
+	//}
 }
 
 RealVertexBuffer::~RealVertexBuffer()
@@ -75,23 +57,20 @@ RealVertexBuffer::~RealVertexBuffer()
 	if (mRealDevice != nullptr)
 	{
 		auto& device = mRealDevice->mDevice;
-		if (mIsDynamic)
-		{
-			vmaDestroyBuffer(mRealDevice->mAllocator, (VkBuffer)mStagingBuffer, mStagingAllocation);
-			vmaDestroyBuffer(mRealDevice->mAllocator, (VkBuffer)mBuffer, mAllocation);
-		}
-		else
-		{
-			vmaDestroyBuffer(mRealDevice->mAllocator, (VkBuffer)mBuffer, mStagingAllocation);
-		}	
+		vmaDestroyBuffer(mRealDevice->mAllocator, (VkBuffer)mBuffer, mAllocation);
 	}
 }
 
 void* RealVertexBuffer::Lock(size_t offset)
 {
+	//if (mPersistentData != nullptr)
+	//{
+	//	return ((char*)mPersistentData + offset);
+	//}
+
 	if (mData == nullptr)
 	{
-		vmaMapMemory(mRealDevice->mAllocator, mStagingAllocation, &mData);
+		vmaMapMemory(mRealDevice->mAllocator, mAllocation, &mData);
 	}
 
 	return ((char*)mData + offset);
@@ -99,10 +78,15 @@ void* RealVertexBuffer::Lock(size_t offset)
 
 void RealVertexBuffer::Unlock()
 {
+	//if (mPersistentData != nullptr)
+	//{
+	//	return;
+	//}
+
 	if (mData != nullptr)
 	{
-		vmaFlushAllocation(mRealDevice->mAllocator, mStagingAllocation, 0, VK_WHOLE_SIZE);
-		vmaUnmapMemory(mRealDevice->mAllocator, mStagingAllocation);
+		vmaFlushAllocation(mRealDevice->mAllocator, mAllocation, 0, VK_WHOLE_SIZE);
+		vmaUnmapMemory(mRealDevice->mAllocator, mAllocation);
 		mData = nullptr;
 	}
 }

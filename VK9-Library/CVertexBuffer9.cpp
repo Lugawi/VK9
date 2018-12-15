@@ -213,25 +213,27 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLoc
 
 	if ((Flags & D3DLOCK_DISCARD) == D3DLOCK_DISCARD)
 	{
-		if (mFrameBit != mCommandStreamManager->mFrameBit)
-		{
-			mIndex = 0;
-			mFrameBit = mCommandStreamManager->mFrameBit;
-		}
-		else
-		{
-			mLastIndex = mIndex;
-			mIndex++;
-		}
 
-		if (mIndex > mIds.size() - 1)
-		{
-			Init();
-		}
-		else
-		{
-			mId = mIds[mIndex];
-		}
+	}
+
+	if (mFrameBit != mCommandStreamManager->mFrameBit)
+	{
+		mIndex = 0;
+		mFrameBit = mCommandStreamManager->mFrameBit;
+	}
+	else
+	{
+		mLastIndex = mIndex;
+		mIndex++;
+	}
+
+	if (mIndex > mIds.size() - 1)
+	{
+		Init();
+	}
+	else
+	{
+		mId = mIds[mIndex];
 	}
 
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
