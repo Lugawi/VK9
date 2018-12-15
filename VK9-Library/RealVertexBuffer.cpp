@@ -34,22 +34,13 @@ RealVertexBuffer::RealVertexBuffer(RealDevice* realDevice, size_t length, bool i
 {
 	vk::BufferCreateInfo bufferCreateInfo;
 	bufferCreateInfo.size = length;
-	
+
 	VmaAllocationCreateInfo allocInfo = {};
-	
+
 	bufferCreateInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst; //
 	allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-	//if (isDynamic)
-	//{
-	//	allocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
-	//	vmaCreateBuffer(mRealDevice->mAllocator, (VkBufferCreateInfo*)&bufferCreateInfo, &allocInfo, (VkBuffer*)&mBuffer, &mAllocation, &mAllocationInfo);
-	//	mPersistentData = mAllocationInfo.pMappedData;
-	//}
-	//else
-	//{
-		allocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
-		vmaCreateBuffer(mRealDevice->mAllocator, (VkBufferCreateInfo*)&bufferCreateInfo, &allocInfo, (VkBuffer*)&mBuffer, &mAllocation, &mAllocationInfo);
-	//}
+	allocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+	vmaCreateBuffer(mRealDevice->mAllocator, (VkBufferCreateInfo*)&bufferCreateInfo, &allocInfo, (VkBuffer*)&mBuffer, &mAllocation, &mAllocationInfo);
 }
 
 RealVertexBuffer::~RealVertexBuffer()
@@ -63,11 +54,6 @@ RealVertexBuffer::~RealVertexBuffer()
 
 void* RealVertexBuffer::Lock(size_t offset)
 {
-	//if (mPersistentData != nullptr)
-	//{
-	//	return ((char*)mPersistentData + offset);
-	//}
-
 	if (mData == nullptr)
 	{
 		vmaMapMemory(mRealDevice->mAllocator, mAllocation, &mData);
@@ -78,11 +64,6 @@ void* RealVertexBuffer::Lock(size_t offset)
 
 void RealVertexBuffer::Unlock()
 {
-	//if (mPersistentData != nullptr)
-	//{
-	//	return;
-	//}
-
 	if (mData != nullptr)
 	{
 		vmaFlushAllocation(mRealDevice->mAllocator, mAllocation, 0, VK_WHOLE_SIZE);
