@@ -504,19 +504,15 @@ vk::Result RealSwapChain::Present(vk::CommandBuffer& commandBuffer, vk::Queue& q
 
 	commandBuffer.end();
 
-	vk::Semaphore waitSemaphores[] = { mImageAvailableSemaphores[mCurrentFrameIndex] };
-	vk::Semaphore signalSemaphores[] = { mRenderFinishedSemaphores[mCurrentFrameIndex] };
-	vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
-
 	mSubmitInfo.waitSemaphoreCount = 1;
-	mSubmitInfo.pWaitSemaphores = waitSemaphores;
-	mSubmitInfo.pWaitDstStageMask = waitStages;
+	mSubmitInfo.pWaitSemaphores = &mImageAvailableSemaphores[mCurrentFrameIndex];
+	mSubmitInfo.pWaitDstStageMask = mWaitStages;
 
 	mSubmitInfo.commandBufferCount = 1;
 	mSubmitInfo.pCommandBuffers = &commandBuffer;
 
 	mSubmitInfo.signalSemaphoreCount = 1;
-	mSubmitInfo.pSignalSemaphores = signalSemaphores;
+	mSubmitInfo.pSignalSemaphores = &mRenderFinishedSemaphores[mCurrentFrameIndex];
 
 	mResult = queue.submit(1, &mSubmitInfo, mInFlightFences[mCurrentFrameIndex]);
 	if (mResult != vk::Result::eSuccess)
@@ -534,7 +530,7 @@ vk::Result RealSwapChain::Present(vk::CommandBuffer& commandBuffer, vk::Queue& q
 	//}
 
 	mPresentInfo.waitSemaphoreCount = 1;
-	mPresentInfo.pWaitSemaphores = signalSemaphores;
+	mPresentInfo.pWaitSemaphores = &mImageAvailableSemaphores[mCurrentFrameIndex];
 	mPresentInfo.pImageIndices = &mCurrentImageIndex;
 	mResult = queue.presentKHR(&mPresentInfo);
 	if (mResult != vk::Result::eSuccess)

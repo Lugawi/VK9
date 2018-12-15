@@ -73,6 +73,11 @@ struct RealSwapChain
 	uint32_t mCurrentFrameIndex = 0;
 	vk::Fence mNullFence;
 
+	vk::PipelineStageFlags mWaitStages[1] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+	vk::Semaphore mWaitSemaphores[1];
+	vk::Semaphore mSignalSemaphores[1];
+	
+
 	std::vector<vk::Semaphore> mImageAvailableSemaphores;
 	std::vector<vk::Semaphore> mRenderFinishedSemaphores;
 	std::vector<vk::Fence> mInFlightFences;
