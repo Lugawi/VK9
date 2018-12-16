@@ -136,6 +136,8 @@ struct RealDevice
 	vk::ShaderModule mVertShaderModule_XYZ_NORMAL_DIFFUSE_TEX2;
 	vk::ShaderModule mFragShaderModule_XYZ_NORMAL_DIFFUSE_TEX2;
 
+	vk::ShaderModule mFragShaderModule_Passthrough;
+
 	//Pipeline
 	vk::PushConstantRange mPushConstantRanges[2];
 

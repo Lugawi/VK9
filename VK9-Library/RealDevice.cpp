@@ -139,6 +139,10 @@ const uint32_t VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX2_FRAG[] =
 #include "VertexBuffer_XYZ_NORMAL_DIFFUSE_TEX2.frag.h"
 ;
 
+const uint32_t PIXEL_PASSTHROUGH_FRAG[] =
+#include "PixelPassthrough.frag.h"
+;
+
 RealDevice::RealDevice(vk::Instance instance, vk::PhysicalDevice physicalDevice, int32_t width, int32_t height, bool usingRenderDoc)
 	: mInstance(instance),
 	mPhysicalDevice(physicalDevice)
@@ -345,6 +349,8 @@ RealDevice::RealDevice(vk::Instance instance, vk::PhysicalDevice physicalDevice,
 
 	mVertShaderModule_XYZ_NORMAL_DIFFUSE_TEX2 = LoadShaderFromConst(mDevice, VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX2_VERT);
 	mFragShaderModule_XYZ_NORMAL_DIFFUSE_TEX2 = LoadShaderFromConst(mDevice, VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX2_FRAG);
+
+	mFragShaderModule_Passthrough = LoadShaderFromConst(mDevice, PIXEL_PASSTHROUGH_FRAG);
 
 	//pipeline stuff.
 	mPushConstantRanges[0].offset = 0;
@@ -866,6 +872,9 @@ RealDevice::~RealDevice()
 	mDevice.destroyShaderModule(mFragShaderModule_XYZ_NORMAL_DIFFUSE_TEX1, nullptr);
 	mDevice.destroyShaderModule(mVertShaderModule_XYZ_NORMAL_DIFFUSE_TEX2, nullptr);
 	mDevice.destroyShaderModule(mFragShaderModule_XYZ_NORMAL_DIFFUSE_TEX2, nullptr);
+	
+	mDevice.destroyShaderModule(mFragShaderModule_Passthrough, nullptr);
+
 	mDevice.destroyPipelineCache(mPipelineCache, nullptr);
 	
 	mDevice.freeCommandBuffers(mCommandPool, 1, &mCommandBuffer);

@@ -353,6 +353,9 @@
     <None Include="Shaders\VertexBuffer_XYZRHW.vert">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\PixelPassthrough.frag">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Shaders.rc">

@@ -1095,7 +1095,15 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 	if (context->VertexShader != nullptr)
 	{
 		realDevice->mPipelineShaderStageCreateInfo[0].module = mStateManager.mShaderConverters[context->VertexShader->mId]->mConvertedShader.ShaderModule;
-		realDevice->mPipelineShaderStageCreateInfo[1].module = mStateManager.mShaderConverters[context->PixelShader->mId]->mConvertedShader.ShaderModule;
+
+		if (context->PixelShader != nullptr)
+		{
+			realDevice->mPipelineShaderStageCreateInfo[1].module = mStateManager.mShaderConverters[context->PixelShader->mId]->mConvertedShader.ShaderModule;
+		}
+		else
+		{
+			realDevice->mPipelineShaderStageCreateInfo[1].module = realDevice->mFragShaderModule_Passthrough;
+		}	
 	}
 	else
 	{

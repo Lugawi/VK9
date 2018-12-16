@@ -170,7 +170,8 @@
 "$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_NORMAL_TEX1.frag.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_NORMAL_TEX1.frag"
 "$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_NORMAL_TEX2.vert.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_NORMAL_TEX2.vert"
 "$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_NORMAL_TEX2.frag.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_NORMAL_TEX2.frag"
-"$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_DIFFUSE.geom.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_DIFFUSE.geom"</Command>
+"$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_DIFFUSE.geom.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_DIFFUSE.geom"
+"$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\PixelPassthrough.frag.h" "$(ProjectDir)\Shaders\PIxelPassthrough.frag"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -243,7 +244,8 @@
 "$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_NORMAL_TEX1.frag.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_NORMAL_TEX1.frag"
 "$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_NORMAL_TEX2.vert.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_NORMAL_TEX2.vert"
 "$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_NORMAL_TEX2.frag.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_NORMAL_TEX2.frag"
-"$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_DIFFUSE.geom.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_DIFFUSE.geom"</Command>
+"$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_DIFFUSE.geom.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_DIFFUSE.geom"
+"$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\PixelPassthrough.frag.h" "$(ProjectDir)\Shaders\PIxelPassthrough.frag"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -317,7 +319,8 @@
 "$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_NORMAL_TEX1.frag.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_NORMAL_TEX1.frag"
 "$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_NORMAL_TEX2.vert.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_NORMAL_TEX2.vert"
 "$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_NORMAL_TEX2.frag.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_NORMAL_TEX2.frag"
-"$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_DIFFUSE.geom.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_DIFFUSE.geom"</Command>
+"$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_DIFFUSE.geom.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_DIFFUSE.geom"
+"$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\PixelPassthrough.frag.h" "$(ProjectDir)\Shaders\PIxelPassthrough.frag"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -390,7 +393,8 @@
 "$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_NORMAL_TEX1.frag.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_NORMAL_TEX1.frag"
 "$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_NORMAL_TEX2.vert.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_NORMAL_TEX2.vert"
 "$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_NORMAL_TEX2.frag.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_NORMAL_TEX2.frag"
-"$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_DIFFUSE.geom.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_DIFFUSE.geom"</Command>
+"$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\VertexBuffer_XYZ_DIFFUSE.geom.h" "$(ProjectDir)\Shaders\VertexBuffer_XYZ_DIFFUSE.geom"
+"$(VK_SDK_PATH)\Bin32\glslc.exe" -mfmt=c -o "$(OutDir)\PixelPassthrough.frag.h" "$(ProjectDir)\Shaders\PIxelPassthrough.frag"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -638,6 +642,7 @@
     <None Include="Shaders\FixedFunctions" />
     <None Include="Shaders\Functions" />
     <None Include="Shaders\GlobalIllumination" />
+    <None Include="Shaders\PixelPassthrough.frag" />
     <None Include="Shaders\Structures" />
     <None Include="Shaders\VertexBuffer_XYZ.frag" />
     <None Include="Shaders\VertexBuffer_XYZ.vert" />

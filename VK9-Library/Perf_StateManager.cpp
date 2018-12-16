@@ -322,7 +322,7 @@ void StateManager::DestroyVertexBuffer(size_t id)
 
 void StateManager::CreateVertexBuffer(size_t id, void* argument1)
 {
-	vk::Result result;
+	//vk::Result result;
 	auto device = mDevices[id];
 	CVertexBuffer9* vertexBuffer9 = bit_cast<CVertexBuffer9*>(argument1);
 	auto ptr = std::make_shared<RealVertexBuffer>(device.get(), vertexBuffer9->mLength, (vertexBuffer9->mUsage & D3DUSAGE_DYNAMIC) == D3DUSAGE_DYNAMIC); //
