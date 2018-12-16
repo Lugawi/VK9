@@ -43,6 +43,8 @@ CIndexBuffer9::CIndexBuffer9(CDevice9* device, UINT Length, DWORD Usage, D3DFORM
 {
 	this->mCommandStreamManager = this->mDevice->mCommandStreamManager;
 
+	mFrameBit = mCommandStreamManager->mFrameBit;
+
 	mSize = mLength / sizeof(float);
 }
 
@@ -198,6 +200,8 @@ HRESULT STDMETHODCALLTYPE CIndexBuffer9::GetDesc(D3DINDEXBUFFER_DESC* pDesc)
 
 HRESULT STDMETHODCALLTYPE CIndexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLock, VOID** ppbData, DWORD Flags)
 {
+	InterlockedIncrement(&mLockCount);
+
 	if (mPool == D3DPOOL_MANAGED)
 	{
 		if (!(Flags & D3DLOCK_READONLY))
@@ -206,24 +210,13 @@ HRESULT STDMETHODCALLTYPE CIndexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLock
 		}
 	}
 
-	InterlockedIncrement(&mLockCount);
-
-	/*
-	Unless the caller indicates that they have not overwritten anything used by a previous draw call then we have to assume they have.
-	Because the draw may not have happened we need to check to see if presentation has occured and if not flip to the next vertex
-	*/
-	if (((Flags & D3DLOCK_NOOVERWRITE) == D3DLOCK_NOOVERWRITE) || ((Flags & D3DLOCK_READONLY) == D3DLOCK_READONLY))
+	if (mFrameBit != mCommandStreamManager->mFrameBit)
 	{
-		//This is best case the caller says they didn't modify anything used in a draw call.
+		mIndex = 0;
 	}
 	else
 	{
-		if (mFrameBit != mCommandStreamManager->mFrameBit)
-		{
-			mIndex = 0;
-			mFrameBit = mCommandStreamManager->mFrameBit;
-		}
-		else
+		if ((Flags & D3DLOCK_NOOVERWRITE) != D3DLOCK_NOOVERWRITE && (Flags & D3DLOCK_READONLY) != D3DLOCK_READONLY)
 		{
 			mLastIndex = mIndex;
 			mIndex++;
@@ -250,11 +243,7 @@ HRESULT STDMETHODCALLTYPE CIndexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLock
 	mCommandStreamManager->RequestWorkAndWait(workItem);
 
 	mLastIndex = mIndex;
-
-	if ((Flags & D3DLOCK_DISCARD) == D3DLOCK_DISCARD)
-	{
-		memset((*ppbData), OffsetToLock, SizeToLock);
-	}
+	mFrameBit = mCommandStreamManager->mFrameBit;
 
 	return S_OK;
 }
@@ -264,7 +253,7 @@ HRESULT STDMETHODCALLTYPE CIndexBuffer9::Unlock()
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
 	workItem->WorkItemType = WorkItemType::IndexBuffer_Unlock;
 	workItem->Id = mId;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
+	mCommandStreamManager->RequestWork(workItem);
 
 	InterlockedDecrement(&mLockCount);
 

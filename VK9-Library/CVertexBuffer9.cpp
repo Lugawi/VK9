@@ -43,6 +43,8 @@ CVertexBuffer9::CVertexBuffer9(CDevice9* device, UINT Length, DWORD Usage, DWORD
 {
 	this->mCommandStreamManager = this->mDevice->mCommandStreamManager;
 
+	mFrameBit = mCommandStreamManager->mFrameBit;
+
 	mSize = mLength / sizeof(float);
 }
 
@@ -217,7 +219,7 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLoc
 	}
 	else
 	{
-		if ((Flags & D3DLOCK_DISCARD) == D3DLOCK_DISCARD)
+		if ((Flags & D3DLOCK_NOOVERWRITE) != D3DLOCK_NOOVERWRITE && (Flags & D3DLOCK_READONLY) != D3DLOCK_READONLY)
 		{
 			mLastIndex = mIndex;
 			mIndex++;
