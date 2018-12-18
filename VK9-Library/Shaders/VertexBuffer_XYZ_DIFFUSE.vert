@@ -45,6 +45,10 @@ void main()
 	gl_Position = ubo.worldViewProjection * vec4(position.xyz,1.0);
 	gl_Position *= vec4(1.0,-1.0,1.0,1.0);
 
+	//half pixel offset.
+	gl_Position.x += (1-((renderState.screenWidth-0.5) / renderState.screenWidth)); 
+	gl_Position.y += (1-((renderState.screenHeight-0.5) / renderState.screenHeight)); 
+
 	ColorPair color = CalculateGlobalIllumination(position, vec4(0.0), Convert(attr), vec4(0.0));
 
 	diffuseColor = color.Diffuse;
