@@ -2281,10 +2281,10 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 
 					deviceState.m9Viewport = (*pViewport);
 
-					deviceState.mViewport.x = (float)deviceState.m9Viewport.X;
-					deviceState.mViewport.y = (float)deviceState.m9Viewport.Y;
-					deviceState.mViewport.width = (float)deviceState.m9Viewport.Width;
-					deviceState.mViewport.height = (float)deviceState.m9Viewport.Height;
+					deviceState.mViewport.x = (float)deviceState.m9Viewport.X - 0.5f;
+					deviceState.mViewport.y = (float)deviceState.m9Viewport.Y - 0.5f;
+					deviceState.mViewport.width = (float)deviceState.m9Viewport.Width - 0.5f;
+					deviceState.mViewport.height = (float)deviceState.m9Viewport.Height - 0.5f;
 					deviceState.mViewport.minDepth = deviceState.m9Viewport.MinZ;
 					deviceState.mViewport.maxDepth = deviceState.m9Viewport.MaxZ;
 
@@ -2296,10 +2296,10 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 
 					deviceState.m9Viewport = (*pViewport);
 
-					deviceState.mViewport.x = (float)deviceState.m9Viewport.X;
-					deviceState.mViewport.y = (float)deviceState.m9Viewport.Y;
-					deviceState.mViewport.width = (float)deviceState.m9Viewport.Width;
-					deviceState.mViewport.height = (float)deviceState.m9Viewport.Height;
+					deviceState.mViewport.x = (float)deviceState.m9Viewport.X - 0.5f;
+					deviceState.mViewport.y = (float)deviceState.m9Viewport.Y - 0.5f;
+					deviceState.mViewport.width = (float)deviceState.m9Viewport.Width - 0.5f;
+					deviceState.mViewport.height = (float)deviceState.m9Viewport.Height - 0.5f;
 					deviceState.mViewport.minDepth = deviceState.m9Viewport.MinZ;
 					deviceState.mViewport.maxDepth = deviceState.m9Viewport.MaxZ;
 

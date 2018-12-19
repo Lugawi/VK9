@@ -47,7 +47,7 @@ const uint32_t VERTEX_BUFFER_XYZ_FRAG[] =
 const uint32_t VERTEX_BUFFER_XYZRHW_DIFFUSE_VERT[] =
 #include "VertexBuffer_XYZRHW_DIFFUSE.vert.h"
 ;
-const uint32_t VERTEX_BUFFER_XYZ_DIFFUSE_VERT[] = 
+const uint32_t VERTEX_BUFFER_XYZ_DIFFUSE_VERT[] =
 #include "VertexBuffer_XYZ_DIFFUSE.vert.h"
 ;
 const uint32_t VERTEX_BUFFER_XYZ_DIFFUSE_FRAG[] =
@@ -661,10 +661,10 @@ RealDevice::RealDevice(vk::Instance instance, vk::PhysicalDevice physicalDevice,
 	//Set some device state stuff.
 
 	//initialize vulkan/d3d9 viewport and scissor structures.
-	//mDeviceState.mViewport.y = (float)mPresentationParameters.BackBufferHeight;
-	mDeviceState.mViewport.width = (float)width;
-	//mDeviceState.mViewport.height = -(float)mPresentationParameters.BackBufferHeight;
-	mDeviceState.mViewport.height = (float)height;
+	mDeviceState.mViewport.x = -0.5f;
+	mDeviceState.mViewport.y = -0.5f;
+	mDeviceState.mViewport.width = (float)width - 0.5f;
+	mDeviceState.mViewport.height = (float)height - 0.5f;
 	mDeviceState.mViewport.minDepth = 0.0f;
 	mDeviceState.mViewport.maxDepth = 1.0f;
 
@@ -687,8 +687,8 @@ RealDevice::RealDevice(vk::Instance instance, vk::PhysicalDevice physicalDevice,
 
 	//FF Buffers
 	CreateBuffer(sizeof(RenderState), vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, mRenderStateBuffer, mRenderStateBufferMemory);
-	CreateBuffer(sizeof(TextureStage)*16, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, mTextureStageBuffer, mTextureStageBufferMemory);
-	CreateBuffer(sizeof(Light)*8, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, mLightBuffer, mLightBufferMemory);
+	CreateBuffer(sizeof(TextureStage) * 16, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, mTextureStageBuffer, mTextureStageBufferMemory);
+	CreateBuffer(sizeof(Light) * 8, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, mLightBuffer, mLightBufferMemory);
 	CreateBuffer(sizeof(D3DMATERIAL9), vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, mMaterialBuffer, mMaterialBufferMemory);
 	CreateBuffer(sizeof(Transformations), vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, mMatrixBuffer, mMatrixBufferMemory);
 
@@ -872,11 +872,11 @@ RealDevice::~RealDevice()
 	mDevice.destroyShaderModule(mFragShaderModule_XYZ_NORMAL_DIFFUSE_TEX1, nullptr);
 	mDevice.destroyShaderModule(mVertShaderModule_XYZ_NORMAL_DIFFUSE_TEX2, nullptr);
 	mDevice.destroyShaderModule(mFragShaderModule_XYZ_NORMAL_DIFFUSE_TEX2, nullptr);
-	
+
 	mDevice.destroyShaderModule(mFragShaderModule_Passthrough, nullptr);
 
 	mDevice.destroyPipelineCache(mPipelineCache, nullptr);
-	
+
 	mDevice.freeCommandBuffers(mCommandPool, 1, &mCommandBuffer);
 	mDevice.freeCommandBuffers(mCommandPool, 2, mCommandBuffers);
 	mDevice.destroyCommandPool(mCommandPool, nullptr);

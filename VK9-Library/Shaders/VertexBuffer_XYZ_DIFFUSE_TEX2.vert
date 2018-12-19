@@ -49,10 +49,6 @@ void main()
 	gl_Position = ubo.worldViewProjection * vec4(position.xyz,1.0);
 	gl_Position *= vec4(1.0,-1.0,1.0,1.0);
 
-	//half pixel offset.
-	gl_Position.x += (1-((renderState.screenWidth-0.5) / renderState.screenWidth)); 
-	gl_Position.y += (1-((renderState.screenHeight-0.5) / renderState.screenHeight)); 
-
 	texcoord1 = attr2.xy;
 	texcoord2 = attr3.xy;
 
