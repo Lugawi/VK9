@@ -2490,156 +2490,6 @@ void ShaderConverter::GenerateYFlip()
 	PushStore(mPositionYId, resultId);
 }
 
-void ShaderConverter::GeneratePushConstant()
-{
-	//std::string registerName;
-	//uint32_t stringWordSize = 0;
-
-	//TypeDescription matrixPointerType;
-	//matrixPointerType.PrimaryType = spv::OpTypePointer;
-	//matrixPointerType.SecondaryType = spv::OpTypeMatrix;
-	//matrixPointerType.TernaryType = spv::OpTypeVector;
-	//matrixPointerType.ComponentCount = 4;
-	//matrixPointerType.StorageClass = spv::StorageClassPushConstant;
-
-	//TypeDescription vectorPointerType;
-	//vectorPointerType.PrimaryType = spv::OpTypePointer;
-	//vectorPointerType.SecondaryType = spv::OpTypeVector;
-	//vectorPointerType.TernaryType = spv::OpTypeFloat;
-	//vectorPointerType.ComponentCount = 4;
-	//vectorPointerType.StorageClass = spv::StorageClassPushConstant;
-
-	//TypeDescription matrixType;
-	//matrixType.PrimaryType = spv::OpTypeMatrix;
-	//matrixType.SecondaryType = spv::OpTypeVector;
-	//matrixType.ComponentCount = 4;
-
-	//TypeDescription vectorType;
-	//vectorType.PrimaryType = spv::OpTypeVector;
-	//vectorType.SecondaryType = spv::OpTypeFloat;
-	//vectorType.ComponentCount = 4;
-
-	//uint32_t matrixPointerTypeId = GetSpirVTypeId(matrixPointerType);
-	//uint32_t vectorPointerTypeId = GetSpirVTypeId(vectorPointerType);
-	//uint32_t matrixTypeId = GetSpirVTypeId(matrixType);
-	//uint32_t vectorTypeId = GetSpirVTypeId(vectorType);
-
-	//uint32_t pushConstantTypeId = GetNextId();
-	//uint32_t pushConstantPointerTypeId = GetNextId();
-	//uint32_t pushConstantPointerId = GetNextId();
-
-	//mTypeInstructions.push_back(Pack(2 + 1, spv::OpTypeStruct)); //size,Type
-	//mTypeInstructions.push_back(pushConstantTypeId); //Result (Id)
-	//mTypeInstructions.push_back(matrixTypeId); //Member 0 type (Id)
-
-	////Name and decorate push constant structure type.
-	//registerName = "PushConstants";
-	//PushName(pushConstantTypeId, registerName);
-
-	//mDecorateInstructions.push_back(Pack(3, spv::OpDecorate)); //size,Type
-	//mDecorateInstructions.push_back(pushConstantTypeId); //target (Id)
-	//mDecorateInstructions.push_back(spv::DecorationBlock); //Decoration Type (Id)
-
-	//mDecorateInstructions.push_back(Pack(4, spv::OpDecorate)); //size,Type
-	//mDecorateInstructions.push_back(matrixTypeId); //target (Id)
-	//mDecorateInstructions.push_back(spv::DecorationMatrixStride); //Decoration Type (Id)
-	//mDecorateInstructions.push_back(16); //stride
-
-	//mDecorateInstructions.push_back(Pack(3, spv::OpDecorate)); //size,Type
-	//mDecorateInstructions.push_back(matrixTypeId); //target (Id)
-	//mDecorateInstructions.push_back(spv::DecorationColMajor); //Decoration Type (Id)
-
-	////Name Members
-	//registerName = "c0";
-	//PushMemberName(pushConstantTypeId, registerName, 0);
-
-	////Set member offsets
-	//mDecorateInstructions.push_back(Pack(4 + 1, spv::OpMemberDecorate)); //size,Type
-	//mDecorateInstructions.push_back(pushConstantTypeId); //target (Id)
-	//mDecorateInstructions.push_back(0); //Member (Literal)
-	//mDecorateInstructions.push_back(spv::DecorationOffset); //Decoration Type (Id)
-	//mDecorateInstructions.push_back(0);
-
-	////Create Pointer type and variable
-	//mTypeInstructions.push_back(Pack(4, spv::OpTypePointer)); //size,Type
-	//mTypeInstructions.push_back(pushConstantPointerTypeId); //Result (Id)
-	//mTypeInstructions.push_back(spv::StorageClassPushConstant); //Storage Class
-	//mTypeInstructions.push_back(pushConstantTypeId); //type (Id)
-
-	//mTypeInstructions.push_back(Pack(4, spv::OpVariable)); //size,Type
-	//mTypeInstructions.push_back(pushConstantPointerTypeId); //ResultType (Id) Must be OpTypePointer with the pointer's type being what you care about.
-	//mTypeInstructions.push_back(pushConstantPointerId); //Result (Id)
-	//mTypeInstructions.push_back(spv::StorageClassPushConstant); //Storage Class
-
-	//registerName = "PC";
-	//PushName(pushConstantPointerId, registerName);
-
-	////Create Access Chains
-	//uint32_t matrixPointerId = GetNextId();
-	//mIdTypePairs[matrixPointerId] = matrixPointerType;
-	//PushAccessChain(matrixPointerTypeId, matrixPointerId, pushConstantPointerId, m0Id);
-
-	//uint32_t c0 = GetNextId();
-	//mIdTypePairs[c0] = vectorPointerType;
-	//PushAccessChain(vectorPointerTypeId, c0, matrixPointerId, m0Id);
-
-	//uint32_t c1 = GetNextId();
-	//mIdTypePairs[c1] = vectorPointerType;
-	//PushAccessChain(vectorPointerTypeId, c1, matrixPointerId, m1Id);
-
-	//uint32_t c2 = GetNextId();
-	//mIdTypePairs[c2] = vectorPointerType;
-	//PushAccessChain(vectorPointerTypeId, c2, matrixPointerId, m2Id);
-
-	//uint32_t c3 = GetNextId();
-	//mIdTypePairs[c3] = vectorPointerType;
-	//PushAccessChain(vectorPointerTypeId, c3, matrixPointerId, m3Id);
-
-	////Load Access Chains
-	//uint32_t matrix_loaded = GetNextId();
-	//mIdTypePairs[matrix_loaded] = matrixType;
-	//PushLoad(matrixTypeId, matrix_loaded, matrixPointerId);
-
-	//uint32_t c0_loaded = GetNextId();
-	//mIdTypePairs[c0_loaded] = vectorType;
-	//PushLoad(vectorTypeId, c0_loaded, c0);
-	//mVector4Vector3Pairs[c0_loaded] = ConvertVec4ToVec3(c0_loaded);
-
-	//uint32_t c1_loaded = GetNextId();
-	//mIdTypePairs[c1_loaded] = vectorType;
-	//PushLoad(vectorTypeId, c1_loaded, c1);
-	//mVector4Vector3Pairs[c1_loaded] = ConvertVec4ToVec3(c1_loaded);
-
-	//uint32_t c2_loaded = GetNextId();
-	//mIdTypePairs[c2_loaded] = vectorType;
-	//PushLoad(vectorTypeId, c2_loaded, c2);
-	//mVector4Vector3Pairs[c2_loaded] = ConvertVec4ToVec3(c2_loaded);
-
-	//uint32_t c3_loaded = GetNextId();
-	//mIdTypePairs[c3_loaded] = vectorType;
-	//PushLoad(vectorTypeId, c3_loaded, c3);
-	//mVector4Vector3Pairs[c3_loaded] = ConvertVec4ToVec3(c3_loaded);
-
-	//mVector4Matrix4X4Pairs[c0_loaded] = matrix_loaded;
-	//mVector4Matrix3X3Pairs[c0_loaded] = ConvertMat4ToMat3(matrix_loaded);
-
-	////Remap c0-c3 to push constant.
-	//mIdsByRegister[(_D3DSHADER_PARAM_REGISTER_TYPE)1337][0] = matrix_loaded;
-	//mRegistersById[(_D3DSHADER_PARAM_REGISTER_TYPE)1337][matrix_loaded] = 0;
-
-	//mIdsByRegister[D3DSPR_CONST][0] = c0_loaded;
-	//mRegistersById[D3DSPR_CONST][c0_loaded] = 0;
-
-	//mIdsByRegister[D3DSPR_CONST][1] = c1_loaded;
-	//mRegistersById[D3DSPR_CONST][c1_loaded] = 1;
-
-	//mIdsByRegister[D3DSPR_CONST][2] = c2_loaded;
-	//mRegistersById[D3DSPR_CONST][c2_loaded] = 2;
-
-	//mIdsByRegister[D3DSPR_CONST][3] = c3_loaded;
-	//mRegistersById[D3DSPR_CONST][c3_loaded] = 3;
-}
-
 void ShaderConverter::GenerateConstantIndices()
 {
 	std::string registerName;
@@ -2995,7 +2845,7 @@ void ShaderConverter::GenerateConstantBlock()
 	uint32_t integerVectorTypeId = GetSpirVTypeId(integerVectorType);
 
 	TypeDescription floatType;
-	floatType.PrimaryType = spv::OpTypeInt;
+	floatType.PrimaryType = spv::OpTypeFloat;
 	uint32_t floatTypeId = GetSpirVTypeId(floatType);
 
 	TypeDescription floatVectorType;
@@ -3088,6 +2938,78 @@ void ShaderConverter::GenerateConstantBlock()
 	mTypeInstructions.push_back(Pack(4, spv::OpVariable)); //size,Type
 	mTypeInstructions.push_back(uboStructurePointerTypeId); //ResultType (Id) Must be OpTypePointer with the pointer's type being what you care about.
 	mTypeInstructions.push_back(mUboPointerId); //Result (Id)
+	mTypeInstructions.push_back(spv::StorageClassUniform); //Storage Class
+}
+
+void ShaderConverter::GenerateRenderStateBlock()
+{
+	//Fetch Id values for types we'll need later.
+	TypeDescription integerType;
+	integerType.PrimaryType = spv::OpTypeInt;
+	uint32_t integerTypeId = GetSpirVTypeId(integerType);
+
+	TypeDescription floatType;
+	floatType.PrimaryType = spv::OpTypeFloat;
+	uint32_t floatTypeId = GetSpirVTypeId(floatType);
+
+	//Generate Ids up front.
+	uint32_t uboStructureTypeId = GetNextId();
+	uint32_t uboStructurePointerTypeId = GetNextId();
+	mRenderStatePointerId = GetNextId();
+
+	//Create structure layout
+	mDecorateInstructions.push_back(Pack(3, spv::OpDecorate)); //size,Type
+	mDecorateInstructions.push_back(uboStructureTypeId); //target (Id)
+	mDecorateInstructions.push_back(spv::DecorationBlock); //Decoration Type (Id)
+
+	mDecorateInstructions.push_back(Pack(4, spv::OpDecorate)); //size,Type
+	mDecorateInstructions.push_back(uboStructureTypeId); //target (Id)
+	mDecorateInstructions.push_back(spv::DecorationDescriptorSet); //Decoration Type (Id)
+	mDecorateInstructions.push_back(0); //descriptor set index
+
+	mDecorateInstructions.push_back(Pack(4, spv::OpDecorate)); //size,Type
+	mDecorateInstructions.push_back(uboStructureTypeId); //target (Id)
+	mDecorateInstructions.push_back(spv::DecorationBinding); //Decoration Type (Id)
+	mDecorateInstructions.push_back(0); //binding index.
+
+	uint32_t numberofMembers = (sizeof(RenderState) / sizeof(uint32_t));
+
+	mTypeInstructions.push_back(Pack(2 + numberofMembers, spv::OpTypeStruct)); //size,Type
+	mTypeInstructions.push_back(uboStructureTypeId); //Result (Id)
+
+	uint32_t memberIndex = 0;
+	uint32_t memberOffset = 0;
+	for (size_t i = 0; i < numberofMembers; i++)
+	{
+		if (i < 18)
+		{
+			mTypeInstructions.push_back(floatTypeId);
+		}
+		else
+		{
+			mTypeInstructions.push_back(integerTypeId);
+		}	
+
+		mDecorateInstructions.push_back(Pack(4 + 1, spv::OpMemberDecorate)); //size,Type
+		mDecorateInstructions.push_back(uboStructureTypeId); //target (Id)
+		mDecorateInstructions.push_back(memberIndex); //Member (Literal)
+		mDecorateInstructions.push_back(spv::DecorationOffset); //Decoration Type (Id)
+		mDecorateInstructions.push_back(memberOffset);
+
+		memberIndex += 1;
+		memberOffset += sizeof(uint32_t);
+	}
+
+	//Create pointer type with layout.
+	mTypeInstructions.push_back(Pack(4, spv::OpTypePointer)); //size,Type
+	mTypeInstructions.push_back(uboStructurePointerTypeId); //Result (Id)
+	mTypeInstructions.push_back(spv::StorageClassUniform); //Storage Class
+	mTypeInstructions.push_back(uboStructureTypeId); //type (Id)
+
+	//Create variable with pointer type.
+	mTypeInstructions.push_back(Pack(4, spv::OpVariable)); //size,Type
+	mTypeInstructions.push_back(uboStructurePointerTypeId); //ResultType (Id) Must be OpTypePointer with the pointer's type being what you care about.
+	mTypeInstructions.push_back(mRenderStatePointerId); //Result (Id)
 	mTypeInstructions.push_back(spv::StorageClassUniform); //Storage Class
 }
 
@@ -7140,6 +7062,7 @@ ConvertedShader ShaderConverter::Convert(uint32_t* shader)
 	PutStringInVector(sourceExtension4, mSourceExtensionInstructions);
 
 	GenerateConstantBlock();
+	GenerateRenderStateBlock();
 
 	//Start of entry point
 	mEntryPointTypeId = GetNextId();
@@ -7155,11 +7078,6 @@ ConvertedShader ShaderConverter::Convert(uint32_t* shader)
 	}
 
 	Generate255Constants();
-
-	if (mIsVertexShader)
-	{
-		GeneratePushConstant();
-	}
 
 	//Read DXBC instructions
 	while (token != D3DPS_END())

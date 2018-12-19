@@ -82,6 +82,25 @@ struct TextureStage
 
 struct RenderState
 {
+	float fogStart;
+	float fogEnd;
+	float fogDensity;
+	float pointSize;
+	float pointSizeMinimum;
+	float pointScaleA;
+	float pointScaleB;
+	float pointScaleC;
+	float pointSizeMaximum;
+	float tweenFactor;
+	float slopeScaleDepthBias;
+	float minimumTessellationLevel;
+	float maximumTessellationLevel;
+	float adaptivetessX;
+	float adaptivetessY;
+	float adaptivetessZ;
+	float adaptivetessW;
+	float depthBias;
+
 	uint textureCount;
 
 	//Render State
@@ -103,9 +122,6 @@ struct RenderState
 	uint specularEnable;
 	uint fogColor;
 	uint fogTableMode;
-	float fogStart;
-	float fogEnd;
-	float fogDensity;
 	uint rangeFogEnable;
 	uint stencilEnable;
 	uint stencilFail;
@@ -137,33 +153,19 @@ struct RenderState
 	uint emissiveMaterialSource;
 	uint vertexBlend;
 	uint clipPlaneEnable;
-	float pointSize;
-	float pointSizeMinimum;
 	uint pointSpriteEnable;
 	uint pointScaleEnable;
-	float pointScaleA;
-	float pointScaleB;
-	float pointScaleC;
 	uint multisampleAntiAlias;
 	uint multisampleMask;
 	uint patchEdgeStyle;
 	uint debugMonitorToken;
-	float pointSizeMaximum;
 	uint indexedVertexBlendEnable;
-	uint colorWriteEnable;
-	float tweenFactor;
+	uint colorWriteEnable;	
 	uint blendOperation;
 	uint positionDegree;
 	uint normalDegree;
 	uint scissorTestEnable;
-	float slopeScaleDepthBias;
 	uint antiAliasedLineEnable;
-	float minimumTessellationLevel;
-	float maximumTessellationLevel;
-	float adaptivetessX;
-	float adaptivetessY;
-	float adaptivetessZ;
-	float adaptivetessW;
 	uint enableAdaptiveTessellation;
 	uint twoSidedStencilMode;
 	uint ccwStencilFail;
@@ -174,8 +176,7 @@ struct RenderState
 	uint colorWriteEnable2;
 	uint colorWriteEnable3;
 	uint blendFactor;
-	uint srgbWriteEnable;
-	float depthBias;
+	uint srgbWriteEnable;	
 	uint wrap8;
 	uint wrap9;
 	uint wrap10;

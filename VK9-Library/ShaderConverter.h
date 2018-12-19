@@ -583,6 +583,7 @@ private:
 	uint32_t mNumberOfBooleansInUbo = 16;
 	uint32_t mNumberOfFloatVectorsInUbo = 256;
 	uint32_t mUboPointerId = 0;
+	uint32_t mRenderStatePointerId = 0;
 
 	uint32_t mTextures[12] = {};
 
@@ -605,13 +606,13 @@ private:
 	void HandleColor(const Token& token, uint32_t inputId, uint32_t outputId, uint32_t originalId);
 	uint32_t ApplyWriteMask(const Token& token, uint32_t inputId, _D3DDECLUSAGE usage = D3DDECLUSAGE_TEXCOORD);
 	void GenerateYFlip();
-	void GeneratePushConstant();
 	void GeneratePostition();
 	void GenerateConstantIndices();
 	void GenerateStore(const Token& token, uint32_t inputId);
 	void GenerateDecoration(uint32_t registerNumber, uint32_t inputId, _D3DDECLUSAGE usage, bool isInput);
 	void Generate255Constants();
 	void GenerateConstantBlock();
+	void GenerateRenderStateBlock();
 	void CombineSpirVOpCodes();
 	void CreateSpirVModule();
 

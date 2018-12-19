@@ -123,6 +123,25 @@ struct TextureStage
 
 struct RenderState
 {
+	float fogStart = 0.0f;
+	float fogEnd = 1.0f;
+	float fogDensity = 1.0f;
+	float pointSize = 64.0f;
+	float pointSizeMinimum = 1.0f;
+	float pointScaleA = 1.0f;
+	float pointScaleB = 0.0f;
+	float pointScaleC = 0.0f;
+	float pointSizeMaximum = 64.0f;
+	float tweenFactor = 0.0f;
+	float slopeScaleDepthBias = 0.00f;
+	float minimumTessellationLevel = 1.0f;
+	float maximumTessellationLevel = 1.0f;
+	float adaptivetessX = 0.0f;
+	float adaptivetessY = 0.0f;
+	float adaptivetessZ = 1.0f;
+	float adaptivetessW = 0.0f;
+	float depthBias = 0.00f;
+
 	uint32_t textureCount = 1;
 
 	//Render State
@@ -144,9 +163,6 @@ struct RenderState
 	uint32_t specularEnable = FALSE;
 	uint32_t fogColor = 0;
 	uint32_t fogTableMode = D3DFOG_NONE;
-	float fogStart = 0.0f;
-	float fogEnd = 1.0f;
-	float fogDensity = 1.0f;
 	uint32_t rangeFogEnable = FALSE;
 	uint32_t stencilEnable = FALSE;
 	uint32_t stencilFail = D3DSTENCILOP_KEEP;
@@ -178,33 +194,19 @@ struct RenderState
 	uint32_t emissiveMaterialSource = D3DMCS_MATERIAL;
 	uint32_t vertexBlend = D3DVBF_DISABLE;
 	uint32_t clipPlaneEnable = 0;
-	float pointSize = 64.0f;
-	float pointSizeMinimum = 1.0f;
 	uint32_t pointSpriteEnable = FALSE;
 	uint32_t pointScaleEnable = FALSE;
-	float pointScaleA = 1.0f;
-	float pointScaleB = 0.0f;
-	float pointScaleC = 0.0f;
 	uint32_t multisampleAntiAlias = TRUE;
 	uint32_t multisampleMask = 0xFFFFFFFF;
 	uint32_t patchEdgeStyle = D3DPATCHEDGE_DISCRETE;
 	uint32_t debugMonitorToken = D3DDMT_ENABLE;
-	float pointSizeMaximum = 64.0f;
 	uint32_t indexedVertexBlendEnable = FALSE;
 	uint32_t colorWriteEnable = 0x0000000F;
-	float tweenFactor = 0.0f;
 	uint32_t blendOperation = D3DBLENDOP_ADD;
 	uint32_t positionDegree = D3DDEGREE_CUBIC;
 	uint32_t normalDegree = D3DDEGREE_LINEAR;
 	uint32_t scissorTestEnable = FALSE;
-	float slopeScaleDepthBias = 0.00f;
 	uint32_t antiAliasedLineEnable = FALSE;
-	float minimumTessellationLevel = 1.0f;
-	float maximumTessellationLevel = 1.0f;
-	float adaptivetessX = 0.0f;
-	float adaptivetessY = 0.0f;
-	float adaptivetessZ = 1.0f;
-	float adaptivetessW = 0.0f;
 	uint32_t enableAdaptiveTessellation = FALSE;
 	uint32_t twoSidedStencilMode = FALSE;
 	uint32_t ccwStencilFail = D3DSTENCILOP_KEEP;
@@ -216,7 +218,6 @@ struct RenderState
 	uint32_t colorWriteEnable3 = 0x0000000f;
 	uint32_t blendFactor = 0xffffffff;
 	uint32_t srgbWriteEnable = 0;
-	float depthBias = 0.00f;
 	uint32_t wrap8 = 0;
 	uint32_t wrap9 = 0;
 	uint32_t wrap10 = 0;
