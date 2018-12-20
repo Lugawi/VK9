@@ -2501,7 +2501,7 @@ void ShaderConverter::GenerateConstantIndices()
 	intType.PrimaryType = spv::OpTypeInt;
 	uint32_t intTypeId = GetSpirVTypeId(intType);
 
-	for (size_t i = 0; i < 16; i++)
+	for (size_t i = 0; i < 17; i++)
 	{
 		mConstantIntegerIds[i] = GetNextId();
 		mIdTypePairs[mConstantIntegerIds[i]] = intType;
