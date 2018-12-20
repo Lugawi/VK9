@@ -139,6 +139,7 @@ struct TypeDescription
 		case spv::OpTypeImage:
 		case spv::OpTypeVoid:
 			return this->PrimaryType == value.PrimaryType;
+		case spv::OpTypeArray:
 		case spv::OpTypeVector:
 		case spv::OpTypeMatrix:
 			return this->PrimaryType == value.PrimaryType && this->SecondaryType == value.SecondaryType && this->ComponentCount == value.ComponentCount;
@@ -164,6 +165,7 @@ struct TypeDescription
 		case spv::OpTypeImage:
 		case spv::OpTypeVoid:
 			return this->PrimaryType != value.PrimaryType;
+		case spv::OpTypeArray:
 		case spv::OpTypeVector:
 		case spv::OpTypeMatrix:
 			return this->PrimaryType != value.PrimaryType || this->SecondaryType != value.SecondaryType || this->ComponentCount != value.ComponentCount;
@@ -570,12 +572,15 @@ private:
 	uint32_t m255FloatId = 0;
 	uint32_t m255VectorId = 0;
 
-	uint32_t m0Id = 0;
 	uint32_t m0fId = 0;
-	uint32_t m1Id = 0;
 	uint32_t m1fId = 0;
-	uint32_t m2Id = 0;
-	uint32_t m3Id = 0;
+
+	//uint32_t m0Id = 0;
+	//uint32_t m1Id = 0;	
+	//uint32_t m2Id = 0;
+	//uint32_t m3Id = 0;
+
+	uint32_t mConstantIntegerIds[17] = {};
 
 	uint32_t mTemp = 0;
 
@@ -584,6 +589,7 @@ private:
 	uint32_t mNumberOfFloatVectorsInUbo = 256;
 	uint32_t mUboPointerId = 0;
 	uint32_t mRenderStatePointerId = 0;
+	uint32_t mTexturesId = 0;
 
 	uint32_t mTextures[12] = {};
 
@@ -613,6 +619,7 @@ private:
 	void Generate255Constants();
 	void GenerateConstantBlock();
 	void GenerateRenderStateBlock();
+	void GenerateSamplerBlock();
 	void CombineSpirVOpCodes();
 	void CreateSpirVModule();
 
