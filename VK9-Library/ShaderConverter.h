@@ -590,6 +590,7 @@ private:
 	uint32_t mUboPointerId = 0;
 	uint32_t mRenderStatePointerId = 0;
 	uint32_t mTexturesId = 0;
+	uint32_t mTextureStagesId = 0;
 
 	uint32_t mTextures[12] = {};
 
@@ -620,6 +621,7 @@ private:
 	void GenerateConstantBlock();
 	void GenerateRenderStateBlock();
 	void GenerateSamplerBlock();
+	void GenerateTextureStageBlock();
 	void CombineSpirVOpCodes();
 	void CreateSpirVModule();
 

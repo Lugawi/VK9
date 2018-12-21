@@ -2895,6 +2895,10 @@ void ShaderConverter::GenerateConstantBlock()
 	mTypeInstructions.push_back(uboStructurePointerTypeId); //ResultType (Id) Must be OpTypePointer with the pointer's type being what you care about.
 	mTypeInstructions.push_back(mUboPointerId); //Result (Id)
 	mTypeInstructions.push_back(spv::StorageClassUniform); //Storage Class
+
+	//Add variable Name
+	std::string variableName = "shaderConstants";
+	PushName(mUboPointerId, variableName);
 }
 
 void ShaderConverter::GenerateRenderStateBlock()
@@ -2928,7 +2932,7 @@ void ShaderConverter::GenerateRenderStateBlock()
 	mDecorateInstructions.push_back(spv::DecorationBinding); //Decoration Type (Id)
 	mDecorateInstructions.push_back(0); //binding index.
 
-	uint32_t numberofMembers = (sizeof(RenderState) / sizeof(uint32_t));
+	constexpr uint32_t numberofMembers = (sizeof(RenderState) / sizeof(uint32_t));
 
 	mTypeInstructions.push_back(Pack(2 + numberofMembers, spv::OpTypeStruct)); //size,Type
 	mTypeInstructions.push_back(uboStructureTypeId); //Result (Id)
@@ -2967,6 +2971,10 @@ void ShaderConverter::GenerateRenderStateBlock()
 	mTypeInstructions.push_back(uboStructurePointerTypeId); //ResultType (Id) Must be OpTypePointer with the pointer's type being what you care about.
 	mTypeInstructions.push_back(mRenderStatePointerId); //Result (Id)
 	mTypeInstructions.push_back(spv::StorageClassUniform); //Storage Class
+
+	//Add variable Name
+	std::string variableName = "renderState";
+	PushName(mRenderStatePointerId, variableName);
 }
 
 void ShaderConverter::GenerateSamplerBlock()
@@ -3011,6 +3019,108 @@ void ShaderConverter::GenerateSamplerBlock()
 	mTypeInstructions.push_back(uboStructurePointerTypeId); //ResultType (Id) Must be OpTypePointer with the pointer's type being what you care about.
 	mTypeInstructions.push_back(mTexturesId); //Result (Id)
 	mTypeInstructions.push_back(spv::StorageClassUniformConstant); //Storage Class
+
+	//Add variable Name
+	std::string variableName = "textures";
+	PushName(mTexturesId, variableName);
+}
+
+void ShaderConverter::GenerateTextureStageBlock()
+{
+	//Fetch Id values for types we'll need later.
+	TypeDescription integerType;
+	integerType.PrimaryType = spv::OpTypeInt;
+	uint32_t integerTypeId = GetSpirVTypeId(integerType);
+
+	TypeDescription floatType;
+	floatType.PrimaryType = spv::OpTypeFloat;
+	uint32_t floatTypeId = GetSpirVTypeId(floatType);
+
+	TypeDescription matrixType;
+	matrixType.PrimaryType = spv::OpTypeMatrix;
+	matrixType.SecondaryType = spv::OpTypeVector;
+	matrixType.ComponentCount = 4;
+	uint32_t matrixTypeId = GetSpirVTypeId(matrixType);
+
+	//Generate Ids up front.
+	uint32_t uboStructureTypeId = GetNextId();
+	uint32_t uboStructurePointerTypeId = GetNextId();
+	uint32_t uboStructureArrayTypeId = GetNextId();
+	mTextureStagesId = GetNextId();
+
+	//Create structure layout
+	mDecorateInstructions.push_back(Pack(3, spv::OpDecorate)); //size,Type
+	mDecorateInstructions.push_back(uboStructureTypeId); //target (Id)
+	mDecorateInstructions.push_back(spv::DecorationBlock); //Decoration Type (Id)
+
+	mDecorateInstructions.push_back(Pack(4, spv::OpDecorate)); //size,Type
+	mDecorateInstructions.push_back(uboStructureTypeId); //target (Id)
+	mDecorateInstructions.push_back(spv::DecorationDescriptorSet); //Decoration Type (Id)
+	mDecorateInstructions.push_back(0); //descriptor set index
+
+	mDecorateInstructions.push_back(Pack(4, spv::OpDecorate)); //size,Type
+	mDecorateInstructions.push_back(uboStructureTypeId); //target (Id)
+	mDecorateInstructions.push_back(spv::DecorationBinding); //Decoration Type (Id)
+	mDecorateInstructions.push_back(1); //binding index.
+
+	constexpr uint32_t numberofMembers = (((sizeof(TextureStage)-sizeof(D3DMATRIX)) / sizeof(uint32_t)) + 1);
+
+	mTypeInstructions.push_back(Pack(2 + numberofMembers, spv::OpTypeStruct)); //size,Type
+	mTypeInstructions.push_back(uboStructureTypeId); //Result (Id)
+
+	uint32_t memberIndex = 0;
+	uint32_t memberOffset = 0;
+	for (size_t i = 0; i < numberofMembers; i++)
+	{
+		size_t offset = 0;
+
+		if (i < 1)
+		{
+			mTypeInstructions.push_back(matrixTypeId);
+			offset = sizeof(D3DMATRIX);			
+		}
+		else if (i < 13)
+		{
+			mTypeInstructions.push_back(integerTypeId);
+			offset = sizeof(uint32_t);
+		}
+		else
+		{
+			mTypeInstructions.push_back(floatTypeId);
+			offset = sizeof(float);
+		}
+
+		mDecorateInstructions.push_back(Pack(4 + 1, spv::OpMemberDecorate)); //size,Type
+		mDecorateInstructions.push_back(uboStructureTypeId); //target (Id)
+		mDecorateInstructions.push_back(memberIndex); //Member (Literal)
+		mDecorateInstructions.push_back(spv::DecorationOffset); //Decoration Type (Id)
+		mDecorateInstructions.push_back(memberOffset);
+
+		memberIndex += 1;
+		memberOffset += offset;
+	}
+
+	//Create array type.
+	mTypeInstructions.push_back(Pack(4, spv::OpTypeArray)); //size,Type
+	mTypeInstructions.push_back(uboStructureArrayTypeId); //Id
+	mTypeInstructions.push_back(uboStructureTypeId); // Type
+	mTypeInstructions.push_back(mConstantIntegerIds[16]); // Length
+
+	//Create pointer type with layout.
+	mTypeInstructions.push_back(Pack(4, spv::OpTypePointer)); //size,Type
+	mTypeInstructions.push_back(uboStructurePointerTypeId); //Result (Id)
+	mTypeInstructions.push_back(spv::StorageClassUniform); //Storage Class
+	mTypeInstructions.push_back(uboStructureArrayTypeId); //type (Id)
+
+	//Create variable with pointer type.
+	mTypeInstructions.push_back(Pack(4, spv::OpVariable)); //size,Type
+	mTypeInstructions.push_back(uboStructurePointerTypeId); //ResultType (Id) Must be OpTypePointer with the pointer's type being what you care about.
+	mTypeInstructions.push_back(mTextureStagesId); //Result (Id)
+	mTypeInstructions.push_back(spv::StorageClassUniform); //Storage Class
+
+	//Add variable Name
+	std::string variableName = "textureStages";
+	PushName(mTextureStagesId, variableName);
 }
 
 void ShaderConverter::CombineSpirVOpCodes()
@@ -7067,6 +7177,7 @@ ConvertedShader ShaderConverter::Convert(uint32_t* shader)
 	if (!mIsVertexShader)
 	{
 		GenerateSamplerBlock();
+		GenerateTextureStageBlock();
 	}
 
 	//Start of entry point

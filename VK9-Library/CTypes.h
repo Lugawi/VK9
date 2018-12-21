@@ -117,8 +117,8 @@ struct TextureStage
 	float bumpMapMatrix11 = 0.0f;
 	float bumpMapScale = 0.0f;
 	float bumpMapOffset = 0.0f;
-	uint32_t filler1 = 0;
-	uint32_t filler2 = 0;
+	float filler1 = 0;
+	float filler2 = 0;
 };
 
 struct RenderState
