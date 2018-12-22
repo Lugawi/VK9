@@ -2344,9 +2344,11 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					//Make sure buffer gets bound because it could be new.
 					realVertexBuffer.mRealDevice->mDeviceState.mAreStreamSourcesDirty = true;
 
-					auto& oldVertexBuffer = (*commandStreamManager->mRenderManager.mStateManager.mVertexBuffers[lastId]);
-					oldVertexBuffer.mRealDevice->CopyBuffer(oldVertexBuffer.mBuffer, realVertexBuffer.mBuffer, realVertexBuffer.mAllocationInfo.size);
-
+					if (!(Flags & D3DLOCK_DISCARD))
+					{
+						auto& oldVertexBuffer = (*commandStreamManager->mRenderManager.mStateManager.mVertexBuffers[lastId]);
+						oldVertexBuffer.mRealDevice->CopyBuffer(oldVertexBuffer.mBuffer, realVertexBuffer.mBuffer, realVertexBuffer.mAllocationInfo.size);
+					}
 				}
 
 				(*ppbData) = realVertexBuffer.Lock(OffsetToLock);
@@ -2371,8 +2373,11 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 
 				if (lastId != workItem->Id)
 				{
-					auto& oldRealIndexBuffer = (*commandStreamManager->mRenderManager.mStateManager.mIndexBuffers[lastId]);
-					realIndexBuffer.mRealDevice->CopyBuffer(oldRealIndexBuffer.mBuffer, realIndexBuffer.mBuffer, realIndexBuffer.mAllocationInfo.size);
+					if (!(Flags & D3DLOCK_DISCARD))
+					{
+						auto& oldRealIndexBuffer = (*commandStreamManager->mRenderManager.mStateManager.mIndexBuffers[lastId]);
+						realIndexBuffer.mRealDevice->CopyBuffer(oldRealIndexBuffer.mBuffer, realIndexBuffer.mBuffer, realIndexBuffer.mAllocationInfo.size);
+					}
 				}
 
 				if (realIndexBuffer.mData == nullptr)
