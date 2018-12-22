@@ -32,7 +32,12 @@ misrepresented as being the original software.
 
 #include "RealDevice.h"
 #include "RealRenderTarget.h"
+#include "CSurface9.h"
+#include "CDevice9.h"
+#include "CStateBlock9.h"
+#include "CTexture9.h"
 #include "Utilities.h"
+#include "Perf_StateManager.h"
 
 const uint32_t VERTEX_BUFFER_XYZRHW_VERT[] =
 #include "VertexBuffer_XYZRHW.vert.h"
@@ -143,8 +148,9 @@ const uint32_t PIXEL_PASSTHROUGH_FRAG[] =
 #include "PixelPassthrough.frag.h"
 ;
 
-RealDevice::RealDevice(vk::Instance instance, vk::PhysicalDevice physicalDevice, int32_t width, int32_t height, bool usingRenderDoc)
-	: mInstance(instance),
+RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::PhysicalDevice physicalDevice, int32_t width, int32_t height, bool usingRenderDoc)
+	: mStateManager(stateManager),
+	mInstance(instance),
 	mPhysicalDevice(physicalDevice)
 {
 	BOOST_LOG_TRIVIAL(info) << "RealDevice::RealDevice";
@@ -1042,4 +1048,156 @@ void RealDevice::CopyImage(vk::Image srcImage, vk::Image dstImage, uint32_t leve
 	mQueue.submit(1, &mSubmitInfo, nullptr);
 	mQueue.waitIdle();
 	mCommandBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources); //So far resetting a command buffer is about 10 times faster than allocating a new one.
+}
+
+void RealDevice::StartScene(bool clearColor, bool clearDepth, bool clearStencil)
+{
+	auto& currentBuffer = this->mCommandBuffers[this->mCurrentCommandBuffer];
+	this->mDeviceState.mRenderTarget->StartScene(currentBuffer, mDeviceState, clearColor, clearDepth, clearStencil, mDeviceState.hasPresented);
+	mDeviceState.hasPresented = false;
+}
+
+void RealDevice::StopScene()
+{
+	auto& currentBuffer = this->mCommandBuffers[this->mCurrentCommandBuffer];
+	mDeviceState.mRenderTarget->StopScene(currentBuffer, mQueue);
+}
+
+void RealDevice::SetRenderTarget(CDevice9* device9, DWORD renderTargetIndex, CSurface9* renderTarget)
+{
+	RealSurface* colorSurface = nullptr;
+	RealTexture* colorTexture = nullptr;
+	RealSurface* depthSurface = nullptr;
+
+	if (renderTarget != nullptr)
+	{
+		auto& constants = mDeviceState.mShaderState;
+
+		constants.mRenderState.screenWidth = renderTarget->mWidth;
+		constants.mRenderState.screenHeight = renderTarget->mHeight;
+
+		colorSurface = mStateManager->mSurfaces[renderTarget->mId].get();
+
+		if (renderTarget->mTexture != nullptr)
+		{
+			colorTexture = mStateManager->mTextures[renderTarget->mTexture->mId].get();
+
+			if (mCurrentStateRecording != nullptr)
+			{
+				depthSurface = mCurrentStateRecording->mDeviceState.mRenderTarget->mDepthSurface;
+				mCurrentStateRecording->mDeviceState.mRenderTarget = std::make_shared<RealRenderTarget>(mDevice, colorTexture, colorSurface, depthSurface);
+			}
+			else
+			{
+				if (mDeviceState.mRenderTarget != nullptr && mDeviceState.mRenderTarget->mIsSceneStarted)
+				{
+					StopScene();
+				}
+
+				depthSurface = mDeviceState.mRenderTarget->mDepthSurface;
+				mDeviceState.mRenderTarget = std::make_shared<RealRenderTarget>(mDevice, colorTexture, colorSurface, depthSurface);
+				mRenderTargets.push_back(mDeviceState.mRenderTarget);
+			}
+		}
+		else if (renderTarget->mCubeTexture != nullptr)
+		{
+			BOOST_LOG_TRIVIAL(fatal) << "Cube texture not supported for render target!";
+		}
+		else
+		{
+			if (mCurrentStateRecording != nullptr)
+			{
+				if (mCurrentStateRecording->mDeviceState.mRenderTarget != nullptr)
+				{
+					depthSurface = mCurrentStateRecording->mDeviceState.mRenderTarget->mDepthSurface;
+				}
+				mCurrentStateRecording->mDeviceState.mRenderTarget = std::make_shared<RealRenderTarget>(mDevice, colorSurface, depthSurface);
+			}
+			else
+			{
+				if (mDeviceState.mRenderTarget != nullptr)
+				{
+					if (mDeviceState.mRenderTarget->mIsSceneStarted)
+					{
+						StopScene();
+					}
+					depthSurface = mDeviceState.mRenderTarget->mDepthSurface;
+				}
+				mDeviceState.mRenderTarget = std::make_shared<RealRenderTarget>(mDevice, colorSurface, depthSurface);
+				mRenderTargets.push_back(mDeviceState.mRenderTarget);
+			}
+		}
+	}
+}
+
+void RealDevice::SetDepthStencilSurface(CDevice9* device9, CSurface9* pNewZStencil)
+{
+	RealSurface* colorSurface = nullptr;
+	RealTexture* colorTexture = nullptr;
+	RealSurface* depthSurface = nullptr;
+
+	if (pNewZStencil != nullptr)
+	{
+		auto& constants = mDeviceState.mShaderState;
+		constants.mRenderState.screenWidth = pNewZStencil->mWidth;
+		constants.mRenderState.screenHeight = pNewZStencil->mHeight;
+
+		depthSurface = mStateManager->mSurfaces[pNewZStencil->mId].get();
+	}
+
+	if (mCurrentStateRecording != nullptr)
+	{
+		auto& renderTarget = mCurrentStateRecording->mDeviceState.mRenderTarget;
+		if (renderTarget != nullptr)
+		{
+			colorSurface = renderTarget->mColorSurface;
+			colorTexture = renderTarget->mColorTexture;
+		}
+
+		if (colorTexture != nullptr)
+		{
+			renderTarget = std::make_shared<RealRenderTarget>(mDevice, colorTexture, colorSurface, depthSurface);
+		}
+		else
+		{
+			renderTarget = std::make_shared<RealRenderTarget>(mDevice, colorSurface, depthSurface);
+		}
+	}
+	else
+	{
+		auto& renderTarget = mDeviceState.mRenderTarget;
+		if (renderTarget != nullptr)
+		{
+			if (renderTarget->mIsSceneStarted)
+			{
+				StopScene();
+			}
+
+			colorSurface = renderTarget->mColorSurface;
+			colorTexture = renderTarget->mColorTexture;
+		}
+
+		if (colorTexture != nullptr)
+		{
+			renderTarget = std::make_shared<RealRenderTarget>(mDevice, colorTexture, colorSurface, depthSurface);
+		}
+		else
+		{
+			renderTarget = std::make_shared<RealRenderTarget>(mDevice, colorSurface, depthSurface);
+		}
+		mRenderTargets.push_back(renderTarget);
+	}
+}
+
+void RealDevice::Clear(DWORD Count, const D3DRECT *pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
+{
+	auto& currentBuffer = mCommandBuffers[mCurrentCommandBuffer];
+
+	if (Count > 0 && pRects != nullptr)
+	{
+		BOOST_LOG_TRIVIAL(warning) << "RenderManager::Clear is not fully implemented!";
+		return;
+	}
+
+	mDeviceState.mRenderTarget->Clear(currentBuffer, mDeviceState, Count, pRects, Flags, Color, Z, Stencil);
 }

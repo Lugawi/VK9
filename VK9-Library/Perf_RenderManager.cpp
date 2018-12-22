@@ -73,7 +73,7 @@ void RenderManager::UpdateBuffer(std::shared_ptr<RealDevice> realDevice)
 
 	if (!deviceState.mRenderTarget->mIsSceneStarted)
 	{
-		this->StartScene(realDevice.get(), false, false, false);
+		realDevice->StartScene(false, false, false);
 	}
 
 	auto& currentBuffer = realDevice->mCommandBuffers[realDevice->mCurrentCommandBuffer];
@@ -277,23 +277,6 @@ void RenderManager::UpdateBuffer(std::shared_ptr<RealDevice> realDevice)
 	}
 }
 
-void RenderManager::StartScene(RealDevice* realDevice, bool clearColor, bool clearDepth, bool clearStencil)
-{
-	auto& device = realDevice->mDevice;
-	auto& deviceState = realDevice->mDeviceState;
-	auto& currentBuffer = realDevice->mCommandBuffers[realDevice->mCurrentCommandBuffer];
-
-	realDevice->mDeviceState.mRenderTarget->StartScene(currentBuffer, deviceState, clearColor, clearDepth, clearStencil, deviceState.hasPresented);
-	deviceState.hasPresented = false;
-}
-
-void RenderManager::StopScene(RealDevice* realDevice)
-{
-	auto& currentBuffer = realDevice->mCommandBuffers[realDevice->mCurrentCommandBuffer];
-
-	realDevice->mDeviceState.mRenderTarget->StopScene(currentBuffer, realDevice->mQueue);
-}
-
 void RenderManager::CopyImage(std::shared_ptr<RealDevice> realDevice, vk::Image srcImage, vk::Image dstImage, int32_t x, int32_t y, uint32_t width, uint32_t height, uint32_t depth, uint32_t srcMip, uint32_t dstMip)
 {
 	vk::Result result;
@@ -357,27 +340,13 @@ void RenderManager::CopyImage(std::shared_ptr<RealDevice> realDevice, vk::Image 
 	device.freeCommandBuffers(realDevice->mCommandPool, 1, commandBuffers);
 }
 
-void RenderManager::Clear(std::shared_ptr<RealDevice> realDevice, DWORD Count, const D3DRECT *pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
-{
-	auto& currentBuffer = realDevice->mCommandBuffers[realDevice->mCurrentCommandBuffer];
-	auto& deviceState = realDevice->mDeviceState;
-
-	if (Count > 0 && pRects != nullptr)
-	{
-		BOOST_LOG_TRIVIAL(warning) << "RenderManager::Clear is not fully implemented!";
-		return;
-	}
-
-	realDevice->mDeviceState.mRenderTarget->Clear(currentBuffer, deviceState, Count, pRects, Flags, Color, Z, Stencil);
-}
-
 vk::Result RenderManager::Present(std::shared_ptr<RealDevice> realDevice, const RECT *pSourceRect, const RECT *pDestRect, HWND hDestWindowOverride, const RGNDATA *pDirtyRegion)
 {
 	if (!realDevice->mDeviceState.mRenderTarget->mIsSceneStarted)
 	{
-		this->StartScene(realDevice.get(), false, false, false);
+		realDevice->StartScene(false, false, false);
 	}
-	this->StopScene(realDevice.get());
+	realDevice->StopScene();
 
 	//vk::Result result;
 	auto& device = realDevice->mDevice;
@@ -438,7 +407,7 @@ void RenderManager::DrawIndexedPrimitive(std::shared_ptr<RealDevice> realDevice,
 
 	if (!realDevice->mDeviceState.mRenderTarget->mIsSceneStarted)
 	{
-		this->StartScene(realDevice.get(), false, false, false);
+		realDevice->StartScene(false, false, false);
 	}
 
 	std::shared_ptr<DrawContext> context = std::make_shared<DrawContext>(realDevice.get());
@@ -464,7 +433,7 @@ void RenderManager::DrawPrimitive(std::shared_ptr<RealDevice> realDevice, D3DPRI
 
 	if (!realDevice->mDeviceState.mRenderTarget->mIsSceneStarted)
 	{
-		this->StartScene(realDevice.get(), false, false, false);
+		realDevice->StartScene(false, false, false);
 	}
 
 	std::shared_ptr<DrawContext> context = std::make_shared<DrawContext>(realDevice.get());

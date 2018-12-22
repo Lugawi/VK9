@@ -180,74 +180,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				DWORD RenderTargetIndex = bit_cast<DWORD>(workItem->Argument1);
 				CSurface9* pRenderTarget = bit_cast<CSurface9*>(workItem->Argument2);
 
-				auto& renderManager = commandStreamManager->mRenderManager;
-				auto& stateManager = renderManager.mStateManager;
-				auto& realDevice = stateManager.mDevices[workItem->Id];
-
-				RealSurface* colorSurface = nullptr;
-				RealTexture* colorTexture = nullptr;
-				RealSurface* depthSurface = nullptr;
-
-				if (pRenderTarget != nullptr)
-				{
-					auto& deviceState = realDevice->mDeviceState;
-					auto& constants = deviceState.mShaderState;
-
-					constants.mRenderState.screenWidth = pRenderTarget->mWidth;
-					constants.mRenderState.screenHeight = pRenderTarget->mHeight;
-
-					colorSurface = stateManager.mSurfaces[pRenderTarget->mId].get();
-
-					if (pRenderTarget->mTexture != nullptr)
-					{
-						colorTexture = stateManager.mTextures[pRenderTarget->mTexture->mId].get();
-
-						if (realDevice->mCurrentStateRecording != nullptr)
-						{
-							depthSurface = realDevice->mCurrentStateRecording->mDeviceState.mRenderTarget->mDepthSurface;
-							realDevice->mCurrentStateRecording->mDeviceState.mRenderTarget = std::make_shared<RealRenderTarget>(realDevice->mDevice, colorTexture, colorSurface, depthSurface);
-						}
-						else
-						{
-							if (deviceState.mRenderTarget != nullptr && deviceState.mRenderTarget->mIsSceneStarted)
-							{
-								renderManager.StopScene(realDevice.get());
-							}
-
-							depthSurface = deviceState.mRenderTarget->mDepthSurface;
-							deviceState.mRenderTarget = std::make_shared<RealRenderTarget>(realDevice->mDevice, colorTexture, colorSurface, depthSurface);
-							realDevice->mRenderTargets.push_back(deviceState.mRenderTarget);
-						}
-					}
-					else if (pRenderTarget->mCubeTexture != nullptr)
-					{
-						BOOST_LOG_TRIVIAL(fatal) << "Cube texture not supported for render target!";
-					}
-					else
-					{
-						if (realDevice->mCurrentStateRecording != nullptr)
-						{
-							if (realDevice->mCurrentStateRecording->mDeviceState.mRenderTarget != nullptr)
-							{
-								depthSurface = realDevice->mCurrentStateRecording->mDeviceState.mRenderTarget->mDepthSurface;
-							}
-							realDevice->mCurrentStateRecording->mDeviceState.mRenderTarget = std::make_shared<RealRenderTarget>(realDevice->mDevice, colorSurface, depthSurface);
-						}
-						else
-						{
-							if (deviceState.mRenderTarget != nullptr)
-							{
-								if (deviceState.mRenderTarget->mIsSceneStarted)
-								{
-									renderManager.StopScene(realDevice.get());
-								}
-								depthSurface = deviceState.mRenderTarget->mDepthSurface;
-							}
-							deviceState.mRenderTarget = std::make_shared<RealRenderTarget>(realDevice->mDevice, colorSurface, depthSurface);
-							realDevice->mRenderTargets.push_back(deviceState.mRenderTarget);
-						}
-					}
-				}
+				commandStreamManager->mRenderManager.mStateManager.mDevices[workItem->Id]->SetRenderTarget(device9, RenderTargetIndex, pRenderTarget);
 			}
 			break;
 			case Device_SetDepthStencilSurface:
@@ -255,65 +188,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				CDevice9* device9 = bit_cast<CDevice9*>(workItem->Caller);
 				CSurface9* pNewZStencil = bit_cast<CSurface9*>(workItem->Argument1);
 
-				auto& stateManager = commandStreamManager->mRenderManager.mStateManager;
-				auto& realDevice = stateManager.mDevices[workItem->Id];
-				auto& renderManager = commandStreamManager->mRenderManager;
-
-				RealSurface* colorSurface = nullptr;
-				RealTexture* colorTexture = nullptr;
-				RealSurface* depthSurface = nullptr;
-
-				if (pNewZStencil != nullptr)
-				{
-					auto& constants = realDevice->mDeviceState.mShaderState;
-					constants.mRenderState.screenWidth = pNewZStencil->mWidth;
-					constants.mRenderState.screenHeight = pNewZStencil->mHeight;
-
-					depthSurface = stateManager.mSurfaces[pNewZStencil->mId].get();
-				}
-
-				if (realDevice->mCurrentStateRecording != nullptr)
-				{
-					auto& renderTarget = realDevice->mCurrentStateRecording->mDeviceState.mRenderTarget;
-					if (renderTarget != nullptr)
-					{
-						colorSurface = renderTarget->mColorSurface;
-						colorTexture = renderTarget->mColorTexture;
-					}
-
-					if (colorTexture != nullptr)
-					{
-						renderTarget = std::make_shared<RealRenderTarget>(realDevice->mDevice, colorTexture, colorSurface, depthSurface);
-					}
-					else
-					{
-						renderTarget = std::make_shared<RealRenderTarget>(realDevice->mDevice, colorSurface, depthSurface);
-					}
-				}
-				else
-				{
-					auto& renderTarget = realDevice->mDeviceState.mRenderTarget;
-					if (renderTarget != nullptr)
-					{
-						if (renderTarget->mIsSceneStarted)
-						{
-							renderManager.StopScene(realDevice.get());
-						}
-
-						colorSurface = renderTarget->mColorSurface;
-						colorTexture = renderTarget->mColorTexture;
-					}
-
-					if (colorTexture != nullptr)
-					{
-						renderTarget = std::make_shared<RealRenderTarget>(realDevice->mDevice, colorTexture, colorSurface, depthSurface);
-					}
-					else
-					{
-						renderTarget = std::make_shared<RealRenderTarget>(realDevice->mDevice, colorSurface, depthSurface);
-					}
-					realDevice->mRenderTargets.push_back(renderTarget);
-				}
+				commandStreamManager->mRenderManager.mStateManager.mDevices[workItem->Id]->SetDepthStencilSurface(device9, pNewZStencil);
 			}
 			break;
 			case Device_Clear:
@@ -325,9 +200,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				float Z = bit_cast<float>(workItem->Argument5);
 				DWORD Stencil = bit_cast<DWORD>(workItem->Argument6);
 
-				auto& realDevice = commandStreamManager->mRenderManager.mStateManager.mDevices[workItem->Id];
-
-				commandStreamManager->mRenderManager.Clear(realDevice, Count, pRects, Flags, Color, Z, Stencil);
+				commandStreamManager->mRenderManager.mStateManager.mDevices[workItem->Id]->Clear(Count, pRects, Flags, Color, Z, Stencil);
 			}
 			break;
 			case Device_BeginScene:
@@ -336,7 +209,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				auto& realDevice = renderManager.mStateManager.mDevices[workItem->Id];
 				if (!realDevice->mDeviceState.mRenderTarget->mIsSceneStarted)
 				{
-					renderManager.StartScene(realDevice.get(), false, false, false);
+					realDevice->StartScene(false, false, false);
 				}
 			}
 			break;

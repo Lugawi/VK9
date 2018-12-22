@@ -30,7 +30,10 @@ misrepresented as being the original software.
 struct RealRenderTarget;
 struct SamplerRequest;
 struct DrawContext;
+struct StateManager;
 class CStateBlock9;
+class CSurface9;
+class CDevice9;
 
 #ifndef MAX_DESCRIPTOR
 #define MAX_DESCRIPTOR 2048
@@ -1254,13 +1257,20 @@ struct RealDevice
 	vk::Pipeline mLastVkPipeline;
 	RealIndexBuffer* mLastIndexBuffer = nullptr;
 
-	RealDevice(vk::Instance instance, vk::PhysicalDevice physicalDevice,int32_t width, int32_t height, bool usingRenderDoc);
+	StateManager* mStateManager;
+
+	RealDevice(StateManager* stateManager, vk::Instance instance, vk::PhysicalDevice physicalDevice,int32_t width, int32_t height, bool usingRenderDoc);
 	~RealDevice();
 
 	void SetImageLayout(vk::Image image, vk::ImageAspectFlags aspectMask, vk::ImageLayout oldImageLayout, vk::ImageLayout newImageLayout, uint32_t levelCount = 1, uint32_t mipIndex = 0, uint32_t layerCount = 1);
 	void CreateBuffer(vk::DeviceSize size, const vk::BufferUsageFlags& usage, vk::MemoryPropertyFlagBits properties, vk::Buffer& buffer, vk::DeviceMemory& deviceMemory);
 	void CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
 	void CopyImage(vk::Image srcImage, vk::Image dstImage, uint32_t levelCount, uint32_t layerCount, uint32_t width, uint32_t height, uint32_t depth);
+	void StartScene(bool clearColor, bool clearDepth, bool clearStencil);
+	void StopScene();
+	void SetRenderTarget(CDevice9* device9, DWORD renderTargetIndex, CSurface9* renderTarget);
+	void SetDepthStencilSurface(CDevice9* device9, CSurface9* pNewZStencil);
+	void Clear(DWORD Count, const D3DRECT* pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil);
 };
 
 #endif // REALDEVICE_H
