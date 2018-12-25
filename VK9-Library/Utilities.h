@@ -645,7 +645,7 @@ inline vk::Format ConvertFormat(D3DFORMAT format) noexcept
 		*/
 		return (vk::Format)VK_FORMAT_B8G8R8A8_UNORM; //B8G8R8X8_UNORM
 	case D3DFMT_R5G6B5:
-		return (vk::Format)VK_FORMAT_B5G6R5_UNORM_PACK16;
+		return (vk::Format)VK_FORMAT_R5G6B5_UNORM_PACK16; //Reall this is VK_FORMAT_B5G6R5_UNORM_PACK16 but Nvidia doesn't support that format as an attachment so we'll do it the other way around and remap.
 	case D3DFMT_X1R5G5B5:
 		return (vk::Format)VK_FORMAT_B5G5R5A1_UNORM_PACK16; //B5G5R5X1_UNORM
 	case D3DFMT_A1R5G5B5:

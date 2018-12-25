@@ -129,7 +129,7 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 
 	mExtent = imageCreateInfo.extent;
 
-	
+
 	VmaAllocationCreateInfo imageAllocInfo = {};
 	imageAllocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
 
@@ -176,6 +176,10 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 	{
 		switch (surface9->mFormat)
 		{
+		case D3DFMT_R5G6B5:
+			//Vulkan has a matching format but nvidia doesn't support using it as a color attachment so we just use the other one and re-map the components.
+			imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eB, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eOne);
+			break;
 		case D3DFMT_A8:
 			//TODO: Revisit A8 mapping.
 			imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eR);
@@ -199,10 +203,19 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 	}
 	else
 	{
-		imageViewCreateInfo.components.r = vk::ComponentSwizzle::eIdentity;
-		imageViewCreateInfo.components.g = vk::ComponentSwizzle::eIdentity;
-		imageViewCreateInfo.components.b = vk::ComponentSwizzle::eIdentity;
-		imageViewCreateInfo.components.a = vk::ComponentSwizzle::eIdentity;
+		switch (surface9->mFormat)
+		{
+		case D3DFMT_R5G6B5:
+			//Vulkan has a matching format but nvidia doesn't support using it as a color attachment so we just use the other one and re-map the components.
+			imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eB, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eOne);
+			break;
+		default:
+			imageViewCreateInfo.components.r = vk::ComponentSwizzle::eIdentity;
+			imageViewCreateInfo.components.g = vk::ComponentSwizzle::eIdentity;
+			imageViewCreateInfo.components.b = vk::ComponentSwizzle::eIdentity;
+			imageViewCreateInfo.components.a = vk::ComponentSwizzle::eIdentity;
+			break;
+		}
 	}
 
 	if (surface9->mTexture == nullptr && surface9->mCubeTexture == nullptr)

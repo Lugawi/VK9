@@ -500,6 +500,10 @@ void StateManager::CreateTexture(size_t id, void* argument1)
 	*/
 	switch (texture9->mFormat)
 	{
+	case D3DFMT_R5G6B5:
+		//Vulkan has a matching format but nvidia doesn't support using it as a color attachment so we just use the other one and re-map the components.
+		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eB, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eOne);
+		break;
 	case D3DFMT_A8:
 		//TODO: Revisit A8 mapping.
 		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eR);
