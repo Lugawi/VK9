@@ -2915,7 +2915,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				}
 
 				pLockedRect->pBits = (void*)bytes;
-				pLockedRect->Pitch = surface.mLayouts[0].rowPitch;
+				pLockedRect->Pitch = std::min(surface.mLayouts[0].rowPitch, surface.mLayouts[0].size); //work-around for 1x1 returning values larger than size.
 
 				if ((Flags & D3DLOCK_NO_DIRTY_UPDATE) == D3DLOCK_NO_DIRTY_UPDATE)
 				{
