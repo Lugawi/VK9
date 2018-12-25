@@ -723,14 +723,14 @@ uint32_t ShaderConverter::GetSpirVTypeId(TypeDescription& registerType, uint32_t
 		mTypeInstructions.push_back(Pack(4, registerType.PrimaryType)); //size,Type
 		mTypeInstructions.push_back(id); //Id
 		mTypeInstructions.push_back(arrayTypeId); // Type
-		mTypeInstructions.push_back(mConstantIntegerIds[16]); // Length
+		mTypeInstructions.push_back(mConstantIntegerIds[registerType.ComponentCount]); // Length
 		break;
 	case spv::OpTypePointer:
 		pointerTypeId = GetSpirVTypeId(registerType.SecondaryType, registerType.TernaryType, registerType.ComponentCount);
 
 		mTypeInstructions.push_back(Pack(4, registerType.PrimaryType)); //size,Type
 		mTypeInstructions.push_back(id); //Id
-		if (registerType.SecondaryType == spv::OpTypeSampledImage || registerType.SecondaryType == spv::OpTypeImage)
+		if (registerType.SecondaryType == spv::OpTypeSampledImage || registerType.SecondaryType == spv::OpTypeImage || registerType.TernaryType == spv::OpTypeSampledImage || registerType.TernaryType == spv::OpTypeImage)
 		{
 			mTypeInstructions.push_back(spv::StorageClassUniformConstant); //Storage Class
 		}
@@ -1132,6 +1132,7 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 		integerVectorPointerType.SecondaryType = spv::OpTypeVector;
 		integerVectorPointerType.TernaryType = spv::OpTypeInt;
 		integerVectorPointerType.ComponentCount = 4;
+		integerVectorPointerType.StorageClass = spv::StorageClassUniform;
 		uint32_t integerVectorPointerTypeId = GetSpirVTypeId(integerVectorPointerType);
 
 		TypeDescription integerType;
@@ -1167,6 +1168,7 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 		TypeDescription integerPointerType;
 		integerPointerType.PrimaryType = spv::OpTypePointer;
 		integerPointerType.SecondaryType = spv::OpTypeInt;
+		integerPointerType.StorageClass = spv::StorageClassUniform;
 		uint32_t integerPointerTypeId = GetSpirVTypeId(integerPointerType);
 
 		uint32_t memberIndexId = GetNextId();
@@ -1205,6 +1207,7 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 		floatVectorPointerType.SecondaryType = spv::OpTypeVector;
 		floatVectorPointerType.TernaryType = spv::OpTypeFloat;
 		floatVectorPointerType.ComponentCount = 4;
+		floatVectorPointerType.StorageClass = spv::StorageClassUniform;
 		uint32_t floatVectorPointerTypeId = GetSpirVTypeId(floatVectorPointerType);
 
 		TypeDescription integerType;
@@ -1230,7 +1233,7 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 		id = GetNextId();
 		description.PrimaryType = spv::OpTypePointer;
 		description.SecondaryType = spv::OpTypeImage;
-		description.StorageClass = spv::StorageClassInput; //spv::StorageClassUniformConstant;
+		description.StorageClass = spv::StorageClassUniformConstant; //spv::StorageClassUniformConstant;
 		typeId = GetSpirVTypeId(description);
 
 		mIdsByRegister[registerType][registerNumber] = id;
@@ -3995,9 +3998,11 @@ void ShaderConverter::Process_DCL_Pixel()
 
 	if (registerType == D3DSPR_SAMPLER)
 	{
-		typeDescription.PrimaryType = spv::OpTypePointer;
-		typeDescription.SecondaryType = spv::OpTypeImage;
-		typeDescription.StorageClass = spv::StorageClassUniformConstant;
+		//typeDescription.PrimaryType = spv::OpTypePointer;
+		//typeDescription.SecondaryType = spv::OpTypeImage;
+		//typeDescription.StorageClass = spv::StorageClassUniformConstant;
+
+		return; //Allow the dynamic code to pick up samplers.
 	}
 	else
 	{
@@ -4074,7 +4079,7 @@ void ShaderConverter::Process_DCL_Pixel()
 		GenerateDecoration(registerNumber, tokenId, (_D3DDECLUSAGE)usage, true);
 		break;
 	case D3DSPR_SAMPLER:
-		textureType = GetTextureType(token.i);
+		//textureType = GetTextureType(token.i);
 
 		//switch (textureType)
 		//{
@@ -4090,20 +4095,20 @@ void ShaderConverter::Process_DCL_Pixel()
 		//	break;
 		//}	
 
-		resultTypeId = GetSpirVTypeId(spv::OpTypePointer, spv::OpTypeImage);
-		mTypeInstructions.push_back(Pack(4, spv::OpVariable)); //size,Type
-		mTypeInstructions.push_back(resultTypeId); //ResultType (Id) Must be OpTypePointer with the pointer's type being what you care about.
-		mTypeInstructions.push_back(tokenId); //Result (Id)
-		mTypeInstructions.push_back(spv::StorageClassUniformConstant); //Storage Class
-		//Optional initializer
+		//resultTypeId = GetSpirVTypeId(spv::OpTypePointer, spv::OpTypeImage);
+		//mTypeInstructions.push_back(Pack(4, spv::OpVariable)); //size,Type
+		//mTypeInstructions.push_back(resultTypeId); //ResultType (Id) Must be OpTypePointer with the pointer's type being what you care about.
+		//mTypeInstructions.push_back(tokenId); //Result (Id)
+		//mTypeInstructions.push_back(spv::StorageClassUniformConstant); //Storage Class
+		////Optional initializer
 
-		mConvertedShader.mDescriptorSetLayoutBinding[mConvertedShader.mDescriptorSetLayoutBindingCount].binding = registerNumber; //mConvertedShader.mDescriptorSetLayoutBindingCount;
-		mConvertedShader.mDescriptorSetLayoutBinding[mConvertedShader.mDescriptorSetLayoutBindingCount].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-		mConvertedShader.mDescriptorSetLayoutBinding[mConvertedShader.mDescriptorSetLayoutBindingCount].descriptorCount = 1;
-		mConvertedShader.mDescriptorSetLayoutBinding[mConvertedShader.mDescriptorSetLayoutBindingCount].stageFlags = vk::ShaderStageFlagBits::eFragment;
-		mConvertedShader.mDescriptorSetLayoutBinding[mConvertedShader.mDescriptorSetLayoutBindingCount].pImmutableSamplers = nullptr;
+		//mConvertedShader.mDescriptorSetLayoutBinding[mConvertedShader.mDescriptorSetLayoutBindingCount].binding = registerNumber; //mConvertedShader.mDescriptorSetLayoutBindingCount;
+		//mConvertedShader.mDescriptorSetLayoutBinding[mConvertedShader.mDescriptorSetLayoutBindingCount].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+		//mConvertedShader.mDescriptorSetLayoutBinding[mConvertedShader.mDescriptorSetLayoutBindingCount].descriptorCount = 1;
+		//mConvertedShader.mDescriptorSetLayoutBinding[mConvertedShader.mDescriptorSetLayoutBindingCount].stageFlags = vk::ShaderStageFlagBits::eFragment;
+		//mConvertedShader.mDescriptorSetLayoutBinding[mConvertedShader.mDescriptorSetLayoutBindingCount].pImmutableSamplers = nullptr;
 
-		mConvertedShader.mDescriptorSetLayoutBindingCount++;
+		//mConvertedShader.mDescriptorSetLayoutBindingCount++;
 
 
 		/*
