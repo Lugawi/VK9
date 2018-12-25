@@ -530,7 +530,7 @@ vk::Result RealSwapChain::Present(vk::CommandBuffer& commandBuffer, vk::Queue& q
 	//}
 
 	mPresentInfo.waitSemaphoreCount = 1;
-	mPresentInfo.pWaitSemaphores = &mImageAvailableSemaphores[mCurrentFrameIndex];
+	mPresentInfo.pWaitSemaphores = &mRenderFinishedSemaphores[mCurrentFrameIndex];
 	mPresentInfo.pImageIndices = &mCurrentImageIndex;
 	mResult = queue.presentKHR(&mPresentInfo);
 	if (mResult != vk::Result::eSuccess)
