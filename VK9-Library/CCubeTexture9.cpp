@@ -273,11 +273,13 @@ HRESULT STDMETHODCALLTYPE CCubeTexture9::AddDirtyRect(D3DCUBEMAP_FACES FaceType,
 
 HRESULT STDMETHODCALLTYPE CCubeTexture9::GetCubeMapSurface(D3DCUBEMAP_FACES FaceType, UINT Level, IDirect3DSurface9** ppCubeMapSurface)
 {
-	//TODO: Implement.
+	IDirect3DSurface9* surface = (IDirect3DSurface9*)this->mSurfaces[FaceType][Level];
 
-	BOOST_LOG_TRIVIAL(warning) << "CCubeTexture9::GetCubeMapSurface is not implemented!";
+	surface->AddRef();
 
-	return S_OK;	
+	(*ppCubeMapSurface) = surface;
+
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CCubeTexture9::GetLevelDesc(UINT Level, D3DSURFACE_DESC* pDesc)
