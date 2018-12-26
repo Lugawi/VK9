@@ -2294,11 +2294,7 @@ uint32_t ShaderConverter::ApplyWriteMask(const Token& token, uint32_t modifiedId
 		inputId = modifiedId;
 	}
 
-	/*
-	Sometimes we have to go from vec4 to vec3 or vec4 to float.
-	The result token tells us what the swizzle needs to be but we'll have to emit some code to convert it to the right type.
-	*/
-	inputId = SwizzleValue(token, inputId);
+	//inputId = SwizzleValue(token, inputId); //This code isn't needed now that we store per channel.
 
 	/*
 	If this token has the _sat modifier then do a clamp before we store the result.
