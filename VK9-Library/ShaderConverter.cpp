@@ -1347,6 +1347,11 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 	{
 		originalId = GetIdByRegister(token, D3DSPR_SAMPLER);
 	}
+	else if (lookingFor == GIVE_ME_SCALAR)
+	{
+		originalId = GetIdByRegister(token);
+		outputComponentCount = 1;
+	}
 	else if (lookingFor == GIVE_ME_VECTOR_2)
 	{
 		originalId = GetIdByRegister(token, D3DSPR_TEXTURE, D3DDECLUSAGE_TEXCOORD);
@@ -1631,7 +1636,7 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 	*/
 	uint32_t swizzle = token.i & D3DVS_SWIZZLE_MASK;
 
-	if (swizzle == 0 || swizzle == D3DVS_NOSWIZZLE || lookingFor == GIVE_ME_SAMPLER)
+	if ((swizzle == 0 || swizzle == D3DVS_NOSWIZZLE || lookingFor == GIVE_ME_SAMPLER) && (lookingFor != GIVE_ME_SCALAR))
 	{
 		return loadedId; //No swizzle no op.
 	}
@@ -1658,10 +1663,16 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 	//OpVectorShuffle must return a vector and vectors must have at least 2 elements so OpCompositeExtract must be used for a single component swizzle operation.
 	if
 		(
-		((xSource >> D3DVS_SWIZZLE_SHIFT) == (ySource >> (D3DVS_SWIZZLE_SHIFT + 2))) &&
-			((xSource >> D3DVS_SWIZZLE_SHIFT) == (zSource >> (D3DVS_SWIZZLE_SHIFT + 4))) &&
-			((xSource >> D3DVS_SWIZZLE_SHIFT) == (wSource >> (D3DVS_SWIZZLE_SHIFT + 6)))
+			(
+				((xSource >> D3DVS_SWIZZLE_SHIFT) == (ySource >> (D3DVS_SWIZZLE_SHIFT + 2))) &&
+				((xSource >> D3DVS_SWIZZLE_SHIFT) == (zSource >> (D3DVS_SWIZZLE_SHIFT + 4))) &&
+				((xSource >> D3DVS_SWIZZLE_SHIFT) == (wSource >> (D3DVS_SWIZZLE_SHIFT + 6)))
+			) 
+			|| 
+			(
+				outputComponentCount == 1
 			)
+		)
 	{
 		TypeDescription outputType = mIdTypePairs[loadedId];
 		outputType.PrimaryType = outputType.SecondaryType;
@@ -5814,6 +5825,7 @@ void ShaderConverter::Process_FRC()
 	wholePointerType.PrimaryType = spv::OpTypePointer;
 	wholePointerType.SecondaryType = typeDescription.PrimaryType;
 	wholePointerType.TernaryType = typeDescription.SecondaryType;
+	wholePointerType.ComponentCount = typeDescription.ComponentCount;
 	uint32_t wholePointerTypeId = GetSpirVTypeId(wholePointerType);
 
 	mTypeInstructions.push_back(Pack(4, spv::OpVariable)); //size,Type
@@ -7268,7 +7280,7 @@ void ShaderConverter::Process_SINCOS()
 
 	Token argumentToken1 = GetNextToken();
 	_D3DSHADER_PARAM_REGISTER_TYPE argumentRegisterType1 = GetRegisterType(argumentToken1.i);
-	uint32_t argumentId1 = GetSwizzledId(argumentToken1, GIVE_ME_VECTOR_4);
+	uint32_t argumentId1 = GetSwizzledId(argumentToken1, GIVE_ME_SCALAR);
 
 	Token argumentToken2 = (mMajorVersion < 3) ? GetNextToken() : argumentToken1;
 	_D3DSHADER_PARAM_REGISTER_TYPE argumentRegisterType2 = GetRegisterType(argumentToken2.i);
