@@ -2541,7 +2541,7 @@ void ShaderConverter::GenerateConstantIndices()
 	registerName = "float_0";
 	PushName(m0fId, registerName);
 
-	uint32_t m0vfId = GetNextId();
+	m0vfId = GetNextId();
 	mIdTypePairs[m0vfId] = compositeType;
 	mTypeInstructions.push_back(Pack(3 + 4, spv::OpConstantComposite)); //size,Type
 	mTypeInstructions.push_back(compositeTypeId); //Result Type (Id)
@@ -2562,7 +2562,7 @@ void ShaderConverter::GenerateConstantIndices()
 	registerName = "float_1";
 	PushName(m1fId, registerName);
 
-	uint32_t m1vfId = GetNextId();
+	m1vfId = GetNextId();
 	mIdTypePairs[m1vfId] = compositeType;
 	mTypeInstructions.push_back(Pack(3 + 4, spv::OpConstantComposite)); //size,Type
 	mTypeInstructions.push_back(compositeTypeId); //Result Type (Id)
@@ -7189,11 +7189,11 @@ void ShaderConverter::Process_CMP()
 	_D3DSHADER_PARAM_REGISTER_TYPE argumentRegisterType3 = GetRegisterType(argumentToken3.i);
 	uint32_t argumentId3 = GetSwizzledId(argumentToken3, GIVE_ME_VECTOR_4);
 
-	TypeDescription typeDescription = mIdTypePairs[argumentId1];
+	TypeDescription typeDescription = mIdTypePairs[argumentId2]; //2 or 3 must match the output type but 1 can be whatever.
 
 	if (typeDescription.PrimaryType == spv::OpTypeVoid)
 	{
-		typeDescription = mIdTypePairs[argumentId2];
+		typeDescription = mIdTypePairs[argumentId3];
 	}
 
 	spv::Op dataType = typeDescription.PrimaryType;
