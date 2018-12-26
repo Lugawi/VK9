@@ -2306,13 +2306,28 @@ uint32_t ShaderConverter::ApplyWriteMask(const Token& token, uint32_t modifiedId
 		uint32_t saturatedInputTypeId = GetSpirVTypeId(saturatedInputType);
 		mIdTypePairs[saturatedInputId] = saturatedInputType;
 
-		if (saturatedInputType.PrimaryType == spv::OpTypeFloat || saturatedInputType.SecondaryType == spv::OpTypeFloat)
+		if (saturatedInputType.PrimaryType == spv::OpTypeVector)
+		{
+			if (saturatedInputType.SecondaryType == spv::OpTypeFloat)
+			{
+				Push(spv::OpExtInst, saturatedInputTypeId, saturatedInputId, mGlslExtensionId, GLSLstd450::GLSLstd450FClamp, inputId, m0vfId, m1vfId);
+			}
+			else
+			{
+				BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::ApplyWriteMask - unsupported data type for clamp!";
+			}
+		}
+		else if(saturatedInputType.PrimaryType == spv::OpTypeFloat)
 		{
 			Push(spv::OpExtInst, saturatedInputTypeId, saturatedInputId, mGlslExtensionId, GLSLstd450::GLSLstd450FClamp, inputId, m0fId, m1fId);
 		}
+		else if (saturatedInputType.PrimaryType == spv::OpTypeInt)
+		{
+			Push(spv::OpExtInst, saturatedInputTypeId, saturatedInputId, mGlslExtensionId, GLSLstd450::GLSLstd450UClamp, inputId, mConstantIntegerIds[0], mConstantIntegerIds[1]);
+		}
 		else
 		{
-			Push(spv::OpExtInst, saturatedInputTypeId, saturatedInputId, mGlslExtensionId, GLSLstd450::GLSLstd450UClamp, inputId, m0fId, m1fId);
+			BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::ApplyWriteMask - unsupported data type for clamp!";
 		}
 
 		inputId = saturatedInputId;
@@ -2506,9 +2521,16 @@ void ShaderConverter::GenerateConstantIndices()
 	std::string registerName;
 	uint32_t stringWordSize = 0;
 
+	//Create float constants.
 	TypeDescription floatType;
 	floatType.PrimaryType = spv::OpTypeFloat;
 	uint32_t floatTypeId = GetSpirVTypeId(floatType);
+
+	TypeDescription compositeType;
+	compositeType.PrimaryType = spv::OpTypeVector;
+	compositeType.SecondaryType = spv::OpTypeFloat;
+	compositeType.ComponentCount = 4;
+	uint32_t compositeTypeId = GetSpirVTypeId(compositeType);
 
 	m0fId = GetNextId();
 	mIdTypePairs[m0fId] = floatType;
@@ -2519,6 +2541,18 @@ void ShaderConverter::GenerateConstantIndices()
 	registerName = "float_0";
 	PushName(m0fId, registerName);
 
+	uint32_t m0vfId = GetNextId();
+	mIdTypePairs[m0vfId] = compositeType;
+	mTypeInstructions.push_back(Pack(3 + 4, spv::OpConstantComposite)); //size,Type
+	mTypeInstructions.push_back(compositeTypeId); //Result Type (Id)
+	mTypeInstructions.push_back(m0vfId); //Result (Id)
+	mTypeInstructions.push_back(m0fId); // Value (Id)
+	mTypeInstructions.push_back(m0fId); // Value (Id)
+	mTypeInstructions.push_back(m0fId); // Value (Id)
+	mTypeInstructions.push_back(m0fId); // Value (Id)
+	registerName = "vec4_0";
+	PushName(m0vfId, registerName);
+
 	m1fId = GetNextId();
 	mIdTypePairs[m1fId] = floatType;
 	mTypeInstructions.push_back(Pack(3 + 1, spv::OpConstant)); //size,Type
@@ -2528,6 +2562,19 @@ void ShaderConverter::GenerateConstantIndices()
 	registerName = "float_1";
 	PushName(m1fId, registerName);
 
+	uint32_t m1vfId = GetNextId();
+	mIdTypePairs[m1vfId] = compositeType;
+	mTypeInstructions.push_back(Pack(3 + 4, spv::OpConstantComposite)); //size,Type
+	mTypeInstructions.push_back(compositeTypeId); //Result Type (Id)
+	mTypeInstructions.push_back(m1vfId); //Result (Id)
+	mTypeInstructions.push_back(m1fId); // Value (Id)
+	mTypeInstructions.push_back(m1fId); // Value (Id)
+	mTypeInstructions.push_back(m1fId); // Value (Id)
+	mTypeInstructions.push_back(m1fId); // Value (Id)
+	registerName = "vec4_1";
+	PushName(m1vfId, registerName);
+
+	//Create int constants.
 	TypeDescription intType;
 	intType.PrimaryType = spv::OpTypeInt;
 	uint32_t intTypeId = GetSpirVTypeId(intType);
@@ -5606,16 +5653,11 @@ void ShaderConverter::Process_EXPP()
 	_D3DSHADER_PARAM_REGISTER_TYPE argumentRegisterType1 = GetRegisterType(argumentToken1.i);
 	uint32_t argumentId1 = GetSwizzledId(argumentToken1, GIVE_ME_VECTOR_4);
 
-	Token argumentToken2 = GetNextToken();
-	_D3DSHADER_PARAM_REGISTER_TYPE argumentRegisterType2 = GetRegisterType(argumentToken2.i);
-	uint32_t argumentId2 = GetSwizzledId(argumentToken2, GIVE_ME_VECTOR_4);
+	//Token argumentToken2 = GetNextToken();
+	//_D3DSHADER_PARAM_REGISTER_TYPE argumentRegisterType2 = GetRegisterType(argumentToken2.i);
+	//uint32_t argumentId2 = GetSwizzledId(argumentToken2, GIVE_ME_VECTOR_4);
 
 	TypeDescription typeDescription = mIdTypePairs[argumentId1];
-
-	if (typeDescription.PrimaryType == spv::OpTypeVoid)
-	{
-		typeDescription = mIdTypePairs[argumentId2];
-	}
 
 	spv::Op dataType = typeDescription.PrimaryType;
 
@@ -5935,15 +5977,6 @@ void ShaderConverter::Process_ADD()
 		argumentType2.TernaryType = spv::OpTypeVoid;
 	}
 
-	//Type could be pointer and matrix so checks are run separately.
-	if (typeDescription.PrimaryType == spv::OpTypePointer)
-	{
-		//Shift the result type so we get a register instead of a pointer as the output type.
-		typeDescription.PrimaryType = typeDescription.SecondaryType;
-		typeDescription.SecondaryType = typeDescription.TernaryType;
-		typeDescription.TernaryType = spv::OpTypeVoid;
-	}
-
 	//Figure out which OpCode to used based on the argument types.
 	//Unforunately DXBC doesn't care about argument types for Addtiply but SpirV does.
 	if (argumentType1.PrimaryType == spv::OpTypeFloat && argumentType2.PrimaryType == spv::OpTypeFloat)
@@ -6054,46 +6087,116 @@ void ShaderConverter::Process_SUB()
 	_D3DSHADER_PARAM_REGISTER_TYPE argumentRegisterType2 = GetRegisterType(argumentToken2.i);
 	uint32_t argumentId2 = GetSwizzledId(argumentToken2, GIVE_ME_VECTOR_4);
 
-	TypeDescription typeDescription = mIdTypePairs[argumentId1];
+	//Grab type info if there is any.
+	TypeDescription argumentType1 = mIdTypePairs[argumentId1];
+	TypeDescription argumentType2 = mIdTypePairs[argumentId2];
+	TypeDescription typeDescription;
 
-	if (typeDescription.PrimaryType == spv::OpTypeVoid)
+	//Shift the result type so we get a register instead of a pointer as the output type.
+	if (argumentType1.PrimaryType == spv::OpTypePointer)
 	{
-		typeDescription = mIdTypePairs[argumentId2];
+
+		argumentType1.PrimaryType = argumentType1.SecondaryType;
+		argumentType1.SecondaryType = argumentType1.TernaryType;
+		argumentType1.TernaryType = spv::OpTypeVoid;
 	}
 
-	spv::Op dataType = typeDescription.PrimaryType;
-
-	//Type could be pointer and matrix so checks are run separately.
-	if (typeDescription.PrimaryType == spv::OpTypePointer)
+	if (argumentType2.PrimaryType == spv::OpTypePointer)
 	{
-		//Shift the result type so we get a register instead of a pointer as the output type.
-		typeDescription.PrimaryType = typeDescription.SecondaryType;
-		typeDescription.SecondaryType = typeDescription.TernaryType;
-		typeDescription.TernaryType = spv::OpTypeVoid;
+		argumentType2.PrimaryType = argumentType2.SecondaryType;
+		argumentType2.SecondaryType = argumentType2.TernaryType;
+		argumentType2.TernaryType = spv::OpTypeVoid;
 	}
 
-	if (typeDescription.PrimaryType == spv::OpTypeMatrix || typeDescription.PrimaryType == spv::OpTypeVector)
+	//Figure out which OpCode to used based on the argument types.
+	//Unforunately DXBC doesn't care about argument types for Subtiply but SpirV does.
+	if (argumentType1.PrimaryType == spv::OpTypeFloat && argumentType2.PrimaryType == spv::OpTypeFloat)
 	{
-		dataType = typeDescription.SecondaryType;
-	}
-
-	uint32_t dataTypeId = GetSpirVTypeId(typeDescription);
-
-	mIdTypePairs[resultId] = typeDescription;
-	switch (dataType)
-	{
-	case spv::OpTypeBool:
-		Push(spv::OpISub, dataTypeId, resultId, argumentId1, argumentId2);
-		break;
-	case spv::OpTypeInt:
-		Push(spv::OpISub, dataTypeId, resultId, argumentId1, argumentId2);
-		break;
-	case spv::OpTypeFloat:
+		typeDescription = argumentType1;
+		uint32_t dataTypeId = GetSpirVTypeId(typeDescription);
+		mIdTypePairs[resultId] = typeDescription;
 		Push(spv::OpFSub, dataTypeId, resultId, argumentId1, argumentId2);
-		break;
-	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_SUB - Unsupported data type " << dataType;
-		break;
+	}
+	else if (argumentType1.PrimaryType == spv::OpTypeVector && argumentType2.PrimaryType == spv::OpTypeVector
+		&& argumentType1.SecondaryType == spv::OpTypeFloat && argumentType2.SecondaryType == spv::OpTypeFloat)
+	{
+		typeDescription = argumentType1;
+		uint32_t dataTypeId = GetSpirVTypeId(typeDescription);
+		mIdTypePairs[resultId] = typeDescription;
+		Push(spv::OpFSub, dataTypeId, resultId, argumentId1, argumentId2);
+	}
+	else if (argumentType1.PrimaryType == spv::OpTypeVector && argumentType2.PrimaryType == spv::OpTypeFloat)
+	{
+		typeDescription = argumentType1;
+		uint32_t dataTypeId = GetSpirVTypeId(typeDescription);
+		mIdTypePairs[resultId] = typeDescription;
+
+		uint32_t compositeId = GetNextId();
+
+		switch (typeDescription.ComponentCount)
+		{
+		case 2:
+			Push(spv::OpCompositeConstruct, dataTypeId, compositeId, argumentId2, argumentId2);
+			break;
+		case 3:
+			Push(spv::OpCompositeConstruct, dataTypeId, compositeId, argumentId2, argumentId2, argumentId2);
+			break;
+		case 4:
+			Push(spv::OpCompositeConstruct, dataTypeId, compositeId, argumentId2, argumentId2, argumentId2, argumentId2);
+			break;
+		default:
+			break;
+		}
+
+		Push(spv::OpFSub, dataTypeId, resultId, argumentId1, compositeId);
+	}
+	else if (argumentType1.PrimaryType == spv::OpTypeFloat && argumentType2.PrimaryType == spv::OpTypeVector)
+	{
+		typeDescription = argumentType2;
+		uint32_t dataTypeId = GetSpirVTypeId(typeDescription);
+		mIdTypePairs[resultId] = typeDescription;
+
+		uint32_t compositeId = GetNextId();
+
+		switch (typeDescription.ComponentCount)
+		{
+		case 2:
+			Push(spv::OpCompositeConstruct, dataTypeId, compositeId, argumentId1, argumentId1);
+			break;
+		case 3:
+			Push(spv::OpCompositeConstruct, dataTypeId, compositeId, argumentId1, argumentId1, argumentId1);
+			break;
+		case 4:
+			Push(spv::OpCompositeConstruct, dataTypeId, compositeId, argumentId1, argumentId1, argumentId1, argumentId1);
+			break;
+		default:
+			break;
+		}
+
+		Push(spv::OpFSub, dataTypeId, resultId, argumentId2, compositeId);
+	}
+	else if (argumentType1.PrimaryType == spv::OpTypeInt && argumentType2.PrimaryType == spv::OpTypeInt)
+	{
+		typeDescription = argumentType1;
+		uint32_t dataTypeId = GetSpirVTypeId(typeDescription);
+		mIdTypePairs[resultId] = typeDescription;
+		Push(spv::OpISub, dataTypeId, resultId, argumentId1, argumentId2);
+	}
+	else if (argumentType1.PrimaryType == spv::OpTypeBool && argumentType2.PrimaryType == spv::OpTypeBool)
+	{
+		typeDescription = argumentType1;
+		uint32_t dataTypeId = GetSpirVTypeId(typeDescription);
+		mIdTypePairs[resultId] = typeDescription;
+		Push(spv::OpISub, dataTypeId, resultId, argumentId1, argumentId2);
+	}
+	else
+	{
+		typeDescription = argumentType1;
+		uint32_t dataTypeId = GetSpirVTypeId(typeDescription);
+		mIdTypePairs[resultId] = typeDescription;
+		Push(spv::OpFSub, dataTypeId, resultId, argumentId1, argumentId2);
+
+		BOOST_LOG_TRIVIAL(warning) << "Process_SUB - Unsupported data types " << argumentType1.PrimaryType << " " << argumentType2.PrimaryType;
 	}
 
 	resultId = ApplyWriteMask(resultToken, resultId);
