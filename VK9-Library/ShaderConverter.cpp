@@ -5204,7 +5204,14 @@ void ShaderConverter::Process_RCP()
 	switch (dataType)
 	{
 	case spv::OpTypeFloat:
-		Push(spv::OpFDiv, dataTypeId, resultId, argumentId1, m1fId);
+		if (typeDescription.PrimaryType == spv::OpTypeVector)
+		{
+			Push(spv::OpFDiv, dataTypeId, resultId, argumentId1, m1vfId);
+		}
+		else
+		{
+			Push(spv::OpFDiv, dataTypeId, resultId, argumentId1, m1fId);
+		}		
 		break;
 	case spv::OpTypeInt:
 		Push(spv::OpSDiv, dataTypeId, resultId, argumentId1, mConstantIntegerIds[1]);
