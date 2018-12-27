@@ -1820,3 +1820,138 @@ HRESULT STDMETHODCALLTYPE CDevice9::ValidateDevice(DWORD *pNumPasses)
 
 	return S_OK;
 }
+
+HRESULT STDMETHODCALLTYPE CDevice9::SetConvolutionMonoKernel(UINT width, UINT height, float *rows, float *columns)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetConvolutionMonoKernel is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDevice9::ComposeRects(IDirect3DSurface9 *pSrc, IDirect3DSurface9 *pDst, IDirect3DVertexBuffer9 *pSrcRectDescs, UINT NumRects, IDirect3DVertexBuffer9 *pDstRectDescs, D3DCOMPOSERECTSOP Operation, int Xoffset, int Yoffset)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "CDevice9::ComposeRects is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDevice9::PresentEx(const RECT *pSourceRect, const RECT *pDestRect, HWND hDestWindowOverride, const RGNDATA *pDirtyRegion, DWORD dwFlags)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "CDevice9::PresentEx is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDevice9::GetGPUThreadPriority(INT *pPriority)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "CDevice9::GetGPUThreadPriority is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDevice9::SetGPUThreadPriority(INT Priority)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetGPUThreadPriority is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDevice9::WaitForVBlank(UINT iSwapChain)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "CDevice9::WaitForVBlank is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDevice9::CheckResourceResidency(IDirect3DResource9 **pResourceArray, UINT32 NumResources)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "CDevice9::CheckResourceResidency is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDevice9::SetMaximumFrameLatency(UINT MaxLatency)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetMaximumFrameLatency is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDevice9::GetMaximumFrameLatency(UINT *pMaxLatency)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "CDevice9::GetMaximumFrameLatency is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDevice9::CheckDeviceState(HWND hDestinationWindow)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "CDevice9::CheckDeviceState is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDevice9::CreateRenderTargetEx(UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, IDirect3DSurface9 **ppSurface, HANDLE *pSharedHandle, DWORD Usage)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "CDevice9::CreateRenderTargetEx is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDevice9::CreateOffscreenPlainSurfaceEx(UINT Width, UINT Height, D3DFORMAT Format, D3DPOOL Pool, IDirect3DSurface9 **ppSurface, HANDLE *pSharedHandle, DWORD Usage)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "CDevice9::CreateOffscreenPlainSurfaceEx is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDevice9::CreateDepthStencilSurfaceEx(UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, IDirect3DSurface9 **ppSurface, HANDLE *pSharedHandle, DWORD Usage)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "CDevice9::CreateDepthStencilSurfaceEx is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDevice9::ResetEx(D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "CDevice9::ResetEx is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDevice9::GetDisplayModeEx(UINT iSwapChain, D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "CDevice9::GetDisplayModeEx is not implemented!";
+
+	return E_NOTIMPL;
+}
