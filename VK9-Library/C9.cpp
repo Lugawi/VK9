@@ -343,6 +343,51 @@ HRESULT STDMETHODCALLTYPE C9::RegisterSoftwareDevice(void *pInitializeFunction)
 	return E_NOTIMPL;
 }
 
+UINT STDMETHODCALLTYPE C9::GetAdapterModeCountEx(UINT Adapter, const D3DDISPLAYMODEFILTER *pFilter)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "C9::GetAdapterModeCountEx is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE C9::EnumAdapterModesEx(UINT Adapter, const D3DDISPLAYMODEFILTER *pFilter, UINT Mode, D3DDISPLAYMODEEX *pMode)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "C9::EnumAdapterModesEx is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE C9::GetAdapterDisplayModeEx(UINT Adapter, D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "C9::GetAdapterDisplayModeEx is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE C9::CreateDeviceEx(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode, IDirect3DDevice9Ex **ppReturnedDeviceInterface)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "C9::CreateDeviceEx is not implemented!";
+
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE C9::GetAdapterLUID(UINT Adapter, LUID *pLUID)
+{
+	//TODO: Implement.
+
+	BOOST_LOG_TRIVIAL(warning) << "C9::GetAdapterLUID is not implemented!";
+
+	return E_NOTIMPL;
+}
+
 BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData)
 {
 	Monitor monitor;

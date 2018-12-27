@@ -32,7 +32,6 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
 	C9* instance = new C9();
 
 	WorkItem* workItem = instance->mCommandStreamManager->GetWorkItem(nullptr);
-	//std::lock_guard<std::mutex> lock(workItem->Mutex);
 	workItem->WorkItemType = WorkItemType::Instance_Create;
 	instance->mId = instance->mCommandStreamManager->RequestWork(workItem);
 
@@ -44,13 +43,18 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
 
 HRESULT WINAPI Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** out)
 {
-	out = nullptr;
+	C9* instance = new C9();
 
-	//TODO: Implement, maybe.
+	WorkItem* workItem = instance->mCommandStreamManager->GetWorkItem(nullptr);
+	workItem->WorkItemType = WorkItemType::Instance_Create;
+	instance->mId = instance->mCommandStreamManager->RequestWork(workItem);
 
-	BOOST_LOG_TRIVIAL(warning) << "Direct3DCreate9Ex is not implemented!";
+	//WINAPI to get monitor info
+	EnumDisplayMonitors(GetDC(NULL), NULL, MonitorEnumProc, (LPARAM)&(instance->mMonitors));
 
-	return E_NOTIMPL;
+	(*out) = (IDirect3D9Ex*)instance;
+
+	return S_OK;
 }
 
 int WINAPI D3DPERF_BeginEvent(DWORD col, LPCWSTR wszName)
