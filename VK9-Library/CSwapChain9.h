@@ -27,7 +27,7 @@ misrepresented as being the original software.
 class CDevice9;
 class CSurface9;
 
-class CSwapChain9 : public IDirect3DSwapChain9
+class CSwapChain9 : public IDirect3DSwapChain9Ex
 {
 private:
 
@@ -62,6 +62,11 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE GetPresentParameters(D3DPRESENT_PARAMETERS *pPresentationParameters);
 	virtual HRESULT STDMETHODCALLTYPE GetRasterStatus(D3DRASTER_STATUS *pRasterStatus);
 	virtual HRESULT STDMETHODCALLTYPE Present(const RECT *pSourceRect,const RECT *pDestRect,HWND hDestWindowOverride,const RGNDATA *pDirtyRegion,DWORD dwFlags);
+
+	//IDirect3DSwapChain9Ex
+	virtual HRESULT STDMETHODCALLTYPE GetLastPresentCount(UINT *pLastPresentCount);
+	virtual HRESULT STDMETHODCALLTYPE GetPresentStats(D3DPRESENTSTATS *pPresentationStatistics);
+	virtual HRESULT STDMETHODCALLTYPE GetDisplayModeEx(D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation);
 };
 
 #endif // CSWAPCHAIN9_H

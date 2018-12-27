@@ -170,3 +170,24 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::Present(const RECT *pSourceRect, const RE
 {
 	return mDevice->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
 }
+
+HRESULT STDMETHODCALLTYPE CSwapChain9::GetLastPresentCount(UINT *pLastPresentCount)
+{
+	BOOST_LOG_TRIVIAL(warning) << "CSurface9::GetLastPresentCount is not implemented!";
+
+	return E_NOTIMPL; //TODO: Implement.
+}
+
+HRESULT STDMETHODCALLTYPE CSwapChain9::GetPresentStats(D3DPRESENTSTATS *pPresentationStatistics)
+{
+	BOOST_LOG_TRIVIAL(warning) << "CSurface9::GetPresentStats is not implemented!";
+
+	return E_NOTIMPL; //TODO: Implement.
+}
+
+HRESULT STDMETHODCALLTYPE CSwapChain9::GetDisplayModeEx(D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation)
+{
+	BOOST_LOG_TRIVIAL(warning) << "CSurface9::GetDisplayModeEx is not implemented!";
+
+	return E_NOTIMPL; //TODO: Implement.
+}
