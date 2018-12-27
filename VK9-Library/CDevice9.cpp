@@ -49,7 +49,7 @@ misrepresented as being the original software.
 
 #include <wingdi.h> //used for gamma ramp
 
-CDevice9::CDevice9(C9* Instance, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters)
+CDevice9::CDevice9(C9* Instance, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode)
 	:
 	mInstance(Instance),
 	mAdapter(Adapter),
@@ -60,6 +60,10 @@ CDevice9::CDevice9(C9* Instance, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocu
 	BOOST_LOG_TRIVIAL(info) << "CDevice9::CDevice9";
 
 	memcpy(&mPresentationParameters, pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS));
+	if (pFullscreenDisplayMode != nullptr)
+	{
+		memcpy(&mFullscreenDisplayMode, pFullscreenDisplayMode, sizeof(D3DDISPLAYMODEEX));
+	}
 	mCommandStreamManager = mInstance->mCommandStreamManager;
 	mInstanceId = mInstance->mId;
 }

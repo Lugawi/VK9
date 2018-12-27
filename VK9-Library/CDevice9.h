@@ -41,7 +41,7 @@ struct Pair
 class CDevice9 : public IDirect3DDevice9Ex
 {	
 public:
-	CDevice9(C9* Instance, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters);
+	CDevice9(C9* Instance, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode);
 	~CDevice9();
 	void Init();
 	void Destroy();
@@ -58,6 +58,7 @@ public:
 	HWND mFocusWindow = 0;
 	DWORD mBehaviorFlags = 0;
 	D3DPRESENT_PARAMETERS mPresentationParameters = {};
+	D3DDISPLAYMODEEX mFullscreenDisplayMode = {};
 
 	//Misc
 	ULONG mReferenceCount = 1;

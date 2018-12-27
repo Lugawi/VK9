@@ -191,7 +191,7 @@ HRESULT STDMETHODCALLTYPE C9::CreateDevice(UINT Adapter,D3DDEVTYPE DeviceType,HW
 {
 	HRESULT result = S_OK;
 
-	CDevice9* obj = new CDevice9(this,Adapter,DeviceType,hFocusWindow,BehaviorFlags,pPresentationParameters);
+	CDevice9* obj = new CDevice9(this,Adapter,DeviceType,hFocusWindow,BehaviorFlags,pPresentationParameters, nullptr);
 
 	(*ppReturnedDeviceInterface) = (IDirect3DDevice9*)obj;
 
@@ -372,11 +372,15 @@ HRESULT STDMETHODCALLTYPE C9::GetAdapterDisplayModeEx(UINT Adapter, D3DDISPLAYMO
 
 HRESULT STDMETHODCALLTYPE C9::CreateDeviceEx(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode, IDirect3DDevice9Ex **ppReturnedDeviceInterface)
 {
-	//TODO: Implement.
+	HRESULT result = S_OK;
 
-	BOOST_LOG_TRIVIAL(warning) << "C9::CreateDeviceEx is not implemented!";
+	CDevice9* obj = new CDevice9(this, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, pFullscreenDisplayMode);
 
-	return E_NOTIMPL;
+	(*ppReturnedDeviceInterface) = (IDirect3DDevice9Ex*)obj;
+
+	obj->Init();
+
+	return result;
 }
 
 HRESULT STDMETHODCALLTYPE C9::GetAdapterLUID(UINT Adapter, LUID *pLUID)
