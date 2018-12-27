@@ -222,31 +222,83 @@ HRESULT STDMETHODCALLTYPE C9::EnumAdapterModes(UINT Adapter,D3DFORMAT Format,UIN
 	{
 	case 0:
 		pMode->Width = 1024;
-		pMode->Height = 768;	
+		pMode->Height = 768;
 		break;
 	case 1:
+		pMode->Width = 1152;
+		pMode->Height = 768;
+		break;
+	case 2:
 		pMode->Width = 1280;
 		pMode->Height = 720;
 		break;
-	case 2:
+	case 3:
+		pMode->Width = 1280;
+		pMode->Height = 768;
+		break;
+	case 4:
+		pMode->Width = 1280;
+		pMode->Height = 800;
+		break;
+	case 5:
+		pMode->Width = 1280;
+		pMode->Height = 1024;
+		break;
+	case 6:
+		pMode->Width = 1366;
+		pMode->Height = 768;
+		break;
+	case 7:
+		pMode->Width = 1440;
+		pMode->Height = 960;
+		break;
+	case 8:
+		pMode->Width = 1440;
+		pMode->Height = 1050;
+		break;
+	case 9:
+		pMode->Width = 1600;
+		pMode->Height = 1200;
+		break;
+	case 10:
+		pMode->Width = 1680;
+		pMode->Height = 1050;
+		break;
+	case 11:
 		pMode->Width = 1920;
 		pMode->Height = 1080;
 		break;
-	case 3:
+	case 12:
+		pMode->Width = 1920;
+		pMode->Height = 1200;
+		break;
+	case 13:
+		pMode->Width = 2048;
+		pMode->Height = 1536;
+		break;
+	case 14:
 		pMode->Width = 2560;
 		pMode->Height = 1440;
 		break;
-	case 4:
+	case 15:
+		pMode->Width = 2560;
+		pMode->Height = 1600;
+		break;
+	case 16:
+		pMode->Width = 2560;
+		pMode->Height = 2048;
+		break;
+	case 17:
 		pMode->Width = 3840;
 		pMode->Height = 2160;
 		break;
-	case 5:
+	case 18:
 		pMode->Width = 7680;
 		pMode->Height = 4320;
 		break;
 	default:
-			pMode->Width = monitor.Width;
-			pMode->Height = monitor.Height;	
+		pMode->Width = monitor.Width;
+		pMode->Height = monitor.Height;
 		break;
 	}
 
@@ -301,7 +353,7 @@ UINT STDMETHODCALLTYPE C9::GetAdapterModeCount(UINT Adapter,D3DFORMAT Format)
 
 	if (Format == D3DFMT_X8R8G8B8)
 	{
-		return 6;
+		return 19;
 	}
 
 	return 0;	
@@ -347,27 +399,139 @@ UINT STDMETHODCALLTYPE C9::GetAdapterModeCountEx(UINT Adapter, const D3DDISPLAYM
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "C9::GetAdapterModeCountEx is not implemented!";
+	if (pFilter!=nullptr && pFilter->Format == D3DFMT_X8R8G8B8)
+	{
+		return 19;
+	}
 
-	return E_NOTIMPL;
+	return 0;
 }
 
 HRESULT STDMETHODCALLTYPE C9::EnumAdapterModesEx(UINT Adapter, const D3DDISPLAYMODEFILTER *pFilter, UINT Mode, D3DDISPLAYMODEEX *pMode)
 {
-	//TODO: Implement.
+	if (Adapter >= mMonitors.size())
+	{
+		return D3DERR_INVALIDCALL;
+	}
 
-	BOOST_LOG_TRIVIAL(warning) << "C9::EnumAdapterModesEx is not implemented!";
+	if (pFilter==nullptr || pFilter->Format != D3DFMT_X8R8G8B8)
+	{
+		return D3DERR_NOTAVAILABLE;
+	}
 
-	return E_NOTIMPL;
+	Monitor& monitor = mMonitors[Adapter];
+
+
+	pMode->RefreshRate = monitor.RefreshRate;
+	pMode->Format = D3DFMT_X8R8G8B8;
+
+	switch (Mode)
+	{
+	case 0:
+		pMode->Width = 1024;
+		pMode->Height = 768;
+		break;
+	case 1:
+		pMode->Width = 1152;
+		pMode->Height = 768;
+		break;
+	case 2:
+		pMode->Width = 1280;
+		pMode->Height = 720;
+		break;
+	case 3:
+		pMode->Width = 1280;
+		pMode->Height = 768;
+		break;
+	case 4:
+		pMode->Width = 1280;
+		pMode->Height = 800;
+		break;
+	case 5:
+		pMode->Width = 1280;
+		pMode->Height = 1024;
+		break;
+	case 6:
+		pMode->Width = 1366;
+		pMode->Height = 768;
+		break;
+	case 7:
+		pMode->Width = 1440;
+		pMode->Height = 960;
+		break;
+	case 8:
+		pMode->Width = 1440;
+		pMode->Height = 1050;
+		break;
+	case 9:
+		pMode->Width = 1600;
+		pMode->Height = 1200;
+		break;
+	case 10:
+		pMode->Width = 1680;
+		pMode->Height = 1050;
+		break;
+	case 11:
+		pMode->Width = 1920;
+		pMode->Height = 1080;
+		break;
+	case 12:
+		pMode->Width = 1920;
+		pMode->Height = 1200;
+		break;
+	case 13:
+		pMode->Width = 2048;
+		pMode->Height = 1536;
+		break;
+	case 14:
+		pMode->Width = 2560;
+		pMode->Height = 1440;
+		break;
+	case 15:
+		pMode->Width = 2560;
+		pMode->Height = 1600;
+		break;
+	case 16:
+		pMode->Width = 2560;
+		pMode->Height = 2048;
+		break;
+	case 17:
+		pMode->Width = 3840;
+		pMode->Height = 2160;
+		break;
+	case 18:
+		pMode->Width = 7680;
+		pMode->Height = 4320;
+		break;
+	default:
+		pMode->Width = monitor.Width;
+		pMode->Height = monitor.Height;
+		break;
+	}
+
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE C9::GetAdapterDisplayModeEx(UINT Adapter, D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation)
 {
-	//TODO: Implement.
+	Monitor& monitor = mMonitors[Adapter];
 
-	BOOST_LOG_TRIVIAL(warning) << "C9::GetAdapterDisplayModeEx is not implemented!";
+	pMode->RefreshRate = monitor.RefreshRate;
+	pMode->Format = D3DFMT_X8R8G8B8;
+	pMode->Height = monitor.Height;
+	pMode->Width = monitor.Width;
 
-	return E_NOTIMPL;
+	if (monitor.PixelBits != 32)
+	{
+		BOOST_LOG_TRIVIAL(info) << Adapter;
+		BOOST_LOG_TRIVIAL(info) << monitor.RefreshRate;
+		BOOST_LOG_TRIVIAL(info) << monitor.Height;
+		BOOST_LOG_TRIVIAL(info) << monitor.Width;
+
+		BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterDisplayModeEx Unknown pixel bit format : " << monitor.PixelBits; //Revisit
+	}
+
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE C9::CreateDeviceEx(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode, IDirect3DDevice9Ex **ppReturnedDeviceInterface)
