@@ -3126,6 +3126,8 @@ void ShaderConverter::GenerateTextureStageBlock()
 	uint32_t uboStructureArrayTypeId = GetNextId();
 	mTextureStagesId = GetNextId();
 
+	mTextureStageTypeId = uboStructureTypeId;
+
 	//Create structure layout
 	mDecorateInstructions.push_back(Pack(3, spv::OpDecorate)); //size,Type
 	mDecorateInstructions.push_back(uboStructureTypeId); //target (Id)
@@ -5231,6 +5233,142 @@ void ShaderConverter::Process_RCP()
 	resultId = ApplyWriteMask(resultToken, resultId);
 
 	PrintTokenInformation("RCP", resultToken, argumentToken1);
+}
+
+void ShaderConverter::Process_TEXBEM()
+{
+	TypeDescription floatVector4Type;
+	floatVector4Type.PrimaryType = spv::OpTypeVector;
+	floatVector4Type.SecondaryType = spv::OpTypeFloat;
+	floatVector4Type.ComponentCount = 4;
+	uint32_t floatVector4TypeId = GetSpirVTypeId(floatVector4Type);
+
+	TypeDescription floatVector2Type;
+	floatVector2Type.PrimaryType = spv::OpTypeVector;
+	floatVector2Type.SecondaryType = spv::OpTypeFloat;
+	floatVector2Type.ComponentCount = 2;
+	uint32_t floatVector2TypeId = GetSpirVTypeId(floatVector2Type);
+
+	TypeDescription floatType;
+	floatType.PrimaryType = spv::OpTypeFloat;
+	uint32_t floatTypeId = GetSpirVTypeId(floatType);
+
+	TypeDescription floatPointerType;
+	floatPointerType.PrimaryType = spv::OpTypePointer;
+	floatPointerType.SecondaryType = spv::OpTypeFloat;
+	floatPointerType.StorageClass = spv::StorageClassUniform;
+	uint32_t floatPointerTypeId = GetSpirVTypeId(floatPointerType);
+
+	Token resultToken = GetNextToken();
+	_D3DSHADER_PARAM_REGISTER_TYPE resultRegisterType = GetRegisterType(resultToken.i);
+	uint32_t resultId = GetNextId();
+
+	Token argumentToken1 = resultToken;
+	_D3DSHADER_PARAM_REGISTER_TYPE argumentRegisterType1 = GetRegisterType(argumentToken1.i);
+	uint32_t textureCoordinatesMId = GetSwizzledId(argumentToken1, GIVE_ME_VECTOR_2);
+	uint32_t samplerMId = GetSwizzledId(argumentToken1, GIVE_ME_SAMPLER);
+	uint32_t registerNumberM = argumentToken1.DestinationParameterToken.RegisterNumber;
+
+	Token argumentToken2 = GetNextToken();
+	_D3DSHADER_PARAM_REGISTER_TYPE argumentRegisterType2 = GetRegisterType(argumentToken2.i);
+	uint32_t rgbaNId = GetSwizzledId(argumentToken2, GIVE_ME_VECTOR_4); //users are required to use tex first so the rgba result id should already be on file.
+
+	//Grab the environment bump map components.
+	uint32_t textureStageMId = GetNextId();
+	PushAccessChain(mTextureStageTypeId, textureStageMId, mTextureStagesId, mConstantIntegerIds[registerNumberM]);
+
+	uint32_t bumpEnvironmentMatrix00PointerMId = GetNextId();
+	mIdTypePairs[bumpEnvironmentMatrix00PointerMId] = floatPointerType;
+	PushAccessChain(floatPointerTypeId, bumpEnvironmentMatrix00PointerMId, textureStageMId, mConstantIntegerIds[13]);
+	uint32_t bumpEnvironmentMatrix00MId = GetNextId();
+	mIdTypePairs[bumpEnvironmentMatrix00MId] = floatType;
+	PushLoad(floatTypeId, bumpEnvironmentMatrix00MId, bumpEnvironmentMatrix00PointerMId);
+
+	uint32_t bumpEnvironmentMatrix10PointerMId = GetNextId();
+	mIdTypePairs[bumpEnvironmentMatrix10PointerMId] = floatPointerType;
+	PushAccessChain(floatPointerTypeId, bumpEnvironmentMatrix10PointerMId, textureStageMId, mConstantIntegerIds[15]);
+	uint32_t bumpEnvironmentMatrix10MId = GetNextId();
+	mIdTypePairs[bumpEnvironmentMatrix10MId] = floatType;
+	PushLoad(floatTypeId, bumpEnvironmentMatrix10MId, bumpEnvironmentMatrix10PointerMId);
+
+	uint32_t bumpEnvironmentMatrix01PointerMId = GetNextId();
+	mIdTypePairs[bumpEnvironmentMatrix01PointerMId] = floatPointerType;
+	PushAccessChain(floatPointerTypeId, bumpEnvironmentMatrix01PointerMId, textureStageMId, mConstantIntegerIds[14]);
+	uint32_t bumpEnvironmentMatrix01MId = GetNextId();
+	mIdTypePairs[bumpEnvironmentMatrix01MId] = floatType;
+	PushLoad(floatTypeId, bumpEnvironmentMatrix01MId, bumpEnvironmentMatrix01PointerMId);
+
+	uint32_t bumpEnvironmentMatrix11PointerMId = GetNextId();
+	mIdTypePairs[bumpEnvironmentMatrix11PointerMId] = floatPointerType;
+	PushAccessChain(floatPointerTypeId, bumpEnvironmentMatrix11PointerMId, textureStageMId, mConstantIntegerIds[16]);
+	uint32_t bumpEnvironmentMatrix11MId = GetNextId();
+	mIdTypePairs[bumpEnvironmentMatrix11MId] = floatType;
+	PushLoad(floatTypeId, bumpEnvironmentMatrix11MId, bumpEnvironmentMatrix11PointerMId);
+
+	//grab u and v from m.
+	uint32_t uMId = GetNextId();
+	mIdTypePairs[uMId] = floatType;
+	PushCompositeExtract(floatTypeId, uMId, textureCoordinatesMId, 0);
+
+	uint32_t vMId = GetNextId();
+	mIdTypePairs[vMId] = floatType;
+	PushCompositeExtract(floatTypeId, vMId, textureCoordinatesMId, 1);
+
+	//grab r and g from n
+	uint32_t rNId = GetNextId();
+	mIdTypePairs[rNId] = floatType;
+	PushCompositeExtract(floatTypeId, rNId, rgbaNId, 0);
+
+	uint32_t gNId = GetNextId();
+	mIdTypePairs[gNId] = floatType;
+	PushCompositeExtract(floatTypeId, gNId, rgbaNId, 1);
+
+	//calculate u'
+	uint32_t r00Id = GetNextId();
+	mIdTypePairs[r00Id] = floatType;
+	Push(spv::OpFMul, floatTypeId, r00Id, bumpEnvironmentMatrix00MId, rNId);
+
+	uint32_t g10Id = GetNextId();
+	mIdTypePairs[g10Id] = floatType;
+	Push(spv::OpFMul, floatTypeId, g10Id, bumpEnvironmentMatrix10MId, gNId);
+
+	uint32_t rg0010Id = GetNextId();
+	mIdTypePairs[rg0010Id] = floatType;
+	Push(spv::OpFAdd, floatTypeId, rg0010Id, r00Id, g10Id);
+
+	uint32_t uId = GetNextId();
+	mIdTypePairs[uId] = floatType;
+	Push(spv::OpFAdd, floatTypeId, uId, uMId, rg0010Id);
+
+	//calculate v'
+	uint32_t r01Id = GetNextId();
+	mIdTypePairs[r01Id] = floatType;
+	Push(spv::OpFMul, floatTypeId, r01Id, bumpEnvironmentMatrix01MId, rNId);
+
+	uint32_t g11Id = GetNextId();
+	mIdTypePairs[g11Id] = floatType;
+	Push(spv::OpFMul, floatTypeId, g11Id, bumpEnvironmentMatrix11MId, gNId);
+
+	uint32_t rg0111Id = GetNextId();
+	mIdTypePairs[rg0111Id] = floatType;
+	Push(spv::OpFAdd, floatTypeId, rg0111Id, r01Id, g11Id);
+
+	uint32_t vId = GetNextId();
+	mIdTypePairs[vId] = floatType;
+	Push(spv::OpFAdd, floatTypeId, vId, vMId, rg0111Id);
+
+	//glue u and v back together.
+	uint32_t uvId = GetNextId();
+	mIdTypePairs[uvId] = floatVector2Type;
+	Push(spv::OpCompositeConstruct, floatVector2TypeId, uvId, uId, vId);
+
+	//Sample the image
+	mIdTypePairs[resultId] = floatVector4Type;
+	Push(spv::OpImageSampleImplicitLod, floatVector4TypeId, resultId, samplerMId, uvId);
+
+	resultId = ApplyWriteMask(resultToken, resultId);
+
+	PrintTokenInformation("TEXBEM", resultToken, argumentToken1, argumentToken2);
 }
 
 /*
@@ -7696,8 +7834,7 @@ ConvertedShader ShaderConverter::Convert(uint32_t* shader)
 			SkipTokens(2);
 			break;
 		case D3DSIO_TEXBEM:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXBEM.";
-			SkipTokens(2);
+			Process_TEXBEM();
 			break;
 		case D3DSIO_TEXBEML:
 			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXBEML.";

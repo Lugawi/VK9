@@ -594,6 +594,7 @@ private:
 	uint32_t mRenderStatePointerId = 0;
 	uint32_t mTexturesId = 0;
 	uint32_t mTextureStagesId = 0;
+	uint32_t mTextureStageTypeId = 0;
 
 	uint32_t mTextures[12] = {};
 
@@ -684,6 +685,7 @@ private:
 	void Process_MOVA();
 	void Process_RSQ();
 	void Process_RCP();
+	void Process_TEXBEM();
 
 	//Binary Operators (mixed unary in here by mistake will sort out some day ... maybe)
 	void Process_DST();
