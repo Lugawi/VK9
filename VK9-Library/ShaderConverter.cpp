@@ -1660,160 +1660,110 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 		ySource = D3DVS_Y_Y;
 	}
 
-	//OpVectorShuffle must return a vector and vectors must have at least 2 elements so OpCompositeExtract must be used for a single component swizzle operation.
-	if
-		(
-		(
-			((xSource >> D3DVS_SWIZZLE_SHIFT) == (ySource >> (D3DVS_SWIZZLE_SHIFT + 2))) &&
-			((xSource >> D3DVS_SWIZZLE_SHIFT) == (zSource >> (D3DVS_SWIZZLE_SHIFT + 4))) &&
-			((xSource >> D3DVS_SWIZZLE_SHIFT) == (wSource >> (D3DVS_SWIZZLE_SHIFT + 6)))
-			)
-			||
-			(
-				outputComponentCount == 1
-				)
-			)
+	std::string registerName;
+
+	TypeDescription vectorType;
+	vectorType.PrimaryType = spv::OpTypeVector;
+	vectorType.SecondaryType = spv::OpTypeFloat;
+	vectorType.ComponentCount = 4;
+	vectorType.StorageClass = spv::StorageClassInput;
+	uint32_t vectorTypeId = GetSpirVTypeId(vectorType);
+
+	mIdTypePairs[outputId] = vectorType;
+
+	registerName = mNameIdPairs[loadedId];
+	if (registerName.size())
 	{
-		TypeDescription outputType = mIdTypePairs[loadedId];
-		outputType.PrimaryType = outputType.SecondaryType;
-		outputType.SecondaryType = outputType.TernaryType;
-		outputType.TernaryType = spv::OpTypeVoid;
-		outputType.ComponentCount = 0;
-
-		if (loadedType.PrimaryType != spv::OpTypeVoid)
-		{
-			uint32_t outputTypeId = GetSpirVTypeId(outputType);
-
-			switch (xSource)
-			{
-			case D3DVS_X_X:
-				mIdTypePairs[outputId] = outputType;
-				PushCompositeExtract(outputTypeId, outputId, loadedId, 0);
-				break;
-			case D3DVS_X_Y:
-				mIdTypePairs[outputId] = outputType;
-				PushCompositeExtract(outputTypeId, outputId, loadedId, 1);
-				break;
-			case D3DVS_X_Z:
-				mIdTypePairs[outputId] = outputType;
-				PushCompositeExtract(outputTypeId, outputId, loadedId, 2);
-				break;
-			case D3DVS_X_W:
-				mIdTypePairs[outputId] = outputType;
-				PushCompositeExtract(outputTypeId, outputId, loadedId, 3);
-				break;
-			}
-		}
-		else
-		{
-			outputId = loadedId;
-		}
+		//registerName += ".r";
+		PushName(outputId, registerName);
 	}
-	else //vector
+
+	uint32_t xIndex = 0;
+	uint32_t yIndex = 0;
+	uint32_t zIndex = 0;
+	uint32_t wIndex = 0;
+
+	switch (xSource)
 	{
-		std::string registerName;
+	case D3DVS_X_X:
+		(xIndex = 0); //Component Literal
+		break;
+	case D3DVS_X_Y:
+		(xIndex = 1); //Component Literal
+		break;
+	case D3DVS_X_Z:
+		(xIndex = 2); //Component Literal
+		break;
+	case D3DVS_X_W:
+		(xIndex = 3); //Component Literal
+		break;
+	}
 
-		TypeDescription vectorType;
-		vectorType.PrimaryType = spv::OpTypeVector;
-		vectorType.SecondaryType = spv::OpTypeFloat;
-		vectorType.ComponentCount = outputComponentCount;
-		vectorType.StorageClass = spv::StorageClassInput;
+	switch (ySource)
+	{
+	case D3DVS_Y_X:
+		(yIndex = 0); //Component Literal
+		break;
+	case D3DVS_Y_Y:
+		(yIndex = 1); //Component Literal
+		break;
+	case D3DVS_Y_Z:
+		(yIndex = 2); //Component Literal
+		break;
+	case D3DVS_Y_W:
+		(yIndex = 3); //Component Literal
+		break;
+	}
 
-		uint32_t vectorTypeId = GetSpirVTypeId(vectorType); //Revisit may not be a float
+	switch (zSource)
+	{
+	case D3DVS_Z_X:
+		(zIndex = 0); //Component Literal
+		break;
+	case D3DVS_Z_Y:
+		(zIndex = 1); //Component Literal
+		break;
+	case D3DVS_Z_Z:
+		(zIndex = 2); //Component Literal
+		break;
+	case D3DVS_Z_W:
+		(zIndex = 3); //Component Literal
+		break;
+	}
 
-		mIdTypePairs[outputId] = vectorType;
+	switch (wSource)
+	{
+	case D3DVS_W_X:
+		(wIndex = 0); //Component Literal
+		break;
+	case D3DVS_W_Y:
+		(wIndex = 1); //Component Literal
+		break;
+	case D3DVS_W_Z:
+		(wIndex = 2); //Component Literal
+		break;
+	case D3DVS_W_W:
+		(wIndex = 3); //Component Literal
+		break;
+	}
 
-		registerName = mNameIdPairs[loadedId];
-		if (registerName.size())
-		{
-			//registerName += ".r";
-			PushName(outputId, registerName);
-		}
-
-		uint32_t xIndex = 0;
-		uint32_t yIndex = 0;
-		uint32_t zIndex = 0;
-		uint32_t wIndex = 0;
-
-		switch (xSource)
-		{
-		case D3DVS_X_X:
-			(xIndex = 0); //Component Literal
-			break;
-		case D3DVS_X_Y:
-			(xIndex = 1); //Component Literal
-			break;
-		case D3DVS_X_Z:
-			(xIndex = 2); //Component Literal
-			break;
-		case D3DVS_X_W:
-			(xIndex = 3); //Component Literal
-			break;
-		}
-
-		switch (ySource)
-		{
-		case D3DVS_Y_X:
-			(yIndex = 0); //Component Literal
-			break;
-		case D3DVS_Y_Y:
-			(yIndex = 1); //Component Literal
-			break;
-		case D3DVS_Y_Z:
-			(yIndex = 2); //Component Literal
-			break;
-		case D3DVS_Y_W:
-			(yIndex = 3); //Component Literal
-			break;
-		}
-
-		switch (zSource)
-		{
-		case D3DVS_Z_X:
-			(zIndex = 0); //Component Literal
-			break;
-		case D3DVS_Z_Y:
-			(zIndex = 1); //Component Literal
-			break;
-		case D3DVS_Z_Z:
-			(zIndex = 2); //Component Literal
-			break;
-		case D3DVS_Z_W:
-			(zIndex = 3); //Component Literal
-			break;
-		}
-
-		switch (wSource)
-		{
-		case D3DVS_W_X:
-			(wIndex = 0); //Component Literal
-			break;
-		case D3DVS_W_Y:
-			(wIndex = 1); //Component Literal
-			break;
-		case D3DVS_W_Z:
-			(wIndex = 2); //Component Literal
-			break;
-		case D3DVS_W_W:
-			(wIndex = 3); //Component Literal
-			break;
-		}
-
-		switch (outputComponentCount)
-		{ //1 should be covered by the other branch.
-		case 2:
-			Push(spv::OpVectorShuffle, vectorTypeId, outputId, loadedId, loadedId, xIndex, yIndex);
-			break;
-		case 3:
-			Push(spv::OpVectorShuffle, vectorTypeId, outputId, loadedId, loadedId, xIndex, yIndex, zIndex);
-			break;
-		case 4:
-			Push(spv::OpVectorShuffle, vectorTypeId, outputId, loadedId, loadedId, xIndex, yIndex, zIndex, wIndex);
-			break;
-		default:
-			BOOST_LOG_TRIVIAL(warning) << "GetSwizzledId - Unsupported component count  " << outputComponentCount;
-			break;
-		}
+	switch (outputComponentCount)
+	{
+	case 1:
+		Push(spv::OpVectorShuffle, vectorTypeId, outputId, loadedId, loadedId, xIndex, xIndex, xIndex, xIndex);
+		break;
+	case 2:
+		Push(spv::OpVectorShuffle, vectorTypeId, outputId, loadedId, loadedId, xIndex, yIndex, yIndex, yIndex);
+		break;
+	case 3:
+		Push(spv::OpVectorShuffle, vectorTypeId, outputId, loadedId, loadedId, xIndex, yIndex, zIndex, zIndex);
+		break;
+	case 4:
+		Push(spv::OpVectorShuffle, vectorTypeId, outputId, loadedId, loadedId, xIndex, yIndex, zIndex, wIndex);
+		break;
+	default:
+		BOOST_LOG_TRIVIAL(warning) << "GetSwizzledId - Unsupported component count  " << outputComponentCount;
+		break;
 	}
 
 	return outputId;
@@ -4555,26 +4505,22 @@ void ShaderConverter::Process_DEFB()
 
 void ShaderConverter::Process_IFC(uint32_t extraInfo)
 {
-	TypeDescription typeDescription;
-	spv::Op dataType;
-	uint32_t dataTypeId;
-	uint32_t argumentId1;
-	uint32_t argumentId2;
-	uint32_t resultId;
-	uint32_t trueLabelId;
-	uint32_t falseLabelId;
-	uint32_t endIfLabelId;
+	Token resultToken = GetNextToken();
+	_D3DSHADER_PARAM_REGISTER_TYPE resultRegisterType = GetRegisterType(resultToken.i);
+	uint32_t resultId = GetNextId();
 
 	Token argumentToken1 = GetNextToken();
 	_D3DSHADER_PARAM_REGISTER_TYPE argumentRegisterType1 = GetRegisterType(argumentToken1.i);
+	uint32_t argumentId1 = GetSwizzledId(argumentToken1, GIVE_ME_VECTOR_4);
 
 	Token argumentToken2 = GetNextToken();
 	_D3DSHADER_PARAM_REGISTER_TYPE argumentRegisterType2 = GetRegisterType(argumentToken2.i);
+	uint32_t argumentId2 = GetSwizzledId(argumentToken2, GIVE_ME_VECTOR_4);
 
-	typeDescription = GetTypeByRegister(argumentToken1); //use argument type because result type may not be known.
-	mIdTypePairs[mNextId] = typeDescription; //snag next id before increment.
-
-	dataType = typeDescription.PrimaryType;
+	//Grab type info if there is any.
+	TypeDescription argumentType1 = mIdTypePairs[argumentId1];
+	TypeDescription argumentType2 = mIdTypePairs[argumentId2];
+	TypeDescription typeDescription = argumentType2;
 
 	//Type could be pointer and matrix so checks are run separately.
 	if (typeDescription.PrimaryType == spv::OpTypePointer)
@@ -4585,31 +4531,50 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 		typeDescription.TernaryType = spv::OpTypeVoid;
 	}
 
+	TypeDescription labelType;
+	labelType.PrimaryType = spv::OpLabel;
+	//uint32_t labelTypeId = GetSpirVTypeId(labelType);
+
+	TypeDescription boolType;
+	boolType.PrimaryType = spv::OpTypeBool;
+	uint32_t boolTypeId = GetSpirVTypeId(boolType);
+
+	TypeDescription boolVectorType;
+	boolVectorType.PrimaryType = spv::OpTypeVector;
+	boolVectorType.SecondaryType = spv::OpTypeBool;
+	boolVectorType.ComponentCount = 4;
+	uint32_t boolVectorTypeId = GetSpirVTypeId(boolVectorType);
+	
+	uint32_t resultTypeId;
+	spv::Op dataType;
 	if (typeDescription.PrimaryType == spv::OpTypeMatrix || typeDescription.PrimaryType == spv::OpTypeVector)
 	{
 		dataType = typeDescription.SecondaryType;
+		resultTypeId = boolVectorTypeId;
+		
+		mIdTypePairs[resultId] = boolVectorType;
 	}
+	else
+	{
+		dataType = typeDescription.PrimaryType;
+		resultTypeId = boolTypeId;
 
-	dataTypeId = GetSpirVTypeId(typeDescription);
-	argumentId1 = GetSwizzledId(argumentToken1, GIVE_ME_VECTOR_4);
-	argumentId2 = GetSwizzledId(argumentToken2, GIVE_ME_VECTOR_4); //, UINT_MAX, D3DSPR_INPUT
-	resultId = GetNextId();
-
-	mIdTypePairs[resultId] = typeDescription;
-
+		mIdTypePairs[resultId] = boolType;
+	}
+	
 	switch (extraInfo)
 	{
 	case 1:
 		switch (dataType)
 		{
 		case spv::OpTypeBool:
-			Push(spv::OpUGreaterThan, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpUGreaterThan, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		case spv::OpTypeInt:
-			Push(spv::OpUGreaterThan, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpUGreaterThan, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		case spv::OpTypeFloat:
-			Push(spv::OpFOrdGreaterThan, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpFOrdGreaterThan, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		default:
 			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
@@ -4620,13 +4585,13 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 		switch (dataType)
 		{
 		case spv::OpTypeBool:
-			Push(spv::OpIEqual, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpIEqual, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		case spv::OpTypeInt:
-			Push(spv::OpIEqual, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpIEqual, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		case spv::OpTypeFloat:
-			Push(spv::OpFOrdEqual, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpFOrdEqual, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		default:
 			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
@@ -4637,13 +4602,13 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 		switch (dataType)
 		{
 		case spv::OpTypeBool:
-			Push(spv::OpUGreaterThanEqual, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpUGreaterThanEqual, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		case spv::OpTypeInt:
-			Push(spv::OpUGreaterThanEqual, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpUGreaterThanEqual, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		case spv::OpTypeFloat:
-			Push(spv::OpFOrdGreaterThanEqual, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpFOrdGreaterThanEqual, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		default:
 			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
@@ -4654,13 +4619,13 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 		switch (dataType)
 		{
 		case spv::OpTypeBool:
-			Push(spv::OpULessThan, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpULessThan, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		case spv::OpTypeInt:
-			Push(spv::OpULessThan, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpULessThan, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		case spv::OpTypeFloat:
-			Push(spv::OpFOrdLessThan, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpFOrdLessThan, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		default:
 			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
@@ -4671,13 +4636,13 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 		switch (dataType)
 		{
 		case spv::OpTypeBool:
-			Push(spv::OpINotEqual, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpINotEqual, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		case spv::OpTypeInt:
-			Push(spv::OpINotEqual, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpINotEqual, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		case spv::OpTypeFloat:
-			Push(spv::OpFOrdNotEqual, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpFOrdNotEqual, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		default:
 			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
@@ -4688,13 +4653,13 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 		switch (dataType)
 		{
 		case spv::OpTypeBool:
-			Push(spv::OpULessThanEqual, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpULessThanEqual, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		case spv::OpTypeInt:
-			Push(spv::OpULessThanEqual, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpULessThanEqual, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		case spv::OpTypeFloat:
-			Push(spv::OpFOrdLessThanEqual, dataTypeId, resultId, argumentId1, argumentId2);
+			Push(spv::OpFOrdLessThanEqual, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		default:
 			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
@@ -4706,12 +4671,9 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 		break;
 	}
 
-	TypeDescription labelType;
-	labelType.PrimaryType = spv::OpLabel;
-
-	trueLabelId = GetNextId();
-	falseLabelId = GetNextId();
-	endIfLabelId = GetNextId();
+	uint32_t trueLabelId = GetNextId();
+	uint32_t falseLabelId = GetNextId();
+	uint32_t endIfLabelId = GetNextId();
 
 	mIdTypePairs[trueLabelId] = labelType;
 	mIdTypePairs[falseLabelId] = labelType;
@@ -4722,8 +4684,34 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 
 	mEndIfLabels.push(endIfLabelId);
 
-	Push(spv::OpSelectionMerge, endIfLabelId, 0);
-	Push(spv::OpBranchConditional, resultId, trueLabelId, falseLabelId);
+	if (resultTypeId == boolVectorTypeId)
+	{
+		uint32_t resultId0 = GetNextId();
+		PushCompositeExtract(boolTypeId, resultId0, resultId, 0);
+		uint32_t resultId1 = GetNextId();
+		PushCompositeExtract(boolTypeId, resultId1, resultId, 1);
+		uint32_t resultId2 = GetNextId();
+		PushCompositeExtract(boolTypeId, resultId2, resultId, 2);
+		uint32_t resultId3 = GetNextId();
+		PushCompositeExtract(boolTypeId, resultId3, resultId, 3);
+
+		uint32_t result01Id = GetNextId();
+		Push(spv::OpLogicalAnd, boolTypeId, result01Id, resultId0, resultId1);
+
+		uint32_t result23Id = GetNextId();
+		Push(spv::OpLogicalAnd, boolTypeId, result23Id, resultId2, resultId3);
+
+		uint32_t result0123Id = GetNextId();
+		Push(spv::OpLogicalAnd, boolTypeId, result0123Id, result01Id, result23Id);
+
+		Push(spv::OpSelectionMerge, endIfLabelId, 0);
+		Push(spv::OpBranchConditional, result0123Id, trueLabelId, falseLabelId);
+	}
+	else
+	{
+		Push(spv::OpSelectionMerge, endIfLabelId, 0);
+		Push(spv::OpBranchConditional, resultId, trueLabelId, falseLabelId);
+	}
 	Push(spv::OpLabel, trueLabelId);
 	PrintTokenInformation("IFC", argumentToken1, argumentToken2);
 }
@@ -4803,6 +4791,7 @@ void ShaderConverter::Process_ELSE()
 
 	mFalseLabels.pop();
 
+	Push(spv::OpBranch, endIfLabelId);
 	Push(spv::OpLabel, falseLabelId);
 	PrintTokenInformation("ELSE");
 }
@@ -4818,6 +4807,7 @@ void ShaderConverter::Process_ENDIF()
 	uint32_t endIfLabelId = mEndIfLabels.top();
 	mEndIfLabels.pop();
 
+	Push(spv::OpBranch, endIfLabelId);
 	Push(spv::OpLabel, endIfLabelId);
 	PrintTokenInformation("ENDIF");
 }
