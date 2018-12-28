@@ -1024,7 +1024,7 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 		case D3DSPR_ATTROUT:
 		case D3DSPR_COLOROUT:
 
-			if (registerNumber)
+			if (mColor1Id)
 			{
 				mColor2Id = id;
 
@@ -2364,6 +2364,8 @@ uint32_t ShaderConverter::ApplyWriteMask(const Token& token, uint32_t modifiedId
 		{
 			if (((token.i & D3DSP_WRITEMASK_ALL) == D3DSP_WRITEMASK_ALL) && (originalType.ComponentCount == modifiedType.ComponentCount))
 			{
+				TypeDescription inputType = mIdTypePairs[inputId];
+				TypeDescription outputType = mIdTypePairs[outputId];
 				PushStore(outputId, inputId);
 			}
 			else
@@ -4225,7 +4227,7 @@ void ShaderConverter::Process_DCL_Vertex()
 	switch (registerComponents)
 	{
 	case 1: //float
-		if (usage == D3DDECLUSAGE_COLOR)
+		if (usage == D3DDECLUSAGE_COLOR && registerType == D3DSPR_INPUT)
 		{
 			typeDescription.SecondaryType = spv::OpTypeInt;
 		}
@@ -4238,7 +4240,7 @@ void ShaderConverter::Process_DCL_Vertex()
 		typeDescription.ComponentCount = 1;
 		break;
 	case 3: //vec2
-		if (usage == D3DDECLUSAGE_COLOR)
+		if (usage == D3DDECLUSAGE_COLOR && registerType == D3DSPR_INPUT)
 		{
 			typeDescription.TernaryType = spv::OpTypeInt;
 		}
@@ -4252,7 +4254,7 @@ void ShaderConverter::Process_DCL_Vertex()
 		typeDescription.ComponentCount = 4;
 		break;
 	case 7: //vec3
-		if (usage == D3DDECLUSAGE_COLOR)
+		if (usage == D3DDECLUSAGE_COLOR && registerType == D3DSPR_INPUT)
 		{
 			typeDescription.TernaryType = spv::OpTypeInt;
 		}
@@ -4266,7 +4268,7 @@ void ShaderConverter::Process_DCL_Vertex()
 		typeDescription.ComponentCount = 4;
 		break;
 	case 0xF: //vec4
-		if (usage == D3DDECLUSAGE_COLOR)
+		if (usage == D3DDECLUSAGE_COLOR && registerType == D3DSPR_INPUT)
 		{
 			typeDescription.TernaryType = spv::OpTypeInt;
 		}
@@ -4382,7 +4384,7 @@ void ShaderConverter::Process_DCL_Vertex()
 			break;
 		case D3DDECLUSAGE_COLOR:
 
-			if (registerNumber)
+			if (mColor1Id)
 			{
 				mColor2Id = tokenId;
 
@@ -4606,6 +4608,9 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 		case spv::OpTypeInt:
 			Push(spv::OpUGreaterThan, dataTypeId, resultId, argumentId1, argumentId2);
 			break;
+		case spv::OpTypeFloat:
+			Push(spv::OpFOrdGreaterThan, dataTypeId, resultId, argumentId1, argumentId2);
+			break;
 		default:
 			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
 			break;
@@ -4619,6 +4624,9 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 			break;
 		case spv::OpTypeInt:
 			Push(spv::OpIEqual, dataTypeId, resultId, argumentId1, argumentId2);
+			break;
+		case spv::OpTypeFloat:
+			Push(spv::OpFOrdEqual, dataTypeId, resultId, argumentId1, argumentId2);
 			break;
 		default:
 			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
@@ -4634,6 +4642,9 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 		case spv::OpTypeInt:
 			Push(spv::OpUGreaterThanEqual, dataTypeId, resultId, argumentId1, argumentId2);
 			break;
+		case spv::OpTypeFloat:
+			Push(spv::OpFOrdGreaterThanEqual, dataTypeId, resultId, argumentId1, argumentId2);
+			break;
 		default:
 			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
 			break;
@@ -4647,6 +4658,9 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 			break;
 		case spv::OpTypeInt:
 			Push(spv::OpULessThan, dataTypeId, resultId, argumentId1, argumentId2);
+			break;
+		case spv::OpTypeFloat:
+			Push(spv::OpFOrdLessThan, dataTypeId, resultId, argumentId1, argumentId2);
 			break;
 		default:
 			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
@@ -4662,6 +4676,9 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 		case spv::OpTypeInt:
 			Push(spv::OpINotEqual, dataTypeId, resultId, argumentId1, argumentId2);
 			break;
+		case spv::OpTypeFloat:
+			Push(spv::OpFOrdNotEqual, dataTypeId, resultId, argumentId1, argumentId2);
+			break;
 		default:
 			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
 			break;
@@ -4675,6 +4692,9 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 			break;
 		case spv::OpTypeInt:
 			Push(spv::OpULessThanEqual, dataTypeId, resultId, argumentId1, argumentId2);
+			break;
+		case spv::OpTypeFloat:
+			Push(spv::OpFOrdLessThanEqual, dataTypeId, resultId, argumentId1, argumentId2);
 			break;
 		default:
 			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
@@ -4783,7 +4803,6 @@ void ShaderConverter::Process_ELSE()
 
 	mFalseLabels.pop();
 
-	Push(spv::OpBranch, endIfLabelId);
 	Push(spv::OpLabel, falseLabelId);
 	PrintTokenInformation("ELSE");
 }
@@ -4799,9 +4818,7 @@ void ShaderConverter::Process_ENDIF()
 	uint32_t endIfLabelId = mEndIfLabels.top();
 	mEndIfLabels.pop();
 
-	Push(spv::OpBranch, endIfLabelId);
 	Push(spv::OpLabel, endIfLabelId);
-
 	PrintTokenInformation("ENDIF");
 }
 
@@ -5394,16 +5411,17 @@ void ShaderConverter::Process_TEXKILL()
 	PushCompositeExtract(floatTypeId, xId, argumentId1, 0);
 
 	uint32_t xConditionalId = GetNextId();
-	mIdTypePairs[xConditionalId] = boolType;
-	Push(spv::OpFOrdLessThan, boolTypeId, xConditionalId, xId, m0fId);
-	uint32_t xMergeBlockId = GetNextId();
-	Push(spv::OpSelectionMerge, xMergeBlockId, 0);
 	uint32_t xTrueLabelId = GetNextId();
 	uint32_t xFalseLabelId = GetNextId();
+
+	mIdTypePairs[xConditionalId] = boolType;
+
+	Push(spv::OpFOrdLessThan, boolTypeId, xConditionalId, xId, m0fId);
+	Push(spv::OpSelectionMerge, xFalseLabelId, 0);
 	Push(spv::OpBranchConditional, xConditionalId, xTrueLabelId, xFalseLabelId);
 	Push(spv::OpLabel, xTrueLabelId);
 	Push(spv::OpKill);
-	Push(spv::OpLabel, xFalseLabelId);
+	Push(spv::OpLabel, xFalseLabelId);	
 
 	//Y
 	uint32_t yId = GetNextId();
@@ -5411,12 +5429,13 @@ void ShaderConverter::Process_TEXKILL()
 	PushCompositeExtract(floatTypeId, yId, argumentId1, 1);
 
 	uint32_t yConditionalId = GetNextId();
-	mIdTypePairs[yConditionalId] = boolType;
-	Push(spv::OpFOrdLessThan, boolTypeId, yConditionalId, yId, m0fId);
-	uint32_t yMergeBlockId = GetNextId();
-	Push(spv::OpSelectionMerge, yMergeBlockId, 0);
 	uint32_t yTrueLabelId = GetNextId();
 	uint32_t yFalseLabelId = GetNextId();
+
+	mIdTypePairs[yConditionalId] = boolType;
+
+	Push(spv::OpFOrdLessThan, boolTypeId, yConditionalId, yId, m0fId);
+	Push(spv::OpSelectionMerge, yFalseLabelId, 0);
 	Push(spv::OpBranchConditional, yConditionalId, yTrueLabelId, yFalseLabelId);
 	Push(spv::OpLabel, yTrueLabelId);
 	Push(spv::OpKill);
@@ -5425,15 +5444,16 @@ void ShaderConverter::Process_TEXKILL()
 	//Z
 	uint32_t zId = GetNextId();
 	mIdTypePairs[zId] = floatType;
-	PushCompositeExtract(floatTypeId, zId, argumentId1, 1);
+	PushCompositeExtract(floatTypeId, zId, argumentId1, 2);
 
 	uint32_t zConditionalId = GetNextId();
-	mIdTypePairs[zConditionalId] = boolType;
-	Push(spv::OpFOrdLessThan, boolTypeId, zConditionalId, zId, m0fId);
-	uint32_t zMergeBlockId = GetNextId();
-	Push(spv::OpSelectionMerge, zMergeBlockId, 0);
 	uint32_t zTrueLabelId = GetNextId();
 	uint32_t zFalseLabelId = GetNextId();
+
+	mIdTypePairs[zConditionalId] = boolType;
+
+	Push(spv::OpFOrdLessThan, boolTypeId, zConditionalId, zId, m0fId);
+	Push(spv::OpSelectionMerge, zFalseLabelId, 0);
 	Push(spv::OpBranchConditional, zConditionalId, zTrueLabelId, zFalseLabelId);
 	Push(spv::OpLabel, zTrueLabelId);
 	Push(spv::OpKill);
