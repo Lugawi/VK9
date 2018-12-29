@@ -815,7 +815,7 @@ uint32_t ShaderConverter::GetNextVersionId(const Token& token)
 	return id;
 }
 
-uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_REGISTER_TYPE type, _D3DDECLUSAGE usage)
+uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_REGISTER_TYPE type, _D3DDECLUSAGE usage, uint32_t usageIndex)
 {
 	D3DSHADER_PARAM_REGISTER_TYPE registerType;
 	uint32_t registerNumber = 0;
@@ -901,60 +901,36 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 		mRegistersById[registerType][id] = registerNumber;
 		mIdTypePairs[id] = description;
 
-		mTypeInstructions.push_back(Pack(4, spv::OpVariable)); //size,Type
-		mTypeInstructions.push_back(typeId); //ResultType (Id) Must be OpTypePointer with the pointer's type being what you care about.
-		mTypeInstructions.push_back(id); //Result (Id)
-		mTypeInstructions.push_back(spv::StorageClassInput); //Storage Class
+		PushVariable(typeId, id, spv::StorageClassInput);
 
 		mInputRegisters.push_back(id);
 
-		if (this->mMajorVersion == 3)
+		if (registerType == D3DSPR_TEXTURE)
 		{
-			if (registerType == D3DSPR_INPUT)
-			{
-				registerName = "input" + std::to_string(registerNumber);
-				PushName(id, registerName);
-
-				GenerateDecoration(registerNumber, id, usage, true);
-			}
-			else
-			{
-				registerName = "output" + std::to_string(registerNumber);
-				PushName(id, registerName);
-
-				GenerateDecoration(registerNumber, id, usage, true);
-			}
+			GenerateDecoration(registerNumber, id, D3DDECLUSAGE_TEXCOORD, usageIndex,true);
 		}
 		else
 		{
-			if (registerType == D3DSPR_INPUT)
-			{
-				registerName = "oD" + std::to_string(registerNumber);
-				PushName(id, registerName);
-
-				GenerateDecoration(registerNumber, id, D3DDECLUSAGE_COLOR, true);
-			}
-			else
-			{
-				registerName = "oT" + std::to_string(registerNumber);
-				PushName(id, registerName);
-
-				GenerateDecoration(registerNumber, id, D3DDECLUSAGE_TEXCOORD, true);
-			}
+			GenerateDecoration(registerNumber, id, D3DDECLUSAGE_COLOR, usageIndex,true);
 		}
 
 		if (this->mIsVertexShader)
 		{
-			mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].binding = 0;//element.Stream; TODO:REVISIT
-			mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].location = registerNumber;  //mConvertedShader.mVertexInputAttributeDescriptionCount;
-			mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].offset = 0;//element.Offset;
-			if (usage == D3DDECLUSAGE_COLOR)
+			mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].binding = 0;
+			mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].location = UsageOffsets[usage] + usageIndex;
+			mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].offset = 0;
+
+			switch (usage)
 			{
-				mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].format = vk::Format::eR32G32B32A32Sint;
-			}
-			else
-			{
-				mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].format = vk::Format::eR32G32B32A32Sfloat;
+			case D3DDECLUSAGE_COLOR:
+				mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].format = vk::Format::eB8G8R8A8Uint;
+				break;
+			case D3DDECLUSAGE_TEXCOORD:
+				mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].format = vk::Format::eR32G32Sfloat;
+				break;
+			default:
+				mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].format = vk::Format::eR32G32B32Sfloat;
+				break;
 			}
 
 			mConvertedShader.mVertexInputAttributeDescriptionCount++;
@@ -1001,29 +977,17 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 			mTypeInstructions.push_back(spv::StorageClassPrivate); //Storage Class
 		}
 
-		/*
-			D3DDECLUSAGE_FOG:
-			registerName = "oFog" + std::to_string(registerNumber);
-			break;
-
-			D3DDECLUSAGE_PSIZE:
-			registerName = "oPts" + std::to_string(registerNumber);
-			break;
-		*/
-
 		switch (registerType)
 		{
 		case D3DSPR_RASTOUT:
 			if (this->mIsVertexShader)
 			{
 				mPositionId = id;
-				registerName = "oPos" + std::to_string(registerNumber);
 				usage = D3DDECLUSAGE_POSITION;
 			}
 			break;
 		case D3DSPR_ATTROUT:
 		case D3DSPR_COLOROUT:
-
 			if (mColor1Id)
 			{
 				mColor2Id = id;
@@ -1077,30 +1041,26 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 				PushAccessChain(floatTypeId, mColor1WId, mColor1Id, mConstantIntegerIds[3]);
 			}
 
-			registerName = "oD" + std::to_string(registerNumber);
 			usage = D3DDECLUSAGE_COLOR;
 			break;
 		case D3DSPR_TEXCRDOUT:
-			registerName = "oT" + std::to_string(registerNumber);
 			usage = D3DDECLUSAGE_TEXCOORD;
 			break;
 		case D3DSPR_TEMP:
 			registerName = "r" + std::to_string(registerNumber);
+			PushName(id, registerName);
 			usage = D3DDECLUSAGE_COLOR;
 			break;
 		default:
-			registerName = "o" + std::to_string(registerNumber);
 			break;
 		}
-
-		PushName(id, registerName);
 
 		//mOutputRegisterUsages[(_D3DDECLUSAGE)GetUsage(token.i)] = id;
 		if (this->mIsVertexShader && registerType != D3DSPR_TEMP)
 		{
 			mOutputRegisters.push_back(id);
 
-			GenerateDecoration(registerNumber, id, usage, false);
+			GenerateDecoration(registerNumber, id, usage, usageIndex,false);
 		}
 		else if (!this->mIsVertexShader && registerType == D3DSPR_TEMP) //r0 is used for pixel shader color output because reasons.
 		{
@@ -2647,139 +2607,119 @@ void ShaderConverter::GenerateStore(const Token& token, uint32_t inputId)
 	}
 }
 
-void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t inputId, _D3DDECLUSAGE usage, bool isInput)
+void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t inputId, _D3DDECLUSAGE usage, uint32_t usageIndex, bool isInput)
 {
-	if (this->mMajorVersion == 3)
+	std::string registerName;
+	//TypeDescription inputType = mIdTypePairs[inputId];
+
+	if (this->mIsVertexShader)
 	{
 		if (isInput)
 		{
-			if (this->mIsVertexShader)
+			mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
+			mDecorateInstructions.push_back(inputId); //target (Id)
+			mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
+			mDecorateInstructions.push_back(UsageOffsets[usage] + usageIndex); //Location offset
+
+			registerName = "v" + std::to_string(registerNumber);
+		}
+		else
+		{
+			if (usage == D3DDECLUSAGE_POSITION)
 			{
-				mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-				mDecorateInstructions.push_back(inputId); //target (Id)
-				mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-				mDecorateInstructions.push_back(registerNumber); //Location offset
+				//Handled by generate position.
+				//mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
+				//mDecorateInstructions.push_back(inputId); //target (Id)
+				//mDecorateInstructions.push_back(spv::DecorationBuiltIn); //Decoration Type (Id)
+				//mDecorateInstructions.push_back(spv::BuiltInPosition); //Location offset
 			}
 			else
 			{
 				mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
 				mDecorateInstructions.push_back(inputId); //target (Id)
 				mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-				mDecorateInstructions.push_back(registerNumber); //Location offset
+				mDecorateInstructions.push_back(UsageOffsets[usage] + usageIndex); //Location offset
+			}
+
+			switch (usage)
+			{
+			case D3DDECLUSAGE_POSITION:
+				registerName = "oPos";
+				break;
+			case D3DDECLUSAGE_FOG:
+				registerName = "oFog";
+				break;
+			case D3DDECLUSAGE_PSIZE:
+				registerName = "oPts";
+				break;
+			case D3DDECLUSAGE_COLOR:
+				registerName = "oD" + std::to_string(registerNumber);
+				break;
+			case D3DDECLUSAGE_TEXCOORD:
+				registerName = "oT" + std::to_string(registerNumber);
+				break;
+			default:
+				registerName = "o" + std::to_string(registerNumber);
+				break;
+			}
+		}
+	}
+	else //Pixel Shader
+	{
+		if (isInput)
+		{
+			mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
+			mDecorateInstructions.push_back(inputId); //target (Id)
+			mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
+			mDecorateInstructions.push_back(UsageOffsets[usage] + usageIndex); //Location offset
+
+			switch (usage)
+			{
+			case D3DDECLUSAGE_TEXCOORD:
+				registerName = "t" + std::to_string(registerNumber);
+				break;
+			case D3DDECLUSAGE_COLOR:
+				registerName = "v" + std::to_string(registerNumber);
+				break;
+			default:
+				registerName = "v" + std::to_string(registerNumber);
+				break;
 			}
 		}
 		else
 		{
-			if (this->mIsVertexShader)
-			{
-				switch (usage)
-				{
-				case D3DDECLUSAGE_POSITION:
-					mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-					mDecorateInstructions.push_back(inputId); //target (Id)
-					mDecorateInstructions.push_back(spv::DecorationBuiltIn); //Decoration Type (Id)
-					mDecorateInstructions.push_back(spv::BuiltInPosition); //Location offset
-					break;
-				default:
-					mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-					mDecorateInstructions.push_back(inputId); //target (Id)
-					mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-					mDecorateInstructions.push_back(registerNumber); //Location offset
-					break;
-				}
-			}
-			else
+			if (usage == D3DDECLUSAGE_COLOR)
 			{
 				mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
 				mDecorateInstructions.push_back(inputId); //target (Id)
 				mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-				mDecorateInstructions.push_back(registerNumber); //Location offset
+				mDecorateInstructions.push_back(usageIndex); //Location offset
+			}
+			else
+			{
+				//This is probably Depth which isn't currently handled.
+				mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
+				mDecorateInstructions.push_back(inputId); //target (Id)
+				mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
+				mDecorateInstructions.push_back(UsageOffsets[usage] + usageIndex); //Location offset
+			}
+
+			switch (usage)
+			{
+
+			case D3DDECLUSAGE_COLOR:
+				registerName = "oC" + std::to_string(registerNumber);
+				break;
+			case D3DDECLUSAGE_DEPTH:
+				registerName = "oDepth";
+				break;
+			default:
+				registerName = "o" + std::to_string(registerNumber);
+				break;
 			}
 		}
 	}
-	else
-	{
-		if (isInput)
-		{
-			if (this->mIsVertexShader)
-			{
-				mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-				mDecorateInstructions.push_back(inputId); //target (Id)
-				mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-				mDecorateInstructions.push_back(registerNumber); //Location offset
-			}
-			else
-			{
-				switch (usage)
-				{
-				case D3DDECLUSAGE_COLOR:
-					mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-					mDecorateInstructions.push_back(inputId); //target (Id)
-					mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-					mDecorateInstructions.push_back(registerNumber + 3); //Location offset
-					break;
-				default:
-					mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-					mDecorateInstructions.push_back(inputId); //target (Id)
-					mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-					mDecorateInstructions.push_back(registerNumber + 5); //Location offset
-					break;
-				}
-			}
-		}
-		else
-		{
-			if (this->mIsVertexShader)
-			{
-				switch (usage)
-				{
-				case D3DDECLUSAGE_POSITION:
-					mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-					mDecorateInstructions.push_back(inputId); //target (Id)
-					mDecorateInstructions.push_back(spv::DecorationBuiltIn); //Decoration Type (Id)
-					mDecorateInstructions.push_back(spv::BuiltInPosition); //Location offset
-					break;
-				case D3DDECLUSAGE_FOG:
-					mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-					mDecorateInstructions.push_back(inputId); //target (Id)
-					mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-					mDecorateInstructions.push_back(0); //Location offset
-					break;
-				case D3DDECLUSAGE_NORMAL:
-					mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-					mDecorateInstructions.push_back(inputId); //target (Id)
-					mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-					mDecorateInstructions.push_back(1); //Location offset
-					break;
-				case D3DDECLUSAGE_PSIZE:
-					mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-					mDecorateInstructions.push_back(inputId); //target (Id)
-					mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-					mDecorateInstructions.push_back(2); //Location offset
-					break;
-				case D3DDECLUSAGE_COLOR:
-					mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-					mDecorateInstructions.push_back(inputId); //target (Id)
-					mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-					mDecorateInstructions.push_back(registerNumber + 3); //Location offset
-					break;
-				default:
-					mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-					mDecorateInstructions.push_back(inputId); //target (Id)
-					mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-					mDecorateInstructions.push_back(registerNumber + 5); //Location offset
-					break;
-				}
-			}
-			else
-			{
-				mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-				mDecorateInstructions.push_back(inputId); //target (Id)
-				mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-				mDecorateInstructions.push_back(registerNumber); //Location offset
-			}
-		}
-	}
+	PushName(inputId, registerName);
 }
 
 void ShaderConverter::Generate255Constants()
@@ -3719,6 +3659,14 @@ void ShaderConverter::PushStore(uint32_t pointerId, uint32_t objectId)
 	Push(spv::OpStore, pointerId, objectId);
 }
 
+void ShaderConverter::PushVariable(uint32_t resultTypeId, uint32_t resultId, spv::StorageClass storageClass)
+{
+	mTypeInstructions.push_back(Pack(4, spv::OpVariable));
+	mTypeInstructions.push_back(resultTypeId);
+	mTypeInstructions.push_back(resultId);
+	mTypeInstructions.push_back(storageClass);
+}
+
 void ShaderConverter::Push(spv::Op code)
 {
 	mFunctionDefinitionInstructions.push_back(Pack(1, code)); //size,Type
@@ -4023,7 +3971,7 @@ void ShaderConverter::Process_DCL_Pixel()
 	uint32_t registerComponents = (registerToken.i & D3DSP_WRITEMASK_ALL) >> 16;
 	uint32_t resultTypeId;
 	uint32_t textureType;
-	std::string registerName;
+	//std::string registerName;
 
 	if (registerType == D3DSPR_SAMPLER)
 	{
@@ -4073,6 +4021,7 @@ void ShaderConverter::Process_DCL_Pixel()
 
 	switch (registerType)
 	{
+	case D3DSPR_TEXTURE:
 	case D3DSPR_INPUT:
 		typeDescription.StorageClass = spv::StorageClassInput;
 		resultTypeId = GetSpirVTypeId(typeDescription);
@@ -4085,27 +4034,7 @@ void ShaderConverter::Process_DCL_Pixel()
 
 		mInputRegisters.push_back(tokenId);
 
-		registerName = "v" + std::to_string(registerNumber);
-		PushName(tokenId, registerName);
-
-		GenerateDecoration(registerNumber, tokenId, (_D3DDECLUSAGE)usage, true);
-		break;
-	case D3DSPR_TEXTURE:
-		typeDescription.StorageClass = spv::StorageClassInput;
-		resultTypeId = GetSpirVTypeId(typeDescription);
-
-		mTypeInstructions.push_back(Pack(4, spv::OpVariable)); //size,Type
-		mTypeInstructions.push_back(resultTypeId); //ResultType (Id) Must be OpTypePointer with the pointer's type being what you care about.
-		mTypeInstructions.push_back(tokenId); //Result (Id)
-		mTypeInstructions.push_back(spv::StorageClassInput); //Storage Class
-															 //Optional initializer
-
-		mInputRegisters.push_back(tokenId);
-
-		registerName = "T" + std::to_string(registerNumber);
-		PushName(tokenId, registerName);
-
-		GenerateDecoration(registerNumber, tokenId, (_D3DDECLUSAGE)usage, true);
+		GenerateDecoration(registerNumber, tokenId, (_D3DDECLUSAGE)usage, usageIndex,true);
 		break;
 	case D3DSPR_SAMPLER:
 		typeDescription.PrimaryType = spv::OpTypePointer;
@@ -4152,7 +4081,7 @@ void ShaderConverter::Process_DCL_Pixel()
 		break;
 	}
 
-	BOOST_LOG_TRIVIAL(info) << "DCL " << GetUsageName((_D3DDECLUSAGE)usage) << " - " << registerNumber << "(" << GetRegisterTypeName(registerType) << ") = " << typeDescription;
+	BOOST_LOG_TRIVIAL(info) << "DCL " << GetUsageName((_D3DDECLUSAGE)usage) << "(" << usageIndex << ") - " << GetRegisterTypeName(registerType) << "(" << registerNumber << ") = " << typeDescription;
 }
 
 void ShaderConverter::Process_DCL_Vertex()
@@ -4167,8 +4096,7 @@ void ShaderConverter::Process_DCL_Vertex()
 	TypeDescription typeDescription;
 	uint32_t registerComponents = (registerToken.i & D3DSP_WRITEMASK_ALL) >> 16;
 	uint32_t resultTypeId;
-	std::string registerName;
-	uint32_t stringWordSize;
+	//uint32_t stringWordSize;
 
 	typeDescription.PrimaryType = spv::OpTypePointer;
 	typeDescription.SecondaryType = spv::OpTypeVector;
@@ -4187,7 +4115,7 @@ void ShaderConverter::Process_DCL_Vertex()
 		}
 
 		typeDescription.TernaryType = spv::OpTypeVoid;
-		typeDescription.ComponentCount = 1;
+		typeDescription.ComponentCount = 0;
 		break;
 	case 3: //vec2
 		if (usage == D3DDECLUSAGE_COLOR && registerType == D3DSPR_INPUT)
@@ -4240,6 +4168,7 @@ void ShaderConverter::Process_DCL_Vertex()
 
 	switch (registerType)
 	{
+	case D3DSPR_TEXTURE:
 	case D3DSPR_INPUT:
 		resultTypeId = GetSpirVTypeId(typeDescription);
 
@@ -4248,9 +4177,9 @@ void ShaderConverter::Process_DCL_Vertex()
 		mTypeInstructions.push_back(tokenId); //Result (Id)
 		mTypeInstructions.push_back(spv::StorageClassInput); //Storage Class
 
-		mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].binding = 0;//element.Stream; TODO:REVISIT
-		mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].offset = 0;//element.Offset;
-		mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].location = registerNumber; //mConvertedShader.mVertexInputAttributeDescriptionCount
+		mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].binding = 0;
+		mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].offset = 0;
+		mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].location = UsageOffsets[usage] + usageIndex;
 
 		switch (typeDescription.ComponentCount)
 		{
@@ -4273,7 +4202,7 @@ void ShaderConverter::Process_DCL_Vertex()
 		case 4:  // 4D float
 			if (usage == D3DDECLUSAGE_COLOR)
 			{
-				mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].format = vk::Format::eR32G32B32A32Sint;
+				mConvertedShader.mVertexInputAttributeDescription[mConvertedShader.mVertexInputAttributeDescriptionCount].format = vk::Format::eB8G8R8A8Uint; //eR32G32B32A32Sint;
 			}
 			else
 			{
@@ -4287,20 +4216,7 @@ void ShaderConverter::Process_DCL_Vertex()
 
 		mInputRegisters.push_back(tokenId);
 
-		if (this->mMajorVersion == 3)
-		{
-			registerName = "input" + std::to_string(registerNumber);
-			PushName(tokenId, registerName);
-
-			GenerateDecoration(registerNumber, tokenId, (_D3DDECLUSAGE)usage, true);
-		}
-		else
-		{
-			registerName = "oD" + std::to_string(registerNumber);
-			PushName(tokenId, registerName);
-
-			GenerateDecoration(registerNumber, tokenId, D3DDECLUSAGE_COLOR, true);
-		}
+		GenerateDecoration(registerNumber, tokenId, (_D3DDECLUSAGE)usage, usageIndex,true);
 
 		break;
 	case D3DSPR_RASTOUT:
@@ -4321,19 +4237,8 @@ void ShaderConverter::Process_DCL_Vertex()
 		case D3DDECLUSAGE_POSITION:
 			mPositionRegister = usageIndex; //might need this later.
 			mPositionId = tokenId;
-			registerName = "oPos" + std::to_string(registerNumber);
-			break;
-		case D3DDECLUSAGE_FOG:
-			registerName = "oFog" + std::to_string(registerNumber);
-			break;
-		case D3DDECLUSAGE_NORMAL:
-			registerName = "oNorm" + std::to_string(registerNumber);
-			break;
-		case D3DDECLUSAGE_PSIZE:
-			registerName = "oPts" + std::to_string(registerNumber);
 			break;
 		case D3DDECLUSAGE_COLOR:
-
 			if (mColor1Id)
 			{
 				mColor2Id = tokenId;
@@ -4386,23 +4291,14 @@ void ShaderConverter::Process_DCL_Vertex()
 				mIdTypePairs[mColor1WId] = pointerFloatType;
 				PushAccessChain(floatTypeId, mColor1WId, mColor1Id, mConstantIntegerIds[3]);
 			}
-
-			registerName = "oD" + std::to_string(registerNumber);
-			break;
-		case D3DDECLUSAGE_TEXCOORD:
-			registerName = "oT" + std::to_string(registerNumber);
 			break;
 		default:
-			registerName = "o" + std::to_string(registerNumber);
 			break;
 		}
 
-		stringWordSize = 2 + std::max(registerName.length() / 4, (size_t)1);
-		PushName(tokenId, registerName);
-
 		mOutputRegisters.push_back(tokenId);
 		mOutputRegisterUsages[(_D3DDECLUSAGE)usage] = tokenId;
-		GenerateDecoration(registerNumber, tokenId, (_D3DDECLUSAGE)usage, false);
+		GenerateDecoration(registerNumber, tokenId, (_D3DDECLUSAGE)usage, usageIndex,false);
 		break;
 	case D3DSPR_TEMP:
 		typeDescription.StorageClass = spv::StorageClassPrivate;
@@ -4419,7 +4315,7 @@ void ShaderConverter::Process_DCL_Vertex()
 		break;
 	}
 
-	BOOST_LOG_TRIVIAL(info) << "DCL " << GetUsageName((_D3DDECLUSAGE)usage) << " - " << registerNumber << "(" << GetRegisterTypeName(registerType) << ") = " << typeDescription;
+	BOOST_LOG_TRIVIAL(info) << "DCL " << GetUsageName((_D3DDECLUSAGE)usage) << "(" << usageIndex << ") - " << GetRegisterTypeName(registerType) << "(" << registerNumber << ") = " << typeDescription;
 }
 
 void ShaderConverter::Process_DCL()
@@ -4544,14 +4440,14 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 	boolVectorType.SecondaryType = spv::OpTypeBool;
 	boolVectorType.ComponentCount = 4;
 	uint32_t boolVectorTypeId = GetSpirVTypeId(boolVectorType);
-	
+
 	uint32_t resultTypeId;
 	spv::Op dataType;
 	if (typeDescription.PrimaryType == spv::OpTypeMatrix || typeDescription.PrimaryType == spv::OpTypeVector)
 	{
 		dataType = typeDescription.SecondaryType;
 		resultTypeId = boolVectorTypeId;
-		
+
 		mIdTypePairs[resultId] = boolVectorType;
 	}
 	else
@@ -4561,7 +4457,7 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 
 		mIdTypePairs[resultId] = boolType;
 	}
-	
+
 	switch (extraInfo)
 	{
 	case 1:
@@ -5411,7 +5307,7 @@ void ShaderConverter::Process_TEXKILL()
 	Push(spv::OpBranchConditional, xConditionalId, xTrueLabelId, xFalseLabelId);
 	Push(spv::OpLabel, xTrueLabelId);
 	Push(spv::OpKill);
-	Push(spv::OpLabel, xFalseLabelId);	
+	Push(spv::OpLabel, xFalseLabelId);
 
 	//Y
 	uint32_t yId = GetNextId();
@@ -5991,7 +5887,7 @@ void ShaderConverter::Process_FRC()
 
 	Token argumentToken1 = GetNextToken();
 	_D3DSHADER_PARAM_REGISTER_TYPE argumentRegisterType1 = GetRegisterType(argumentToken1.i);
-	uint32_t argumentId1 = GetSwizzledId(argumentToken1, GIVE_ME_VECTOR_4);	
+	uint32_t argumentId1 = GetSwizzledId(argumentToken1, GIVE_ME_VECTOR_4);
 
 	//Grab type info if there is any.
 	TypeDescription argumentType1 = mIdTypePairs[argumentId1];
@@ -7340,7 +7236,7 @@ void ShaderConverter::Process_CMP()
 	TypeDescription argumentType1 = mIdTypePairs[argumentId1];
 	TypeDescription argumentType2 = mIdTypePairs[argumentId2];
 	TypeDescription argumentType3 = mIdTypePairs[argumentId3];
-	TypeDescription typeDescription; 
+	TypeDescription typeDescription;
 
 	//Shift the result type so we get a register instead of a pointer as the output type.
 	if (argumentType1.PrimaryType == spv::OpTypePointer)

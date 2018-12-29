@@ -41,14 +41,20 @@ CVertexDeclaration9::CVertexDeclaration9(CDevice9* device, const D3DVERTEXELEMEN
 		case D3DDECLUSAGE_POSITION:
 			mHasPosition = true;
 			break;
-		case D3DDECLUSAGE_POSITIONT:
-			mHasPositionT = true;
+		case D3DDECLUSAGE_BLENDWEIGHT:
+			mHasBlendWeight = true;
+			break;
+		case D3DDECLUSAGE_BLENDINDICES:
+			mHasBlendIndices = true;
 			break;
 		case D3DDECLUSAGE_NORMAL:
 			mHasNormal = true;
 			break;
 		case D3DDECLUSAGE_PSIZE:
 			mHasPSize = true;
+			break;
+		case D3DDECLUSAGE_POSITIONT:
+			mHasPositionT = true;
 			break;
 		case D3DDECLUSAGE_COLOR:
 			if (pVertexElements[i].UsageIndex)
@@ -70,6 +76,8 @@ CVertexDeclaration9::CVertexDeclaration9(CDevice9* device, const D3DVERTEXELEMEN
 
 		i++;
 	}
+
+	auto test = 0;
 }
 
 CVertexDeclaration9::~CVertexDeclaration9()

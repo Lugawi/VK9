@@ -36,9 +36,11 @@ public:
 
 	std::vector<D3DVERTEXELEMENT9> mVertexElements;
 	BOOL mHasPosition=0;
-	BOOL mHasPositionT = 0;
+	BOOL mHasBlendWeight = 0;
+	BOOL mHasBlendIndices = 0;
 	BOOL mHasNormal = 0;
 	BOOL mHasPSize = 0;
+	BOOL mHasPositionT = 0;
 	BOOL mHasColor1=0;
 	BOOL mHasColor2=0;
 	int32_t mTextureCount=0;

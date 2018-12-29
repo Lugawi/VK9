@@ -1309,7 +1309,14 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 	/**********************************************
 	* Figure out attributes
 	**********************************************/
+	//if (context->VertexShader != nullptr)
+	//{
+	//	auto& convertedShader = mStateManager.mShaderConverters[context->VertexShader->mId]->mConvertedShader;
 
+	//	memcpy(&realDevice->mVertexInputAttributeDescription, &convertedShader.mVertexInputAttributeDescription, sizeof(convertedShader.mVertexInputAttributeDescription));
+	//	realDevice->mPipelineVertexInputStateCreateInfo.pVertexAttributeDescriptions = realDevice->mVertexInputAttributeDescription;
+	//	attributeCount = convertedShader.mVertexInputAttributeDescriptionCount;
+	//}
 	if (deviceState.mVertexDeclaration != nullptr)
 	{
 		uint32_t textureIndex = 0;
@@ -1320,132 +1327,74 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 		{
 			D3DVERTEXELEMENT9& element = deviceState.mVertexDeclaration->mVertexElements[i];
 
-			int t = D3DDECLTYPE_FLOAT3;
-
 			realDevice->mVertexInputAttributeDescription[i].binding = element.Stream;
-			//realDevice.mVertexInputAttributeDescription[i].location = location;
 			realDevice->mVertexInputAttributeDescription[i].format = ConvertDeclType((D3DDECLTYPE)element.Type);
 			realDevice->mVertexInputAttributeDescription[i].offset = element.Offset;
-
-			switch ((D3DDECLUSAGE)element.Usage)
-			{
-			case D3DDECLUSAGE_POSITION:
-				realDevice->mVertexInputAttributeDescription[i].location = 0;
-				break;
-			case D3DDECLUSAGE_POSITIONT:
-				realDevice->mVertexInputAttributeDescription[i].location = 0;
-				break;
-			case D3DDECLUSAGE_NORMAL:
-				realDevice->mVertexInputAttributeDescription[i].location = hasPosition;
-				break;
-			case D3DDECLUSAGE_PSIZE:
-				realDevice->mVertexInputAttributeDescription[i].location = hasPosition + hasNormal;
-				break;
-			case D3DDECLUSAGE_COLOR:
-				realDevice->mVertexInputAttributeDescription[i].location = hasPosition + hasNormal + hasPSize + element.UsageIndex;
-				break;
-			case D3DDECLUSAGE_TEXCOORD:
-				realDevice->mVertexInputAttributeDescription[i].location = hasPosition + hasNormal + hasPSize + hasColor1 + hasColor2 + textureIndex;
-				textureIndex += 1;
-				break;
-			case D3DDECLUSAGE_BLENDWEIGHT:
-				BOOST_LOG_TRIVIAL(fatal) << "RenderManager::BeginDraw D3DDECLUSAGE_BLENDWEIGHT is not implemented!";
-				break;
-			case D3DDECLUSAGE_BLENDINDICES:
-				BOOST_LOG_TRIVIAL(fatal) << "RenderManager::BeginDraw D3DDECLUSAGE_BLENDINDICES is not implemented!";
-				break;
-			case D3DDECLUSAGE_TANGENT:
-				BOOST_LOG_TRIVIAL(fatal) << "RenderManager::BeginDraw D3DDECLUSAGE_TANGENT is not implemented!";
-				break;
-			case D3DDECLUSAGE_BINORMAL:
-				BOOST_LOG_TRIVIAL(fatal) << "RenderManager::BeginDraw D3DDECLUSAGE_BINORMAL is not implemented!";
-				break;
-			case D3DDECLUSAGE_TESSFACTOR:
-				BOOST_LOG_TRIVIAL(fatal) << "RenderManager::BeginDraw D3DDECLUSAGE_TESSFACTOR is not implemented!";
-				break;
-			case D3DDECLUSAGE_FOG:
-				BOOST_LOG_TRIVIAL(fatal) << "RenderManager::BeginDraw D3DDECLUSAGE_FOG is not implemented!";
-				break;
-			case D3DDECLUSAGE_DEPTH:
-				BOOST_LOG_TRIVIAL(fatal) << "RenderManager::BeginDraw D3DDECLUSAGE_DEPTH is not implemented!";
-				break;
-			case D3DDECLUSAGE_SAMPLE:
-				BOOST_LOG_TRIVIAL(fatal) << "RenderManager::BeginDraw D3DDECLUSAGE_SAMPLE is not implemented!";
-				break;
-			default:
-				break;
-			}
+			realDevice->mVertexInputAttributeDescription[i].location = UsageOffsets[element.Usage] + element.UsageIndex;
 		}
 	}
 	else if (deviceState.mFVF)
 	{
 		uint32_t attributeIndex = 0;
 		uint32_t offset = 0;
-		uint32_t location = 0;
 
 		if (hasPosition)
 		{
 			realDevice->mVertexInputAttributeDescription[attributeIndex].binding = 0;
-			realDevice->mVertexInputAttributeDescription[attributeIndex].location = location;
+			realDevice->mVertexInputAttributeDescription[attributeIndex].location = UsageOffsets[D3DDECLUSAGE_POSITION];
 			realDevice->mVertexInputAttributeDescription[attributeIndex].format = vk::Format::eR32G32B32Sfloat;
 			realDevice->mVertexInputAttributeDescription[attributeIndex].offset = offset;
 			offset += (sizeof(float) * positionSize);
-			location += 1;
 			attributeIndex += 1;
 		}
 
 		if (hasNormal)
 		{
 			realDevice->mVertexInputAttributeDescription[attributeIndex].binding = 0;
-			realDevice->mVertexInputAttributeDescription[attributeIndex].location = location;
+			realDevice->mVertexInputAttributeDescription[attributeIndex].location = UsageOffsets[D3DDECLUSAGE_NORMAL];
 			realDevice->mVertexInputAttributeDescription[attributeIndex].format = vk::Format::eR32G32B32Sfloat;
 			realDevice->mVertexInputAttributeDescription[attributeIndex].offset = offset;
 			offset += (sizeof(float) * 3);
-			location += 1;
 			attributeIndex += 1;
 		}
 
 		if (hasPSize)
 		{
 			realDevice->mVertexInputAttributeDescription[attributeIndex].binding = 0;
-			realDevice->mVertexInputAttributeDescription[attributeIndex].location = location;
+			realDevice->mVertexInputAttributeDescription[attributeIndex].location = UsageOffsets[D3DDECLUSAGE_PSIZE];
 			realDevice->mVertexInputAttributeDescription[attributeIndex].format = vk::Format::eR32G32B32Sfloat;
 			realDevice->mVertexInputAttributeDescription[attributeIndex].offset = offset;
 			offset += sizeof(float);
-			location += 1;
 			attributeIndex += 1;
 		}
 
 		if (hasColor1)
 		{
 			realDevice->mVertexInputAttributeDescription[attributeIndex].binding = 0;
-			realDevice->mVertexInputAttributeDescription[attributeIndex].location = location;
+			realDevice->mVertexInputAttributeDescription[attributeIndex].location = UsageOffsets[D3DDECLUSAGE_COLOR];
 			realDevice->mVertexInputAttributeDescription[attributeIndex].format = vk::Format::eB8G8R8A8Uint;
 			realDevice->mVertexInputAttributeDescription[attributeIndex].offset = offset;
 			offset += sizeof(uint32_t);
-			location += 1;
 			attributeIndex += 1;
 		}
 
 		if (hasColor2)
 		{
 			realDevice->mVertexInputAttributeDescription[attributeIndex].binding = 0;
-			realDevice->mVertexInputAttributeDescription[attributeIndex].location = location;
+			realDevice->mVertexInputAttributeDescription[attributeIndex].location = UsageOffsets[D3DDECLUSAGE_COLOR] + 1;
 			realDevice->mVertexInputAttributeDescription[attributeIndex].format = vk::Format::eB8G8R8A8Uint;
 			realDevice->mVertexInputAttributeDescription[attributeIndex].offset = offset;
 			offset += sizeof(uint32_t);
-			location += 1;
 			attributeIndex += 1;
 		}
 
 		for (size_t j = 0; j < textureCount; j++)
 		{
 			realDevice->mVertexInputAttributeDescription[attributeIndex].binding = 0;
-			realDevice->mVertexInputAttributeDescription[attributeIndex].location = location;
+			realDevice->mVertexInputAttributeDescription[attributeIndex].location = UsageOffsets[D3DDECLUSAGE_TEXCOORD] + j;
 			realDevice->mVertexInputAttributeDescription[attributeIndex].format = vk::Format::eR32G32Sfloat;
 			realDevice->mVertexInputAttributeDescription[attributeIndex].offset = offset;
 			offset += (sizeof(float) * 2);
-			location += 1;
 			attributeIndex += 1;
 		}
 	}

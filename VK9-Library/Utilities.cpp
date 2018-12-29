@@ -669,6 +669,7 @@ void MergeState(const DeviceState& sourceState, DeviceState& targetState, D3DSTA
 			if ((type == D3DSBT_ALL || type == D3DSBT_FORCE_DWORD) && (!onlyIfExists || targetState.mStreamSources.count(pair1.first) > 0))
 			{
 				targetState.mStreamSources[pair1.first] = pair1.second;
+				targetState.mAreStreamSourcesDirty = true;
 			}
 		}
 	}
