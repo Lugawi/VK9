@@ -392,7 +392,7 @@ HRESULT STDMETHODCALLTYPE C9::RegisterSoftwareDevice(void *pInitializeFunction)
 
 	BOOST_LOG_TRIVIAL(warning) << "C9::RegisterSoftwareDevice is not implemented!";
 
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 UINT STDMETHODCALLTYPE C9::GetAdapterModeCountEx(UINT Adapter, const D3DDISPLAYMODEFILTER *pFilter)
@@ -549,11 +549,9 @@ HRESULT STDMETHODCALLTYPE C9::CreateDeviceEx(UINT Adapter, D3DDEVTYPE DeviceType
 
 HRESULT STDMETHODCALLTYPE C9::GetAdapterLUID(UINT Adapter, LUID *pLUID)
 {
-	//TODO: Implement.
+	(*pLUID) = mLUID;
 
-	BOOST_LOG_TRIVIAL(warning) << "C9::GetAdapterLUID is not implemented!";
-
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData)

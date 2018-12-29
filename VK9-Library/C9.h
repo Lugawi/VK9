@@ -51,6 +51,7 @@ public:
 	
 	std::vector<Monitor> mMonitors;
 	bool mValidationPresent = false;
+	LUID mLUID = {};
 
 public:
 	//IUnknown

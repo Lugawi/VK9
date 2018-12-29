@@ -161,9 +161,10 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::GetPresentParameters(D3DPRESENT_PARAMETER
 HRESULT STDMETHODCALLTYPE CSwapChain9::GetRasterStatus(D3DRASTER_STATUS *pRasterStatus)
 {
 	(*pRasterStatus) = {};
+
 	BOOST_LOG_TRIVIAL(warning) << "CSurface9::GetRasterStatus is not implemented!";
 
-	return E_NOTIMPL; //TODO: Implement.
+	return S_OK; //TODO: Implement.
 }
 
 HRESULT STDMETHODCALLTYPE CSwapChain9::Present(const RECT *pSourceRect, const RECT *pDestRect, HWND hDestWindowOverride, const RGNDATA *pDirtyRegion, DWORD dwFlags)
@@ -173,21 +174,30 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::Present(const RECT *pSourceRect, const RE
 
 HRESULT STDMETHODCALLTYPE CSwapChain9::GetLastPresentCount(UINT *pLastPresentCount)
 {
+	(*pLastPresentCount) = {};
+
 	BOOST_LOG_TRIVIAL(warning) << "CSurface9::GetLastPresentCount is not implemented!";
 
-	return E_NOTIMPL; //TODO: Implement.
+	return S_OK; //TODO: Implement.
 }
 
 HRESULT STDMETHODCALLTYPE CSwapChain9::GetPresentStats(D3DPRESENTSTATS *pPresentationStatistics)
 {
+	(*pPresentationStatistics) = {};
+
 	BOOST_LOG_TRIVIAL(warning) << "CSurface9::GetPresentStats is not implemented!";
 
-	return E_NOTIMPL; //TODO: Implement.
+	return S_OK; //TODO: Implement.
 }
 
 HRESULT STDMETHODCALLTYPE CSwapChain9::GetDisplayModeEx(D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation)
 {
-	BOOST_LOG_TRIVIAL(warning) << "CSurface9::GetDisplayModeEx is not implemented!";
+	pMode->Format = mPresentationParameters->BackBufferFormat;
+	pMode->Height = mPresentationParameters->BackBufferHeight;
+	pMode->Width = mPresentationParameters->BackBufferWidth;
+	pMode->RefreshRate = mPresentationParameters->FullScreen_RefreshRateInHz; //Revsit
 
-	return E_NOTIMPL; //TODO: Implement.
+	(*pRotation) = D3DDISPLAYROTATION_IDENTITY;
+
+	return S_OK;
 }

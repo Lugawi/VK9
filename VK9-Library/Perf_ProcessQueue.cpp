@@ -295,6 +295,30 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				}
 			}
 			break;
+			case Device_GetDisplayModeEx:
+			{
+				UINT iSwapChain = bit_cast<UINT>(workItem->Argument1);
+				D3DDISPLAYMODEEX* pMode = bit_cast<D3DDISPLAYMODEEX*>(workItem->Argument2);
+				auto& realDevice = commandStreamManager->mRenderManager.mStateManager.mDevices[workItem->Id];
+
+				if (iSwapChain)
+				{
+					//TODO: Implement.
+					BOOST_LOG_TRIVIAL(warning) << "ProcessQueue multiple swapchains are not implemented!";
+				}
+				else
+				{
+					auto& colorSurface = realDevice->mDeviceState.mRenderTarget->mColorSurface;
+
+					pMode->Size = sizeof(D3DDISPLAYMODEEX);
+					pMode->Height = colorSurface->mExtent.height;
+					pMode->Width = colorSurface->mExtent.width;
+					pMode->RefreshRate = 60; //fake it till you make it.
+					pMode->Format = ConvertFormat(colorSurface->mRealFormat);
+					pMode->ScanLineOrdering = D3DSCANLINEORDERING_UNKNOWN;
+				}
+			}
+			break;
 			case Device_GetFVF:
 			{
 				DWORD* pFVF = bit_cast<DWORD*>(workItem->Argument1);

@@ -73,6 +73,8 @@ public:
 	CSurface9* mDepthStencilSurface = nullptr;
 
 	UINT mAvailableTextureMemory = 0;
+	UINT mMaxLatency = 0;
+	INT mPriority = 0;
 
 	//Buffer Caches
 	std::vector<CVertexBuffer9*> mTempVertexBuffers;

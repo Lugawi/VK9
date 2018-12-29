@@ -37,6 +37,7 @@ enum WorkItemType
 	, Device_DrawPrimitive
 	, Device_EndStateBlock
 	, Device_GetDisplayMode
+	, Device_GetDisplayModeEx
 	, Device_GetFVF
 	, Device_GetIndices
 	, Device_GetLight

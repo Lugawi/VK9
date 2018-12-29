@@ -1801,7 +1801,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::UpdateSurface(IDirect3DSurface9 *pSourceSurf
 
 	BOOST_LOG_TRIVIAL(warning) << "CDevice9::UpdateSurface is not implemented!";
 
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::UpdateTexture(IDirect3DBaseTexture9* pSourceTexture, IDirect3DBaseTexture9* pDestinationTexture)
@@ -1831,7 +1831,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetConvolutionMonoKernel(UINT width, UINT he
 
 	BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetConvolutionMonoKernel is not implemented!";
 
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::ComposeRects(IDirect3DSurface9 *pSrc, IDirect3DSurface9 *pDst, IDirect3DVertexBuffer9 *pSrcRectDescs, UINT NumRects, IDirect3DVertexBuffer9 *pDstRectDescs, D3DCOMPOSERECTSOP Operation, int Xoffset, int Yoffset)
@@ -1840,34 +1840,48 @@ HRESULT STDMETHODCALLTYPE CDevice9::ComposeRects(IDirect3DSurface9 *pSrc, IDirec
 
 	BOOST_LOG_TRIVIAL(warning) << "CDevice9::ComposeRects is not implemented!";
 
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::PresentEx(const RECT *pSourceRect, const RECT *pDestRect, HWND hDestWindowOverride, const RGNDATA *pDirtyRegion, DWORD dwFlags)
 {
-	//TODO: Implement.
+	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
+	//std::lock_guard<std::mutex> lock(workItem->Mutex);
+	workItem->WorkItemType = WorkItemType::Device_Present;
+	workItem->Id = mId;
+	workItem->Argument1 = bit_cast<void*>(pSourceRect);
+	workItem->Argument2 = bit_cast<void*>(pDestRect);
+	workItem->Argument3 = bit_cast<void*>(hDestWindowOverride);
+	workItem->Argument4 = bit_cast<void*>(pDirtyRegion);
+	mCommandStreamManager->RequestWorkAndWait(workItem);
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::PresentEx is not implemented!";
+	//Mark the temp buffers as unused.
+	for (auto& buffer : mTempVertexBuffers)
+	{
+		buffer->mIsUsed = false;
+	}
+	for (auto& buffer : mTempIndexBuffers)
+	{
+		buffer->mIsUsed = false;
+	}
 
-	return E_NOTIMPL;
+	if (mCommandStreamManager->mResult == vk::Result::eErrorDeviceLost) { return D3DERR_DEVICELOST; }
+
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetGPUThreadPriority(INT *pPriority)
 {
-	//TODO: Implement.
+	(*pPriority) = mPriority;
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::GetGPUThreadPriority is not implemented!";
-
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetGPUThreadPriority(INT Priority)
 {
-	//TODO: Implement.
+	mPriority = Priority;
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetGPUThreadPriority is not implemented!";
-
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::WaitForVBlank(UINT iSwapChain)
@@ -1876,7 +1890,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::WaitForVBlank(UINT iSwapChain)
 
 	BOOST_LOG_TRIVIAL(warning) << "CDevice9::WaitForVBlank is not implemented!";
 
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::CheckResourceResidency(IDirect3DResource9 **pResourceArray, UINT32 NumResources)
@@ -1890,20 +1904,16 @@ HRESULT STDMETHODCALLTYPE CDevice9::CheckResourceResidency(IDirect3DResource9 **
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetMaximumFrameLatency(UINT MaxLatency)
 {
-	//TODO: Implement.
+	mMaxLatency = MaxLatency;
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetMaximumFrameLatency is not implemented!";
-
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetMaximumFrameLatency(UINT *pMaxLatency)
 {
-	//TODO: Implement.
+	(*pMaxLatency) = mMaxLatency;
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::GetMaximumFrameLatency is not implemented!";
-
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::CheckDeviceState(HWND hDestinationWindow)
@@ -1912,50 +1922,82 @@ HRESULT STDMETHODCALLTYPE CDevice9::CheckDeviceState(HWND hDestinationWindow)
 
 	BOOST_LOG_TRIVIAL(warning) << "CDevice9::CheckDeviceState is not implemented!";
 
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreateRenderTargetEx(UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, IDirect3DSurface9 **ppSurface, HANDLE *pSharedHandle, DWORD Usage)
 {
-	//TODO: Implement.
+	HRESULT result = S_OK;
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::CreateRenderTargetEx is not implemented!";
+	//I added an extra int at the end so the signature would be different for this version. Locakable/Discard are both BOOL.
+	CRenderTargetSurface9* obj = new CRenderTargetSurface9(this, Width, Height, Format);
 
-	return E_NOTIMPL;
+	(*ppSurface) = (IDirect3DSurface9*)obj;
+
+	return result;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreateOffscreenPlainSurfaceEx(UINT Width, UINT Height, D3DFORMAT Format, D3DPOOL Pool, IDirect3DSurface9 **ppSurface, HANDLE *pSharedHandle, DWORD Usage)
 {
-	//TODO: Implement.
+	HRESULT result = S_OK;
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::CreateOffscreenPlainSurfaceEx is not implemented!";
+	CSurface9* ptr = new CSurface9(this, (CTexture9*)nullptr, Width, Height, 1, 0, Format, Pool, pSharedHandle);
 
-	return E_NOTIMPL;
+	ptr->Init();
+
+	(*ppSurface) = (IDirect3DSurface9*)ptr;
+
+	return result;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreateDepthStencilSurfaceEx(UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, IDirect3DSurface9 **ppSurface, HANDLE *pSharedHandle, DWORD Usage)
 {
-	//TODO: Implement.
+	HRESULT result = S_OK;
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::CreateDepthStencilSurfaceEx is not implemented!";
+	CSurface9* obj = new CSurface9(this, (CTexture9*)nullptr, Width, Height, Format, MultiSample, MultisampleQuality, Discard, pSharedHandle);
 
-	return E_NOTIMPL;
+	obj->Init();
+
+	(*ppSurface) = (IDirect3DSurface9*)obj;
+
+	return result;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::ResetEx(D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode)
 {
-	//TODO: Implement.
+	if (mCommandStreamManager->mResult == vk::Result::eErrorDeviceLost)
+	{
+		/*
+		All of the the d3d9 "device state" is attached to the RealDevice object so just destroy the current one and make a new one.
+		The application is responsible for destroying any handles it has before calling Reset but I doubt games really do that.
+		*/
+		memcpy(&mPresentationParameters, pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS));
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::ResetEx is not implemented!";
+		Destroy();
+		Init();
+	}
+	else
+	{
+		WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
+		workItem->WorkItemType = WorkItemType::Device_Reset;
+		workItem->Id = mId;
+		workItem->Argument1 = mFocusWindow;
+		mCommandStreamManager->RequestWork(workItem);
+	}
 
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetDisplayModeEx(UINT iSwapChain, D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation)
 {
-	//TODO: Implement.
+	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
+	workItem->WorkItemType = WorkItemType::Device_GetDisplayModeEx;
+	workItem->Id = mId;
+	workItem->Argument1 = bit_cast<void*>(iSwapChain);
+	workItem->Argument2 = bit_cast<void*>(pMode);
+	mCommandStreamManager->RequestWorkAndWait(workItem);
+	
+	(*pRotation) = D3DDISPLAYROTATION_IDENTITY;
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::GetDisplayModeEx is not implemented!";
-
-	return E_NOTIMPL;
+	return S_OK;
 }
