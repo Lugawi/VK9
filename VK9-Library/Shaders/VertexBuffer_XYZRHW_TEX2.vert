@@ -27,8 +27,8 @@ misrepresented as being the original software.
 #include "Functions"
 
 layout (location = 0) in vec4 position;
-layout (location = 1) in vec4 attr1;
-layout (location = 2) in vec4 attr2;
+layout (location = 11) in vec4 t0;
+layout (location = 12) in vec4 t1;
 
 layout (location = 0) out vec4 diffuseColor;
 layout (location = 1) out vec4 specularColor;
@@ -48,8 +48,8 @@ void main()
 	gl_Position = vec4(position.xy,0.0,1.0);
 	gl_Position *= vec4(1.0,-1.0,1.0,1.0);
 
-	texcoord1 = attr1.xy;
-	texcoord2 = attr2.xy;
+	texcoord1 = t0.xy;
+	texcoord2 = t1.xy;
 
 	ColorPair color = CalculateGlobalIllumination(position, vec4(0.0), vec4(0.0), vec4(0.0));
 

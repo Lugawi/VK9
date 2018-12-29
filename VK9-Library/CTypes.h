@@ -91,9 +91,9 @@ public:
 
 struct ShaderConstantSlots
 {
-	uint32_t IntegerConstants[64]; //16 * 4
-	uint32_t BooleanConstants[16];
-	float FloatConstants[1024]; //256 * 4
+	uint32_t IntegerConstants[64] = {}; //16 * 4
+	uint32_t BooleanConstants[16] = {};
+	float FloatConstants[1024] = {}; //256 * 4
 };
 
 struct TextureStage
@@ -240,7 +240,7 @@ struct ShaderState
 {
 	RenderState mRenderState;
 	TextureStage mTextureStages[16];
-	Light mLights[8];
+	Light mLights[8] = {};
 	D3DMATERIAL9 mMaterial = 
 	{
 		1.0f, 1.0f, 1.0f, 1.0f,

@@ -2720,6 +2720,10 @@ void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t input
 		}
 	}
 	PushName(inputId, registerName);
+
+#ifdef _EXTRA_SHADER_DEBUG_INFO
+	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::GenerateDecoration created " << registerName << " @ " << UsageOffsets[usage] + usageIndex;
+#endif
 }
 
 void ShaderConverter::Generate255Constants()

@@ -27,10 +27,10 @@ misrepresented as being the original software.
 #include "Functions"
 
 layout (location = 0) in vec4 position;
-layout (location = 1) in vec4 attr1; //normal
-layout (location = 2) in uvec4 attr2; //color
-layout (location = 3) in vec4 attr3; //tex1
-layout (location = 4) in vec4 attr4; //tex2
+layout (location = 8) in vec4 norm;
+layout (location = 30) in uvec4 attr2; //color
+layout (location = 11) in vec4 t0; //tex1
+layout (location = 12) in vec4 t1; //tex2
 
 layout (location = 0) out vec4 diffuseColor;
 layout (location = 1) out vec4 specularColor;
@@ -50,10 +50,10 @@ void main()
 	gl_Position = ubo.worldViewProjection * vec4(position.xyz,1.0);
 	gl_Position *= vec4(1.0,-1.0,1.0,1.0);
 
-	texcoord1 = attr3.xy;
-	texcoord2 = attr4.xy;
+	texcoord1 = t0.xy;
+	texcoord2 = t1.xy;
 
-	ColorPair color = CalculateGlobalIllumination(position, attr1, Convert(attr2), vec4(0.0));
+	ColorPair color = CalculateGlobalIllumination(position, norm, Convert(attr2), vec4(0.0));
 
 	diffuseColor = color.Diffuse;
 	specularColor = color.Specular;

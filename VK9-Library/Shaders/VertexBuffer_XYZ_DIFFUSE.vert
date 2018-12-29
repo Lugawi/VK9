@@ -27,7 +27,7 @@ misrepresented as being the original software.
 #include "Functions"
 
 layout (location = 0) in vec4 position;
-layout (location = 1) in uvec4 attr;
+layout (location = 30) in uvec4 attr; //color
 
 layout (location = 0) out vec4 diffuseColor;
 layout (location = 1) out vec4 specularColor;
