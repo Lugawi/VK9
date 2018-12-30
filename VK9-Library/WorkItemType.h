@@ -85,6 +85,7 @@ enum WorkItemType
 	, Device_SetVertexShaderConstantF
 	, Device_SetVertexShaderConstantI
 	, Device_SetViewport
+	, Device_UpdateSurface
 	, Device_UpdateTexture
 	, Device_GetAvailableTextureMem
 	, Device_SetRenderTarget

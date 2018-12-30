@@ -1795,11 +1795,16 @@ HRESULT STDMETHODCALLTYPE CDevice9::TestCooperativeLevel()
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE CDevice9::UpdateSurface(IDirect3DSurface9 *pSourceSurface, const RECT *pSourceRect, IDirect3DSurface9 *pDestinationSurface, const POINT *pDestinationPoint)
+HRESULT STDMETHODCALLTYPE CDevice9::UpdateSurface(IDirect3DSurface9* pSourceSurface, const RECT* pSourceRect, IDirect3DSurface9* pDestinationSurface, const POINT* pDestinationPoint)
 {
-	//TODO: Implement.
-
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::UpdateSurface is not implemented!";
+	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
+	workItem->WorkItemType = WorkItemType::Device_UpdateTexture;
+	workItem->Id = mId;
+	workItem->Argument1 = bit_cast<void*>(pSourceSurface);
+	workItem->Argument2 = bit_cast<void*>(pSourceRect);
+	workItem->Argument3 = bit_cast<void*>(pDestinationSurface);
+	workItem->Argument4 = bit_cast<void*>(pDestinationPoint);
+	mCommandStreamManager->RequestWorkAndWait(workItem);
 
 	return S_OK;
 }

@@ -2204,6 +2204,16 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				}
 			}
 			break;
+			case Device_UpdateSurface:
+			{
+				auto& realDevice = commandStreamManager->mRenderManager.mStateManager.mDevices[workItem->Id];
+				IDirect3DSurface9* pSourceSurface = bit_cast<IDirect3DSurface9*>(workItem->Argument1);
+				RECT* pSourceRect = bit_cast<RECT*>(workItem->Argument2);
+				IDirect3DSurface9* pDestinationSurface = bit_cast<IDirect3DSurface9*>(workItem->Argument2);
+				POINT* pDestinationPoint = bit_cast<POINT*>(workItem->Argument2);
+
+				commandStreamManager->mRenderManager.UpdateSurface(realDevice, pSourceSurface, pSourceRect, pDestinationSurface, pDestinationPoint);
+			}
 			case Device_UpdateTexture:
 			{
 				auto& realDevice = commandStreamManager->mRenderManager.mStateManager.mDevices[workItem->Id];

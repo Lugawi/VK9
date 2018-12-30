@@ -447,6 +447,115 @@ void RenderManager::DrawPrimitive(std::shared_ptr<RealDevice> realDevice, D3DPRI
 	currentBuffer.draw(ConvertPrimitiveCountToVertexCount(PrimitiveType, PrimitiveCount), 1, StartVertex, 0);
 }
 
+void RenderManager::UpdateSurface(std::shared_ptr<RealDevice> realDevice, IDirect3DSurface9* pSourceSurface, const RECT* pSourceRect, IDirect3DSurface9* pDestinationSurface, const POINT* pDestinationPoint)
+{
+	if (pSourceSurface == nullptr || pDestinationSurface == nullptr)
+	{
+		return;
+	}
+
+	auto& device = realDevice->mDevice;
+
+	vk::CommandBuffer commandBuffer;
+	vk::Result result;
+
+	vk::CommandBufferAllocateInfo commandBufferInfo = {};
+	commandBufferInfo.commandPool = realDevice->mCommandPool;
+	commandBufferInfo.level = vk::CommandBufferLevel::ePrimary;
+	commandBufferInfo.commandBufferCount = 1;
+
+	result = device.allocateCommandBuffers(&commandBufferInfo, &commandBuffer);
+	if (result != vk::Result::eSuccess)
+	{
+		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::UpdateTexture vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
+		return;
+	}
+
+	vk::CommandBufferInheritanceInfo commandBufferInheritanceInfo;
+	commandBufferInheritanceInfo.renderPass = nullptr;
+	commandBufferInheritanceInfo.subpass = 0;
+	commandBufferInheritanceInfo.framebuffer = nullptr;
+	commandBufferInheritanceInfo.occlusionQueryEnable = VK_FALSE;
+	//commandBufferInheritanceInfo.queryFlags = 0;
+	//commandBufferInheritanceInfo.pipelineStatistics = 0;
+
+	vk::CommandBufferBeginInfo commandBufferBeginInfo;
+	commandBufferBeginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+	commandBufferBeginInfo.pInheritanceInfo = &commandBufferInheritanceInfo;
+
+	result = commandBuffer.begin(&commandBufferBeginInfo);
+	if (result != vk::Result::eSuccess)
+	{
+		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::UpdateTexture vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
+		return;
+	}
+
+	std::shared_ptr<RealSurface> source;
+	std::shared_ptr<RealSurface> target;
+	uint32_t width = 0;
+	uint32_t height = 0;
+
+	CSurface9& target9 = (*(CSurface9*)pDestinationSurface);
+	target = mStateManager.mSurfaces[target9.mId];
+	ReallySetImageLayout(commandBuffer, target->mStagingImage, vk::ImageAspectFlags(), vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
+
+	CSurface9& source9 = (*(CSurface9*)pSourceSurface);
+	source = mStateManager.mSurfaces[source9.mId];
+	ReallySetImageLayout(commandBuffer, source->mStagingImage, vk::ImageAspectFlags(), vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferSrcOptimal, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
+
+	vk::ImageSubresourceLayers subResource1;
+	subResource1.aspectMask = vk::ImageAspectFlagBits::eColor;
+	subResource1.baseArrayLayer = 0;
+	subResource1.mipLevel = 0;
+	subResource1.layerCount = 1;
+
+	vk::ImageSubresourceLayers subResource2;
+	subResource2.aspectMask = vk::ImageAspectFlagBits::eColor;
+	subResource2.baseArrayLayer = 0;
+	subResource2.mipLevel = 0;
+	subResource2.layerCount = 1;
+
+	vk::ImageBlit region;
+	region.srcSubresource = subResource1;
+	region.dstSubresource = subResource2;
+	region.srcOffsets[0] = vk::Offset3D(pSourceRect->left, pSourceRect->top, 0);
+	region.srcOffsets[1] = vk::Offset3D(pSourceRect->right, pSourceRect->bottom, 1);
+	region.dstOffsets[0] = vk::Offset3D(pDestinationPoint->x, pDestinationPoint->y, 0);
+	region.dstOffsets[1] = vk::Offset3D(pSourceRect->right, pSourceRect->bottom, 1);
+
+	commandBuffer.blitImage(
+		source->mStagingImage, vk::ImageLayout::eTransferSrcOptimal,
+		target->mStagingImage, vk::ImageLayout::eTransferDstOptimal,
+		1, &region, vk::Filter::eLinear);
+
+	ReallySetImageLayout(commandBuffer, source->mStagingImage, vk::ImageAspectFlags(), vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eGeneral, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
+	ReallySetImageLayout(commandBuffer, target->mStagingImage, vk::ImageAspectFlags(), vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eGeneral, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
+
+	commandBuffer.end();
+
+	vk::CommandBuffer commandBuffers[] = { commandBuffer };
+	vk::Fence nullFence;
+
+	vk::SubmitInfo submitInfo;
+	submitInfo.waitSemaphoreCount = 0;
+	submitInfo.pWaitSemaphores = NULL;
+	submitInfo.pWaitDstStageMask = NULL;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = commandBuffers;
+	submitInfo.signalSemaphoreCount = 0;
+	submitInfo.pSignalSemaphores = NULL;
+
+	result = realDevice->mQueue.submit(1, &submitInfo, nullFence);
+	if (result != vk::Result::eSuccess)
+	{
+		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::UpdateTexture vkQueueSubmit failed with return code of " << GetResultString((VkResult)result);
+		return;
+	}
+
+	realDevice->mQueue.waitIdle();
+	device.freeCommandBuffers(realDevice->mCommandPool, 1, commandBuffers);
+}
+
 void RenderManager::UpdateTexture(std::shared_ptr<RealDevice> realDevice, IDirect3DBaseTexture9* pSourceTexture, IDirect3DBaseTexture9* pDestinationTexture)
 {
 	if (pSourceTexture == nullptr || pDestinationTexture == nullptr)

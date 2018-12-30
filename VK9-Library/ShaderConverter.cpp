@@ -2610,6 +2610,9 @@ void ShaderConverter::GenerateStore(const Token& token, uint32_t inputId)
 void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t inputId, _D3DDECLUSAGE usage, uint32_t usageIndex, bool isInput)
 {
 	std::string registerName;
+	uint32_t location;
+	location = UsageOffsets[usage] + usageIndex;
+	
 	//TypeDescription inputType = mIdTypePairs[inputId];
 
 	if (this->mIsVertexShader)
@@ -2619,12 +2622,17 @@ void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t input
 			mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
 			mDecorateInstructions.push_back(inputId); //target (Id)
 			mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-			mDecorateInstructions.push_back(UsageOffsets[usage] + usageIndex); //Location offset
+			mDecorateInstructions.push_back(location); //Location offset
 
 			registerName = "v" + std::to_string(registerNumber);
 		}
 		else
 		{
+			if (mMajorVersion < 3)
+			{
+				location = UsageOffsets[usage] + registerNumber;
+			}
+
 			if (usage == D3DDECLUSAGE_POSITION)
 			{
 				//Handled by generate position.
@@ -2638,7 +2646,7 @@ void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t input
 				mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
 				mDecorateInstructions.push_back(inputId); //target (Id)
 				mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-				mDecorateInstructions.push_back(UsageOffsets[usage] + usageIndex); //Location offset
+				mDecorateInstructions.push_back(location); //Location offset
 			}
 
 			switch (usage)
@@ -2668,10 +2676,15 @@ void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t input
 	{
 		if (isInput)
 		{
+			if (mMajorVersion < 3)
+			{
+				location = UsageOffsets[usage] + registerNumber;
+			}
+
 			mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
 			mDecorateInstructions.push_back(inputId); //target (Id)
 			mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-			mDecorateInstructions.push_back(UsageOffsets[usage] + usageIndex); //Location offset
+			mDecorateInstructions.push_back(location); //Location offset
 
 			switch (usage)
 			{
@@ -2701,7 +2714,7 @@ void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t input
 				mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
 				mDecorateInstructions.push_back(inputId); //target (Id)
 				mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-				mDecorateInstructions.push_back(UsageOffsets[usage] + usageIndex); //Location offset
+				mDecorateInstructions.push_back(location); //Location offset
 			}
 
 			switch (usage)
@@ -2722,7 +2735,7 @@ void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t input
 	PushName(inputId, registerName);
 
 #ifdef _EXTRA_SHADER_DEBUG_INFO
-	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::GenerateDecoration created " << registerName << " @ " << UsageOffsets[usage] + usageIndex;
+	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::GenerateDecoration created " << registerName << " @ " << location;
 #endif
 }
 
