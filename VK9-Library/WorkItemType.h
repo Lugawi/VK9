@@ -34,7 +34,9 @@ enum WorkItemType
 	, Device_Present
 	, Device_BeginStateBlock
 	, Device_DrawIndexedPrimitive
+	, Device_DrawIndexedPrimitiveUP
 	, Device_DrawPrimitive
+	, Device_DrawPrimitiveUP
 	, Device_EndStateBlock
 	, Device_GetDisplayMode
 	, Device_GetDisplayModeEx
