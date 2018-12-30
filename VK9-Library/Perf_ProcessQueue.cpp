@@ -2204,6 +2204,17 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				}
 			}
 			break;
+			case Device_StretchRect:
+			{
+				auto& realDevice = commandStreamManager->mRenderManager.mStateManager.mDevices[workItem->Id];
+				IDirect3DSurface9* pSourceSurface = bit_cast<IDirect3DSurface9*>(workItem->Argument1);
+				RECT* pSourceRect = bit_cast<RECT*>(workItem->Argument2);
+				IDirect3DSurface9* pDestSurface = bit_cast<IDirect3DSurface9*>(workItem->Argument3);
+				RECT* pDestRect = bit_cast<RECT*>(workItem->Argument4);
+				D3DTEXTUREFILTERTYPE Filter = bit_cast<D3DTEXTUREFILTERTYPE>(workItem->Argument5);
+
+				commandStreamManager->mRenderManager.StretchRect(realDevice, pSourceSurface, pSourceRect, pDestSurface, pDestRect, Filter);
+			}
 			case Device_UpdateSurface:
 			{
 				auto& realDevice = commandStreamManager->mRenderManager.mStateManager.mDevices[workItem->Id];

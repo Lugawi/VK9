@@ -1781,9 +1781,15 @@ BOOL STDMETHODCALLTYPE CDevice9::ShowCursor(BOOL bShow)
 
 HRESULT STDMETHODCALLTYPE CDevice9::StretchRect(IDirect3DSurface9 *pSourceSurface, const RECT *pSourceRect, IDirect3DSurface9 *pDestSurface, const RECT *pDestRect, D3DTEXTUREFILTERTYPE Filter)
 {
-	//TODO: Implement.
-
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::StretchRect is not implemented!";
+	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
+	workItem->WorkItemType = WorkItemType::Device_StretchRect;
+	workItem->Id = mId;
+	workItem->Argument1 = bit_cast<void*>(pSourceSurface);
+	workItem->Argument2 = bit_cast<void*>(pSourceRect);
+	workItem->Argument3 = bit_cast<void*>(pDestSurface);
+	workItem->Argument4 = bit_cast<void*>(pDestRect);
+	workItem->Argument5 = bit_cast<void*>(Filter);
+	mCommandStreamManager->RequestWorkAndWait(workItem);
 
 	return S_OK;
 }
@@ -1798,7 +1804,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::TestCooperativeLevel()
 HRESULT STDMETHODCALLTYPE CDevice9::UpdateSurface(IDirect3DSurface9* pSourceSurface, const RECT* pSourceRect, IDirect3DSurface9* pDestinationSurface, const POINT* pDestinationPoint)
 {
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::Device_UpdateTexture;
+	workItem->WorkItemType = WorkItemType::Device_UpdateSurface;
 	workItem->Id = mId;
 	workItem->Argument1 = bit_cast<void*>(pSourceSurface);
 	workItem->Argument2 = bit_cast<void*>(pSourceRect);
