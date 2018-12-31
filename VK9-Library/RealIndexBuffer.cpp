@@ -24,18 +24,63 @@ misrepresented as being the original software.
 
 #include "RealIndexBuffer.h"
 
-RealIndexBuffer::RealIndexBuffer(RealDevice* realDevice)
+RealIndexBuffer::RealIndexBuffer(RealDevice* realDevice, size_t length, bool isDynamic, _D3DFORMAT format)
 	: mRealDevice(realDevice)
 {
-	BOOST_LOG_TRIVIAL(info) << "RealIndexBuffer::RealIndexBuffer";
+	vk::BufferCreateInfo bufferCreateInfo;
+	bufferCreateInfo.size = length;
+	bufferCreateInfo.usage = vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst;
+
+	VmaAllocationCreateInfo allocInfo = {};
+	allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+	allocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+
+	vmaCreateBuffer(mRealDevice->mAllocator, (VkBufferCreateInfo*)&bufferCreateInfo, &allocInfo, (VkBuffer*)&mBuffer, &mAllocation, &mAllocationInfo);
+
+	switch (format)
+	{
+	case D3DFMT_INDEX16:
+		mIndexType = vk::IndexType::eUint16;
+		mSize = mLength / sizeof(uint16_t); //WORD
+		break;
+	case D3DFMT_INDEX32:
+		mIndexType = vk::IndexType::eUint32;
+		mSize = mLength / sizeof(uint32_t); //DWORD
+		break;
+	default:
+		mSize = 0;
+		BOOST_LOG_TRIVIAL(fatal) << "RealIndexBuffer::RealIndexBuffer invalid D3DFORMAT of " << format;
+		break;
+	}
+
+	mSize = mSize;
 }
 
 RealIndexBuffer::~RealIndexBuffer()
 {
-	BOOST_LOG_TRIVIAL(info) << "RealIndexBuffer::~RealIndexBuffer";
 	if (mRealDevice != nullptr)
 	{
 		auto& device = mRealDevice->mDevice;
 		vmaDestroyBuffer(mRealDevice->mAllocator, (VkBuffer)mBuffer, mAllocation);
+	}
+}
+
+void* RealIndexBuffer::Lock(size_t offset)
+{
+	if (mData == nullptr)
+	{
+		vmaMapMemory(mRealDevice->mAllocator, mAllocation, &mData);
+	}
+
+	return ((char*)mData + offset);
+}
+
+void RealIndexBuffer::Unlock()
+{
+	if (mData != nullptr)
+	{
+		vmaFlushAllocation(mRealDevice->mAllocator, mAllocation, 0, VK_WHOLE_SIZE);
+		vmaUnmapMemory(mRealDevice->mAllocator, mAllocation);
+		mData = nullptr;
 	}
 }

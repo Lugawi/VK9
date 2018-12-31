@@ -26,7 +26,7 @@ misrepresented as being the original software.
 
 #include "RealRenderTarget.h"
 
-RealVertexBuffer::RealVertexBuffer(RealDevice* realDevice, size_t length, bool isDynamic)
+RealVertexBuffer::RealVertexBuffer(RealDevice* realDevice, size_t length, bool isDynamic, DWORD fvf)
 	: mRealDevice(realDevice),
 	mLength(length),
 	mIsDynamic(isDynamic),
@@ -34,13 +34,89 @@ RealVertexBuffer::RealVertexBuffer(RealDevice* realDevice, size_t length, bool i
 {
 	vk::BufferCreateInfo bufferCreateInfo;
 	bufferCreateInfo.size = length;
+	bufferCreateInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst;
 
 	VmaAllocationCreateInfo allocInfo = {};
-
-	bufferCreateInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst; //
 	allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 	allocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+
 	vmaCreateBuffer(mRealDevice->mAllocator, (VkBufferCreateInfo*)&bufferCreateInfo, &allocInfo, (VkBuffer*)&mBuffer, &mAllocation, &mAllocationInfo);
+
+	uint32_t attributeStride = 0;
+
+	if (fvf)
+	{
+		if ((fvf & D3DFVF_XYZ) == D3DFVF_XYZ)
+		{
+			attributeStride += (sizeof(float) * 3);
+		}
+
+		if ((fvf & D3DFVF_XYZW) == D3DFVF_XYZW)
+		{
+			attributeStride += (sizeof(float) * 4);
+		}
+
+		if ((fvf & D3DFVF_NORMAL) == D3DFVF_NORMAL)
+		{
+			attributeStride += (sizeof(float) * 3);
+		}
+
+		if ((fvf & D3DFVF_DIFFUSE) == D3DFVF_DIFFUSE)
+		{
+			attributeStride += sizeof(uint32_t);
+		}
+
+		if ((fvf & D3DFVF_SPECULAR) == D3DFVF_SPECULAR)
+		{
+			attributeStride += sizeof(uint32_t);
+		}
+
+		if ((fvf & D3DFVF_TEX1) == D3DFVF_TEX1)
+		{
+			attributeStride += (sizeof(float) * 2);
+		}
+
+		if ((fvf & D3DFVF_TEX2) == D3DFVF_TEX2)
+		{
+			attributeStride += (sizeof(float) * 2);
+		}
+
+		if ((fvf & D3DFVF_TEX3) == D3DFVF_TEX3)
+		{
+			attributeStride += (sizeof(float) * 2);
+		}
+
+		if ((fvf & D3DFVF_TEX4) == D3DFVF_TEX4)
+		{
+			attributeStride += (sizeof(float) * 2);
+		}
+
+		if ((fvf & D3DFVF_TEX5) == D3DFVF_TEX5)
+		{
+			attributeStride += (sizeof(float) * 2);
+		}
+
+		if ((fvf & D3DFVF_TEX6) == D3DFVF_TEX6)
+		{
+			attributeStride += (sizeof(float) * 2);
+		}
+
+		if ((fvf & D3DFVF_TEX7) == D3DFVF_TEX7)
+		{
+			attributeStride += (sizeof(float) * 2);
+		}
+
+		if ((fvf & D3DFVF_TEX8) == D3DFVF_TEX8)
+		{
+			attributeStride += (sizeof(float) * 2);
+		}
+
+		mSize = mLength / attributeStride;
+	}
+	else
+	{
+		mSize = 0;
+	}
 }
 
 RealVertexBuffer::~RealVertexBuffer()

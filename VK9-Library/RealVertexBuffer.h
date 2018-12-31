@@ -40,7 +40,7 @@ struct RealVertexBuffer
 	bool mIsDynamic;
 
 	RealDevice* mRealDevice = nullptr; //null if not owner.
-	RealVertexBuffer(RealDevice* realDevice, size_t length, bool isDynamic);
+	RealVertexBuffer(RealDevice* realDevice, size_t length, bool isDynamic, DWORD fvf);
 	~RealVertexBuffer();
 
 	void* Lock(size_t offset);

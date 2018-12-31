@@ -2402,7 +2402,6 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 			case VertexBuffer_Unlock:
 			{
 				auto& realVertexBuffer = (*commandStreamManager->mRenderManager.mStateManager.mVertexBuffers[workItem->Id]);
-				auto& realDevice = realVertexBuffer.mRealDevice;
 
 				realVertexBuffer.Unlock();
 			}
@@ -2418,6 +2417,9 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 
 				if (lastId != workItem->Id)
 				{
+					//Make sure buffer gets bound because it could be new.
+					realIndexBuffer.mRealDevice->mDeviceState.mAreStreamSourcesDirty = true;
+
 					if (!(Flags & D3DLOCK_DISCARD))
 					{
 						auto& oldRealIndexBuffer = (*commandStreamManager->mRenderManager.mStateManager.mIndexBuffers[lastId]);
@@ -2425,43 +2427,14 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					}
 				}
 
-				if (realIndexBuffer.mData == nullptr)
-				{
-					vk::Result result = (vk::Result)vmaMapMemory(realIndexBuffer.mRealDevice->mAllocator, realIndexBuffer.mAllocation, &realIndexBuffer.mData);
-					if (realIndexBuffer.mData == nullptr)
-					{
-						(*ppbData) = nullptr;
-					}
-					else
-					{
-						(*ppbData) = (char *)realIndexBuffer.mData + OffsetToLock;
-					}
-				}
-				else
-				{
-					(*ppbData) = (char *)realIndexBuffer.mData + OffsetToLock;
-				}
+				(*ppbData) = realIndexBuffer.Lock(OffsetToLock);
 			}
 			break;
 			case IndexBuffer_Unlock:
 			{
 				auto& realIndexBuffer = (*commandStreamManager->mRenderManager.mStateManager.mIndexBuffers[workItem->Id]);
 
-				if (realIndexBuffer.mData != nullptr)
-				{
-					vmaFlushAllocation(realIndexBuffer.mRealDevice->mAllocator, realIndexBuffer.mAllocation, 0, VK_WHOLE_SIZE);
-					vmaUnmapMemory(realIndexBuffer.mRealDevice->mAllocator, realIndexBuffer.mAllocation);
-					realIndexBuffer.mData = nullptr;
-
-					//if (realIndexBuffer.mRealDevice->mDeviceState.mRenderTarget->mIsSceneStarted)
-					//{
-					//	vk::BufferMemoryBarrier uboBarrier(vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eShaderRead, 0, 0, 0, VK_WHOLE_SIZE);
-					//	uboBarrier.buffer = realIndexBuffer.mBuffer;
-
-					//	auto& currentBuffer = realIndexBuffer.mRealDevice->mCommandBuffers[realIndexBuffer.mRealDevice->mCurrentCommandBuffer];
-					//	currentBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlags(), 0, nullptr, 1, &uboBarrier, 0, nullptr);
-					//}
-				}
+				realIndexBuffer.Unlock();
 			}
 			break;
 			case StateBlock_Create:

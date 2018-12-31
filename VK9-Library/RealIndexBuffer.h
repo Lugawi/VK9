@@ -28,16 +28,25 @@ misrepresented as being the original software.
 
 struct RealIndexBuffer
 {
-	vk::Buffer mBuffer;
-	VmaAllocation mAllocation = {};
 	VmaAllocationInfo mAllocationInfo = {};
-	vk::IndexType mIndexType;
+
+	VmaAllocation mAllocation = {};
+	vk::Buffer mBuffer;
+
+	void* mPersistentData = nullptr;
 	void* mData = nullptr;
 	int32_t mSize;
+	size_t mLength;
+	bool mIsDynamic;
+
+	vk::IndexType mIndexType;
 
 	RealDevice* mRealDevice = nullptr; //null if not owner.
-	RealIndexBuffer(RealDevice* realDevice);
+	RealIndexBuffer(RealDevice* realDevice, size_t length, bool isDynamic, _D3DFORMAT format);
 	~RealIndexBuffer();
+
+	void* Lock(size_t offset);
+	void Unlock();
 };
 
 #endif //REALINDEXBUFFER_H

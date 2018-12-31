@@ -322,72 +322,12 @@ void StateManager::DestroyVertexBuffer(size_t id)
 
 void StateManager::CreateVertexBuffer(size_t id, void* argument1)
 {
-	//vk::Result result;
-	auto device = mDevices[id];
 	CVertexBuffer9* vertexBuffer9 = bit_cast<CVertexBuffer9*>(argument1);
-	auto ptr = std::make_shared<RealVertexBuffer>(device.get(), vertexBuffer9->mLength, (vertexBuffer9->mUsage & D3DUSAGE_DYNAMIC) == D3DUSAGE_DYNAMIC); //
+	auto ptr = std::make_shared<RealVertexBuffer>(mDevices[id].get(), vertexBuffer9->mLength, (vertexBuffer9->mUsage & D3DUSAGE_DYNAMIC) == D3DUSAGE_DYNAMIC, vertexBuffer9->mFVF);
 
-	uint32_t attributeStride = 0;
-
-	if (vertexBuffer9->mFVF)
+	if (ptr->mSize)
 	{
-		if ((vertexBuffer9->mFVF & D3DFVF_XYZ) == D3DFVF_XYZ)
-		{
-			attributeStride += (sizeof(float) * 3);
-		}
-
-		if ((vertexBuffer9->mFVF & D3DFVF_DIFFUSE) == D3DFVF_DIFFUSE)
-		{
-			attributeStride += sizeof(uint32_t);
-		}
-
-		if ((vertexBuffer9->mFVF & D3DFVF_TEX1) == D3DFVF_TEX1)
-		{
-			attributeStride += (sizeof(float) * 2);
-		}
-
-		if ((vertexBuffer9->mFVF & D3DFVF_TEX2) == D3DFVF_TEX2)
-		{
-			attributeStride += (sizeof(float) * 2);
-		}
-
-		if ((vertexBuffer9->mFVF & D3DFVF_TEX3) == D3DFVF_TEX3)
-		{
-			attributeStride += (sizeof(float) * 2);
-		}
-
-		if ((vertexBuffer9->mFVF & D3DFVF_TEX4) == D3DFVF_TEX4)
-		{
-			attributeStride += (sizeof(float) * 2);
-		}
-
-		if ((vertexBuffer9->mFVF & D3DFVF_TEX5) == D3DFVF_TEX5)
-		{
-			attributeStride += (sizeof(float) * 2);
-		}
-
-		if ((vertexBuffer9->mFVF & D3DFVF_TEX6) == D3DFVF_TEX6)
-		{
-			attributeStride += (sizeof(float) * 2);
-		}
-
-		if ((vertexBuffer9->mFVF & D3DFVF_TEX7) == D3DFVF_TEX7)
-		{
-			attributeStride += (sizeof(float) * 2);
-		}
-
-		if ((vertexBuffer9->mFVF & D3DFVF_TEX8) == D3DFVF_TEX8)
-		{
-			attributeStride += (sizeof(float) * 2);
-		}
-
-		//mSize = mLength / (sizeof(float)*3 + sizeof(DWORD));
-		ptr->mSize = vertexBuffer9->mLength / attributeStride;
 		vertexBuffer9->mSize = ptr->mSize;
-	}
-	else
-	{
-		ptr->mSize = vertexBuffer9->mSize;
 	}
 
 	mVertexBuffers.push_back(ptr);
@@ -400,38 +340,13 @@ void StateManager::DestroyIndexBuffer(size_t id)
 
 void StateManager::CreateIndexBuffer(size_t id, void* argument1)
 {
-	vk::Result result;
-	auto device = mDevices[id];
 	CIndexBuffer9* indexBuffer9 = bit_cast<CIndexBuffer9*>(argument1);
-	auto ptr = std::make_shared<RealIndexBuffer>(device.get());
+	auto ptr = std::make_shared<RealIndexBuffer>(mDevices[id].get(), indexBuffer9->mLength, (indexBuffer9->mUsage & D3DUSAGE_DYNAMIC) == D3DUSAGE_DYNAMIC, indexBuffer9->mFormat);
 
-	vk::BufferCreateInfo bufferCreateInfo;
-	bufferCreateInfo.size = indexBuffer9->mLength;
-	bufferCreateInfo.usage = vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst;
-	//bufferCreateInfo.flags = 0;
-
-	VmaAllocationCreateInfo allocInfo = {};
-	allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-	allocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
-
-	result = (vk::Result)vmaCreateBuffer(ptr->mRealDevice->mAllocator, (VkBufferCreateInfo*)&bufferCreateInfo, &allocInfo, (VkBuffer*)&ptr->mBuffer, &ptr->mAllocation, &ptr->mAllocationInfo);
-
-	switch (indexBuffer9->mFormat)
+	if (ptr->mSize)
 	{
-	case D3DFMT_INDEX16:
-		ptr->mIndexType = vk::IndexType::eUint16;
-		indexBuffer9->mSize = indexBuffer9->mLength / sizeof(uint16_t); //WORD
-		break;
-	case D3DFMT_INDEX32:
-		ptr->mIndexType = vk::IndexType::eUint32;
-		indexBuffer9->mSize = indexBuffer9->mLength / sizeof(uint32_t);
-		break;
-	default:
-		BOOST_LOG_TRIVIAL(fatal) << "CIndexBuffer9::CIndexBuffer9 invalid D3DFORMAT of " << indexBuffer9->mFormat;
-		break;
+		indexBuffer9->mSize = ptr->mSize;
 	}
-
-	ptr->mSize = indexBuffer9->mSize;
 
 	mIndexBuffers.push_back(ptr);
 }
