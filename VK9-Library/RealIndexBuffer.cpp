@@ -52,8 +52,6 @@ RealIndexBuffer::RealIndexBuffer(RealDevice* realDevice, size_t length, bool isD
 		BOOST_LOG_TRIVIAL(fatal) << "RealIndexBuffer::RealIndexBuffer invalid D3DFORMAT of " << format;
 		break;
 	}
-
-	mSize = mSize;
 }
 
 RealIndexBuffer::~RealIndexBuffer()
