@@ -337,6 +337,8 @@ HRESULT STDMETHODCALLTYPE CSurface9::SetPrivateData(REFGUID refguid, const void*
 
 HRESULT STDMETHODCALLTYPE CSurface9::GetContainer(REFIID riid, void** ppContainer)
 {
+	this->AddRef();
+
 	//TODO: Implement.
 
 	BOOST_LOG_TRIVIAL(warning) << "CSurface9::GetContainer is not implemented!";

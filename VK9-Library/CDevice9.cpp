@@ -1107,6 +1107,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetRenderState(D3DRENDERSTATETYPE State, DWO
 HRESULT STDMETHODCALLTYPE CDevice9::GetRenderTarget(DWORD RenderTargetIndex, IDirect3DSurface9** ppRenderTarget)
 {
 	mRenderTargets[RenderTargetIndex]->AddRef();
+
 	(*ppRenderTarget) = mRenderTargets[RenderTargetIndex];
 
 	return S_OK;
@@ -1191,11 +1192,16 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetSwapChain(UINT iSwapChain, IDirect3DSwapC
 HRESULT STDMETHODCALLTYPE CDevice9::GetTexture(DWORD Stage, IDirect3DBaseTexture9** ppTexture)
 {
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::Device_GetStreamSource;
+	workItem->WorkItemType = WorkItemType::Device_GetTexture;
 	workItem->Id = mId;
 	workItem->Argument1 = bit_cast<void*>(Stage);
 	workItem->Argument2 = bit_cast<void*>(ppTexture);
 	mCommandStreamManager->RequestWorkAndWait(workItem);
+
+	if ((*ppTexture) != nullptr)
+	{
+		(*ppTexture)->AddRef();
+	}
 
 	return S_OK;
 }
@@ -1237,6 +1243,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetVertexDeclaration(IDirect3DVertexDeclarat
 	{
 		(*ppDecl)->AddRef();
 	}
+
 	return S_OK;
 }
 
