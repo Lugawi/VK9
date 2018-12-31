@@ -703,15 +703,15 @@ inline vk::Format ConvertFormat(D3DFORMAT format) noexcept
 	case D3DFMT_G8R8_G8B8:
 		return (vk::Format)VK_FORMAT_UNDEFINED;
 	case D3DFMT_DXT1:
-		return (vk::Format)VK_FORMAT_BC1_RGB_UNORM_BLOCK;
+		return (vk::Format)VK_FORMAT_UNDEFINED; //VK_FORMAT_BC1_RGB_UNORM_BLOCK
 	case D3DFMT_DXT2:
-		return (vk::Format)VK_FORMAT_BC2_UNORM_BLOCK;
+		return (vk::Format)VK_FORMAT_UNDEFINED; //VK_FORMAT_BC2_UNORM_BLOCK
 	case D3DFMT_DXT3:
-		return (vk::Format)VK_FORMAT_BC3_UNORM_BLOCK;
+		return (vk::Format)VK_FORMAT_UNDEFINED; //VK_FORMAT_BC3_UNORM_BLOCK
 	case D3DFMT_DXT4:
-		return (vk::Format)VK_FORMAT_BC4_UNORM_BLOCK;
+		return (vk::Format)VK_FORMAT_UNDEFINED; //VK_FORMAT_BC4_UNORM_BLOCK
 	case D3DFMT_DXT5:
-		return (vk::Format)VK_FORMAT_BC5_UNORM_BLOCK;
+		return (vk::Format)VK_FORMAT_UNDEFINED; //VK_FORMAT_BC5_UNORM_BLOCK
 	case D3DFMT_D16_LOCKABLE:
 		return (vk::Format)VK_FORMAT_D16_UNORM; //D16_LOCKABLE
 	case D3DFMT_D32:
