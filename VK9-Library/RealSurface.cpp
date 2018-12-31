@@ -29,7 +29,9 @@ misrepresented as being the original software.
 #include "Utilities.h"
 
 RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image* parentImage)
-	: mRealDevice(realDevice)
+	: mRealDevice(realDevice),
+	mParentImage(parentImage),
+	mSurface9(surface9)
 {
 	BOOST_LOG_TRIVIAL(info) << "RealSurface::RealSurface";
 
@@ -311,4 +313,209 @@ RealSurface::~RealSurface()
 
 		vmaDestroyImage(mRealDevice->mAllocator, (VkImage)mStagingImage, mImageAllocation);
 	}
+}
+
+void RealSurface::Lock(D3DLOCKED_RECT* pLockedRect, const RECT* pRect, DWORD Flags)
+{
+	vk::Result result;
+	char* bytes = nullptr;
+
+	if (mData == nullptr)
+	{
+		if (mIsFlushed)
+		{
+			mRealDevice->SetImageLayout(mStagingImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral); //VK_IMAGE_LAYOUT_PREINITIALIZED			
+		}
+
+		result = (vk::Result)vmaMapMemory(mRealDevice->mAllocator, mImageAllocation, &mData);
+		if (result != vk::Result::eSuccess)
+		{
+			BOOST_LOG_TRIVIAL(fatal) << "RealSurface::Lock vkMapMemory failed with return code of " << GetResultString((VkResult)result);
+			return;
+		}
+	}
+
+	bytes = (char*)mData;
+
+	if (mLayouts[0].offset)
+	{
+		bytes += mLayouts[0].offset;
+	}
+
+	std::array<vk::Offset3D, 2> dirtyRect;
+	size_t pixelSize = SizeOf(mRealFormat);
+
+	if (pRect != nullptr)
+	{
+		bytes += (mLayouts[0].rowPitch * pRect->top);
+		bytes += (pixelSize * pRect->left);
+
+		dirtyRect[0].x = pRect->left;
+		dirtyRect[0].y = pRect->top;
+		dirtyRect[0].z = 0;
+
+		dirtyRect[1].x = pRect->right;
+		dirtyRect[1].y = pRect->bottom;
+		dirtyRect[1].z = 1;
+	}
+	else
+	{
+		dirtyRect[0] = vk::Offset3D(0, 0, 0);
+		dirtyRect[1] = vk::Offset3D(mExtent.width, mExtent.height, 1);
+	}
+
+	pLockedRect->pBits = (void*)bytes;
+	pLockedRect->Pitch = std::min(mLayouts[0].rowPitch, mLayouts[0].size); //work-around for 1x1 returning values larger than size.
+
+	if ((Flags & D3DLOCK_READONLY) == D3DLOCK_READONLY)
+	{
+		//Nothing to do.
+	}
+	else
+	{
+		mDirtyRects.push_back(dirtyRect);
+		mIsFlushed = false;
+	}
+
+	//TODO: revisit
+	//if ((Flags & D3DLOCK_NO_DIRTY_UPDATE) == D3DLOCK_NO_DIRTY_UPDATE)
+	//{	
+	//}
+	//else if ((Flags & D3DLOCK_READONLY) == D3DLOCK_READONLY)
+	//{
+	//}
+	//else
+	//{
+	//}
+}
+
+void RealSurface::Unlock()
+{
+	if (mData != nullptr)
+	{
+		vmaUnmapMemory(mRealDevice->mAllocator, mImageAllocation);
+		vmaFlushAllocation(mRealDevice->mAllocator, mImageAllocation, 0, VK_WHOLE_SIZE);
+
+		mData = nullptr;
+	}
+
+	mIsFlushed = false;
+}
+
+void RealSurface::Flush()
+{
+	if (mIsFlushed)
+	{
+		return;
+	}
+
+	if (mParentImage == nullptr)
+	{
+		return;
+	}
+
+	vk::CommandBuffer commandBuffer;
+	vk::Result result;
+
+	vk::CommandBufferAllocateInfo commandBufferInfo;
+	commandBufferInfo.commandPool = mRealDevice->mCommandPool;
+	commandBufferInfo.level = vk::CommandBufferLevel::ePrimary;
+	commandBufferInfo.commandBufferCount = 1;
+
+	result = mRealDevice->mDevice.allocateCommandBuffers(&commandBufferInfo, &commandBuffer);
+	if (result != vk::Result::eSuccess)
+	{
+		BOOST_LOG_TRIVIAL(fatal) << "ProcessQueue vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
+		return;
+	}
+
+	vk::CommandBufferInheritanceInfo commandBufferInheritanceInfo;
+	commandBufferInheritanceInfo.renderPass = nullptr;
+	commandBufferInheritanceInfo.subpass = 0;
+	commandBufferInheritanceInfo.framebuffer = nullptr;
+	commandBufferInheritanceInfo.occlusionQueryEnable = VK_FALSE;
+	//commandBufferInheritanceInfo.queryFlags = 0;
+	//commandBufferInheritanceInfo.pipelineStatistics = 0;
+
+	vk::CommandBufferBeginInfo commandBufferBeginInfo;
+	commandBufferBeginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+	commandBufferBeginInfo.pInheritanceInfo = &commandBufferInheritanceInfo;
+
+	result = commandBuffer.begin(&commandBufferBeginInfo);
+	if (result != vk::Result::eSuccess)
+	{
+		BOOST_LOG_TRIVIAL(fatal) << "ProcessQueue vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
+		return;
+	}
+
+	ReallySetImageLayout(commandBuffer, mStagingImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1); //eGeneral
+	ReallySetImageLayout(commandBuffer, (*mParentImage), vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, 1, mSurface9->mMipIndex, mSurface9->mTargetLayer + 1);
+
+	vk::ImageSubresourceLayers subResource1;
+	subResource1.aspectMask = vk::ImageAspectFlagBits::eColor;
+	subResource1.baseArrayLayer = 0;
+	subResource1.mipLevel = 0;
+	subResource1.layerCount = 1;
+
+	vk::ImageSubresourceLayers subResource2;
+	subResource2.aspectMask = vk::ImageAspectFlagBits::eColor;
+	subResource2.baseArrayLayer = mSurface9->mTargetLayer;
+	subResource2.mipLevel = mSurface9->mMipIndex;
+	subResource2.layerCount = 1;
+
+	vk::ImageBlit region;
+	region.srcSubresource = subResource1;
+	region.dstSubresource = subResource2;
+
+	if (mDirtyRects.size())
+	{
+		std::vector<vk::ImageBlit> regions;
+		for (auto& dirtyRect : mDirtyRects)
+		{
+			region.srcOffsets[0] = dirtyRect[0];
+			region.srcOffsets[1] = dirtyRect[1];
+			region.dstOffsets[0] = dirtyRect[0];
+			region.dstOffsets[1] = dirtyRect[1];
+
+			regions.push_back(region);
+
+			commandBuffer.blitImage(
+				mStagingImage, vk::ImageLayout::eTransferSrcOptimal,
+				(*mParentImage), vk::ImageLayout::eTransferDstOptimal,
+				1, &regions[regions.size() - 1], vk::Filter::eLinear);
+		}
+		mDirtyRects.clear();
+	}
+	else
+	{
+		ReallyCopyImage(commandBuffer, mStagingImage, (*mParentImage), 0, 0, mSurface9->mWidth, mSurface9->mHeight, 1, 0, mSurface9->mMipIndex, 0, mSurface9->mTargetLayer);
+	}
+
+	ReallySetImageLayout(commandBuffer, (*mParentImage), vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eGeneral, 1, mSurface9->mMipIndex, mSurface9->mTargetLayer + 1);
+
+	commandBuffer.end();
+
+	vk::CommandBuffer commandBuffers[] = { commandBuffer };
+	vk::Fence nullFence;
+	vk::SubmitInfo submitInfo;
+	submitInfo.waitSemaphoreCount = 0;
+	submitInfo.pWaitSemaphores = nullptr;
+	submitInfo.pWaitDstStageMask = nullptr;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = commandBuffers;
+	submitInfo.signalSemaphoreCount = 0;
+	submitInfo.pSignalSemaphores = nullptr;
+
+	result = mRealDevice->mQueue.submit(1, &submitInfo, nullFence);
+	if (result != vk::Result::eSuccess)
+	{
+		BOOST_LOG_TRIVIAL(fatal) << "ProcessQueue vkQueueSubmit failed with return code of " << GetResultString((VkResult)result);
+		return;
+	}
+
+	mRealDevice->mQueue.waitIdle();
+
+	mRealDevice->mDevice.freeCommandBuffers(mRealDevice->mCommandPool, 1, commandBuffers);
+
+	mIsFlushed = true;
 }

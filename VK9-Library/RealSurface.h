@@ -34,6 +34,8 @@ struct RealSurface
 	BOOL mIsFlushed = true;
 	void* mData = nullptr;
 	vk::Image mStagingImage;
+	vk::Image* mParentImage;
+	CSurface9* mSurface9=nullptr;
 	VmaAllocation mImageAllocation;
 	VmaAllocationInfo mImageAllocationInfo;
 
@@ -50,6 +52,11 @@ struct RealSurface
 	RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image* parentImage);
 	RealSurface(RealDevice* realDevice, CVolume9* volume9);
 	~RealSurface();
+
+	void Lock(D3DLOCKED_RECT* pLockedRect, const RECT* pRect, DWORD Flags);
+	void Unlock();
+	void Flush();
+
 };
 
 #endif // REALSURFACE_H
