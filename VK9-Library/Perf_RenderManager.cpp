@@ -105,7 +105,7 @@ void RenderManager::UpdateBuffer(std::shared_ptr<RealDevice> realDevice)
 	if (deviceState.mAreTextureStagesDirty)
 	{
 		uboBarrier.buffer = realDevice->mTextureStageBuffer;
-		uboBarrier.size = sizeof(TextureStage) * 9;
+		uboBarrier.size = sizeof(TextureStage) * 16;
 
 		//uboBarrier.srcAccessMask = vk::AccessFlagBits::eMemoryRead;
 		//uboBarrier.dstAccessMask = vk::AccessFlagBits::eMemoryWrite;

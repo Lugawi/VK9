@@ -331,6 +331,8 @@ void RealSurface::Lock(D3DLOCKED_RECT* pLockedRect, const RECT* pRect, DWORD Fla
 		if (result != vk::Result::eSuccess)
 		{
 			BOOST_LOG_TRIVIAL(fatal) << "RealSurface::Lock vkMapMemory failed with return code of " << GetResultString((VkResult)result);
+			pLockedRect->pBits = nullptr;
+
 			return;
 		}
 	}
@@ -345,11 +347,10 @@ void RealSurface::Lock(D3DLOCKED_RECT* pLockedRect, const RECT* pRect, DWORD Fla
 	std::array<vk::Offset3D, 2> dirtyRect;
 	size_t pixelSize = SizeOf(mRealFormat);
 
+	pLockedRect->Pitch = std::min(mLayouts[0].rowPitch, mLayouts[0].size); //work-around for 1x1 returning values larger than size.
+
 	if (pRect != nullptr)
 	{
-		bytes += (mLayouts[0].rowPitch * pRect->top);
-		bytes += (pixelSize * pRect->left);
-
 		dirtyRect[0].x = pRect->left;
 		dirtyRect[0].y = pRect->top;
 		dirtyRect[0].z = 0;
@@ -357,6 +358,10 @@ void RealSurface::Lock(D3DLOCKED_RECT* pLockedRect, const RECT* pRect, DWORD Fla
 		dirtyRect[1].x = pRect->right;
 		dirtyRect[1].y = pRect->bottom;
 		dirtyRect[1].z = 1;
+
+		//bytes += (mLayouts[0].rowPitch * pRect->top);
+		//bytes += (pixelSize * pRect->left);
+		bytes += (pLockedRect->Pitch * dirtyRect[0].y + pixelSize * dirtyRect[0].x);
 	}
 	else
 	{
@@ -365,7 +370,7 @@ void RealSurface::Lock(D3DLOCKED_RECT* pLockedRect, const RECT* pRect, DWORD Fla
 	}
 
 	pLockedRect->pBits = (void*)bytes;
-	pLockedRect->Pitch = std::min(mLayouts[0].rowPitch, mLayouts[0].size); //work-around for 1x1 returning values larger than size.
+
 
 	if ((Flags & D3DLOCK_READONLY) == D3DLOCK_READONLY)
 	{
@@ -467,29 +472,29 @@ void RealSurface::Flush()
 	region.srcSubresource = subResource1;
 	region.dstSubresource = subResource2;
 
-	if (mDirtyRects.size())
-	{
-		std::vector<vk::ImageBlit> regions;
-		for (auto& dirtyRect : mDirtyRects)
-		{
-			region.srcOffsets[0] = dirtyRect[0];
-			region.srcOffsets[1] = dirtyRect[1];
-			region.dstOffsets[0] = dirtyRect[0];
-			region.dstOffsets[1] = dirtyRect[1];
+	//if (mDirtyRects.size())
+	//{
+	//	std::vector<vk::ImageBlit> regions;
+	//	for (auto& dirtyRect : mDirtyRects)
+	//	{
+	//		region.srcOffsets[0] = dirtyRect[0];
+	//		region.srcOffsets[1] = dirtyRect[1];
+	//		region.dstOffsets[0] = dirtyRect[0];
+	//		region.dstOffsets[1] = dirtyRect[1];
 
-			regions.push_back(region);
+	//		regions.push_back(region);
 
-			commandBuffer.blitImage(
-				mStagingImage, vk::ImageLayout::eTransferSrcOptimal,
-				(*mParentImage), vk::ImageLayout::eTransferDstOptimal,
-				1, &regions[regions.size() - 1], vk::Filter::eLinear);
-		}
-		mDirtyRects.clear();
-	}
-	else
-	{
+	//		commandBuffer.blitImage(
+	//			mStagingImage, vk::ImageLayout::eTransferSrcOptimal,
+	//			(*mParentImage), vk::ImageLayout::eTransferDstOptimal,
+	//			1, &regions[regions.size() - 1], vk::Filter::eLinear);
+	//	}
+	//	mDirtyRects.clear();
+	//}
+	//else
+	//{
 		ReallyCopyImage(commandBuffer, mStagingImage, (*mParentImage), 0, 0, mSurface9->mWidth, mSurface9->mHeight, 1, 0, mSurface9->mMipIndex, 0, mSurface9->mTargetLayer);
-	}
+	//}
 
 	ReallySetImageLayout(commandBuffer, (*mParentImage), vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eGeneral, 1, mSurface9->mMipIndex, mSurface9->mTargetLayer + 1);
 
