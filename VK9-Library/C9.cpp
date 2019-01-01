@@ -388,7 +388,7 @@ HMONITOR STDMETHODCALLTYPE C9::GetAdapterMonitor(UINT Adapter)
 	HMONITOR returnValue;
 	if ((mMonitors.size()-1) < Adapter)
 	{
-		returnValue - mMonitors[0].hMonitor;
+		returnValue = mMonitors[0].hMonitor;
 	}
 	else
 	{

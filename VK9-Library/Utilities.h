@@ -673,9 +673,9 @@ inline vk::Format ConvertFormat(D3DFORMAT format) noexcept
 	case D3DFMT_A16B16G16R16:
 		return (vk::Format)VK_FORMAT_R16G16B16A16_UNORM;
 	case D3DFMT_A8P8:
-		return (vk::Format)VK_FORMAT_UNDEFINED; //P8_UINT_A8_UNORM
+		return (vk::Format)VK_FORMAT_R8G8_UNORM; //P8_UINT_A8_UNORM
 	case D3DFMT_P8:
-		return (vk::Format)VK_FORMAT_UNDEFINED; //P8_UINT
+		return (vk::Format)VK_FORMAT_R8_UINT; //P8_UINT
 	case D3DFMT_L8:
 		return (vk::Format)VK_FORMAT_R8_UNORM;
 	case D3DFMT_A8L8:
@@ -703,19 +703,19 @@ inline vk::Format ConvertFormat(D3DFORMAT format) noexcept
 	case D3DFMT_G8R8_G8B8:
 		return (vk::Format)VK_FORMAT_UNDEFINED;
 	case D3DFMT_DXT1:
-		return (vk::Format)VK_FORMAT_UNDEFINED; //VK_FORMAT_BC1_RGB_UNORM_BLOCK
+		return (vk::Format)VK_FORMAT_BC1_RGB_UNORM_BLOCK; //VK_FORMAT_BC1_RGB_UNORM_BLOCK
 	case D3DFMT_DXT2:
-		return (vk::Format)VK_FORMAT_UNDEFINED; //VK_FORMAT_BC2_UNORM_BLOCK
+		return (vk::Format)VK_FORMAT_BC2_UNORM_BLOCK; //VK_FORMAT_BC2_UNORM_BLOCK
 	case D3DFMT_DXT3:
-		return (vk::Format)VK_FORMAT_UNDEFINED; //VK_FORMAT_BC3_UNORM_BLOCK
+		return (vk::Format)VK_FORMAT_BC3_UNORM_BLOCK; //VK_FORMAT_BC3_UNORM_BLOCK
 	case D3DFMT_DXT4:
-		return (vk::Format)VK_FORMAT_UNDEFINED; //VK_FORMAT_BC4_UNORM_BLOCK
+		return (vk::Format)VK_FORMAT_BC4_UNORM_BLOCK; //VK_FORMAT_BC4_UNORM_BLOCK
 	case D3DFMT_DXT5:
-		return (vk::Format)VK_FORMAT_UNDEFINED; //VK_FORMAT_BC5_UNORM_BLOCK
+		return (vk::Format)VK_FORMAT_BC5_UNORM_BLOCK; //VK_FORMAT_BC5_UNORM_BLOCK
 	case D3DFMT_D16_LOCKABLE:
 		return (vk::Format)VK_FORMAT_D16_UNORM; //D16_LOCKABLE
 	case D3DFMT_D32:
-		return (vk::Format)VK_FORMAT_UNDEFINED; //D32_UNORM
+		return (vk::Format)VK_FORMAT_D32_SFLOAT; //D32_UNORM
 	case D3DFMT_D15S1:
 		return (vk::Format)VK_FORMAT_UNDEFINED; //S1_UINT_D15_UNORM
 	case D3DFMT_D24S8:
@@ -732,7 +732,7 @@ inline vk::Format ConvertFormat(D3DFORMAT format) noexcept
 		return (vk::Format)VK_FORMAT_D24_UNORM_S8_UINT; //S8_UINT_D24_SFLOAT
 #if !defined(D3D_DISABLE_9EX)
 	case D3DFMT_D32_LOCKABLE:
-		return (vk::Format)VK_FORMAT_UNDEFINED;
+		return (vk::Format)VK_FORMAT_D32_SFLOAT;
 	case D3DFMT_S8_LOCKABLE:
 		return (vk::Format)VK_FORMAT_S8_UINT;
 #endif // !D3D_DISABLE_9EX
