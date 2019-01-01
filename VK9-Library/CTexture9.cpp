@@ -107,6 +107,9 @@ CTexture9::~CTexture9()
 
 void CTexture9::Init()
 {
+	//Work-around for games using strange formats that don't support sampling.
+	mFormat = D3DFMT_A8R8G8B8;
+
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
 	workItem->Id = this->mDevice->mId;
 	workItem->WorkItemType = WorkItemType::Texture_Create;

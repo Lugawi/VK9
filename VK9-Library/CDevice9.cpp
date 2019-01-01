@@ -295,12 +295,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateCubeTexture(UINT EdgeLength, UINT Leve
 
 	CCubeTexture9* obj = new CCubeTexture9(this, EdgeLength, Levels, Usage, Format, Pool, pSharedHandle);
 
-	obj->mCommandStreamManager = this->mCommandStreamManager;
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->Id = this->mId;
-	workItem->WorkItemType = WorkItemType::CubeTexture_Create;
-	workItem->Argument1 = (void*)obj;
-	obj->mId = mCommandStreamManager->RequestWorkAndWait(workItem);
+	obj->Init();
 
 	for (size_t i = 0; i < 6; i++)
 	{

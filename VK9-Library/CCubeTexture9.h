@@ -32,6 +32,8 @@ public:
 	CCubeTexture9(CDevice9* device,UINT EdgeLength, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, HANDLE *pSharedHandle);
 	~CCubeTexture9();
 
+	void Init();
+
 	size_t mId;
 	std::shared_ptr<CommandStreamManager> mCommandStreamManager;
 

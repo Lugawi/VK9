@@ -234,6 +234,7 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 	}
 	else if (parentImage != nullptr)
 	{
+		imageViewCreateInfo.format = vk::Format::eB8G8R8A8Unorm; //TODO: revisit image format
 		imageViewCreateInfo.image = (*parentImage);
 
 		result = realDevice->mDevice.createImageView(&imageViewCreateInfo, nullptr, &mStagingImageView);

@@ -41,7 +41,8 @@ CCubeTexture9::CCubeTexture9(CDevice9* device, UINT EdgeLength, UINT Levels, DWO
 	mId(0)
 {
 	BOOST_LOG_TRIVIAL(info) << "CCubeTexture9::CCubeTexture9";
-	//mDevice->AddRef();
+	
+	this->mCommandStreamManager = this->mDevice->mCommandStreamManager;
 
 	if (!mLevels)
 	{
@@ -89,6 +90,18 @@ CCubeTexture9::~CCubeTexture9()
 	workItem->WorkItemType = WorkItemType::CubeTexture_Destroy;
 	workItem->Id = mId;
 	mCommandStreamManager->RequestWorkAndWait(workItem);
+}
+
+void CCubeTexture9::Init()
+{
+	//Work-around for games using strange formats that don't support sampling.
+	mFormat = D3DFMT_A8R8G8B8;
+
+	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
+	workItem->Id = this->mDevice->mId;
+	workItem->WorkItemType = WorkItemType::CubeTexture_Create;
+	workItem->Argument1 = (void*)this;
+	mId = mCommandStreamManager->RequestWorkAndWait(workItem);
 }
 
 ULONG STDMETHODCALLTYPE CCubeTexture9::AddRef(void)
