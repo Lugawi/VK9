@@ -262,72 +262,6 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 	}
 }
 
-RealSurface::RealSurface(RealDevice* realDevice, CVolume9* volume9)
-	: mRealDevice(realDevice)
-{
-	vk::Result result;
-
-	mRealFormat = ConvertFormat(volume9->mFormat);
-
-	if (mRealFormat == vk::Format::eUndefined)//VK_FORMAT_UNDEFINED
-	{
-		if (volume9->mFormat > 199)
-		{
-			char four[5] =
-			{
-				(char)(volume9->mFormat & 0xFF),
-				(char)((volume9->mFormat >> 8) & 0xFF),
-				(char)((volume9->mFormat >> 16) & 0xFF),
-				(char)((volume9->mFormat >> 24) & 0xFF),
-				'\0'
-			};
-
-			BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface (CVolume9*) unknown format: " << four;
-		}
-		else
-		{
-			BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface (CVolume9*) unknown format: " << volume9->mFormat;
-		}
-
-	}
-
-	vk::ImageCreateInfo imageCreateInfo;
-	imageCreateInfo.imageType = vk::ImageType::e3D;
-	imageCreateInfo.format = mRealFormat;
-	imageCreateInfo.extent = vk::Extent3D(volume9->mWidth, volume9->mHeight, volume9->mDepth); //volume9->mDepth
-	imageCreateInfo.mipLevels = 1;
-	imageCreateInfo.arrayLayers = 1;
-	imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
-	imageCreateInfo.tiling = vk::ImageTiling::eOptimal; //vk::ImageTiling::eLinear
-	imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst;
-	imageCreateInfo.initialLayout = vk::ImageLayout::ePreinitialized;
-
-	VmaAllocationCreateInfo imageAllocInfo = {};
-	imageAllocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-	imageAllocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
-
-	result = (vk::Result)vmaCreateImage(mRealDevice->mAllocator, (VkImageCreateInfo*)&imageCreateInfo, &imageAllocInfo, (VkImage*)&mStagingImage, &mImageAllocation, &mImageAllocationInfo);
-	if (result != vk::Result::eSuccess)
-	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface (CVolume9*) vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
-		BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface (CVolume9*)" <<
-			" format:" << (uint32_t)imageCreateInfo.format <<
-			" imageType:" << (uint32_t)imageCreateInfo.imageType <<
-			" tiling:" << (uint32_t)imageCreateInfo.tiling <<
-			" usage:" << (uint32_t)imageCreateInfo.usage;
-		return;
-	}
-
-	mSubresource.mipLevel = 0;
-	mSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-	mSubresource.arrayLayer = 0; //if this is wrong you may get 4294967296.
-
-	//BOOST_LOG_TRIVIAL(info) << "RealSurface::RealSurface (CVolume9) using format " << (VkFormat)mRealFormat;
-	realDevice->mDevice.getImageSubresourceLayout(mStagingImage, &mSubresource, &mLayouts[0]);
-
-	realDevice->SetImageLayout(mStagingImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
-}
-
 RealSurface::~RealSurface()
 {
 	if (mRealDevice != nullptr)
@@ -454,7 +388,7 @@ void RealSurface::Flush()
 	result = mRealDevice->mDevice.allocateCommandBuffers(&commandBufferInfo, &commandBuffer);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ProcessQueue vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
+		BOOST_LOG_TRIVIAL(fatal) << "RealSurface::Flush vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -473,7 +407,7 @@ void RealSurface::Flush()
 	result = commandBuffer.begin(&commandBufferBeginInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ProcessQueue vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
+		BOOST_LOG_TRIVIAL(fatal) << "RealSurface::Flush vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -538,7 +472,7 @@ void RealSurface::Flush()
 	result = mRealDevice->mQueue.submit(1, &submitInfo, nullFence);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ProcessQueue vkQueueSubmit failed with return code of " << GetResultString((VkResult)result);
+		BOOST_LOG_TRIVIAL(fatal) << "RealSurface::Flush vkQueueSubmit failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 

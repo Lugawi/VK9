@@ -74,6 +74,7 @@ VKAPI_ATTR void VKAPI_CALL vkDebugReportMessageEXT(
 #include "RealInstance.h"
 #include "RealTexture.h"
 #include "RealSurface.h"
+#include "RealVolume.h"
 #include "RealVertexBuffer.h"
 #include "RealIndexBuffer.h"
 #include "RealQuery.h"
@@ -104,6 +105,9 @@ struct StateManager
 
 	std::vector< std::shared_ptr<RealSurface> > mSurfaces;
 	std::atomic_size_t mSurfaceKey = 0;
+
+	std::vector< std::shared_ptr<RealVolume> > mVolumes;
+	std::atomic_size_t mVolumeKey = 0;
 
 	std::vector< std::shared_ptr<ShaderConverter> > mShaderConverters;
 	std::atomic_size_t mShaderConverterKey = 0;

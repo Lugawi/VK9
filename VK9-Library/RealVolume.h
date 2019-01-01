@@ -1,5 +1,5 @@
 /*
-Copyright(c) 2018 Christopher Joseph Dean Schaefer
+Copyright(c) 2019 Christopher Joseph Dean Schaefer
 
 This software is provided 'as-is', without any express or implied
 warranty.In no event will the authors be held liable for any damages
@@ -23,39 +23,36 @@ misrepresented as being the original software.
 
 #include "RealDevice.h"
 
-#ifndef REALSURFACE_H
-#define REALSURFACE_H
-
-class CSurface9;
 class CVolume9;
 
-struct RealSurface
+#ifndef REALVOLUME_H
+#define REALVOLUME_H
+
+struct RealVolume
 {
-	BOOL mIsFlushed = true;
+	VmaAllocationInfo mAllocationInfo = {};
+
+	VmaAllocation mAllocation = {};
+	vk::Buffer mBuffer;
+
+	void* mPersistentData = nullptr;
 	void* mData = nullptr;
-	vk::Image mStagingImage;
-	vk::Image* mParentImage;
-	CSurface9* mSurface9=nullptr;
-	VmaAllocation mImageAllocation;
-	VmaAllocationInfo mImageAllocationInfo;
+	size_t mAttributeSize;
+	size_t mLength;
 
-	std::vector< std::array<vk::Offset3D, 2> > mDirtyRects;
-
-	vk::Extent3D mExtent;
-	vk::Format mRealFormat = vk::Format::eR8G8B8A8Unorm;
-	vk::ImageLayout mImageLayout = vk::ImageLayout::eGeneral;
-	vk::SubresourceLayout mLayouts[1] = {};
-	vk::ImageSubresource mSubresource;
-	vk::ImageView mStagingImageView;
+	vk::Image* mParentImage = nullptr;
+	CVolume9* mVolume9 = nullptr;
+	BOOL mIsFlushed = true;
 
 	RealDevice* mRealDevice = nullptr; //null if not owner.
-	RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image* parentImage);
-	~RealSurface();
+	RealVolume(RealDevice* realDevice, CVolume9* volume9, vk::Image* parentImage);
+	~RealVolume();
 
-	void Lock(D3DLOCKED_RECT* pLockedRect, const RECT* pRect, DWORD Flags);
+	void* Lock(size_t offset);
+	void* LockBox(D3DLOCKED_BOX * pLockedVolume, CONST D3DBOX* pBox, DWORD Flags);
 	void Unlock();
 	void Flush();
 
 };
 
-#endif // REALSURFACE_H
+#endif // REALVOLUME_H

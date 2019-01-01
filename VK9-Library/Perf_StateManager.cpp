@@ -34,6 +34,7 @@ misrepresented as being the original software.
 #include "CDevice9.h"
 #include "CStateBlock9.h"
 #include "CTexture9.h"
+#include "CVolume9.h"
 #include "CCubeTexture9.h"
 #include "CVolumeTexture9.h"
 #include "CVertexBuffer9.h"
@@ -422,17 +423,23 @@ void StateManager::CreateSurface(size_t id, void* argument1)
 
 void StateManager::DestroyVolume(size_t id)
 {
-	mSurfaces[id].reset();
+	mVolumes[id].reset();
 }
 
 void StateManager::CreateVolume(size_t id, void* argument1)
 {
 	auto device = mDevices[id];
 	CVolume9* volume9 = bit_cast<CVolume9*>(argument1);
+	vk::Image* parentImage = nullptr;
 
-	std::shared_ptr<RealSurface> ptr = std::make_shared<RealSurface>(device.get(), volume9);
+	if (volume9->mTexture != nullptr)
+	{
+		parentImage = &mTextures[volume9->mTexture->mId]->mImage;
+	}
 
-	mSurfaces.push_back(ptr);
+	std::shared_ptr<RealVolume> ptr = std::make_shared<RealVolume>(device.get(), volume9, parentImage);
+
+	mVolumes.push_back(ptr);
 }
 
 void StateManager::DestroyShader(size_t id)

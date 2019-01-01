@@ -174,7 +174,7 @@ size_t CommandStreamManager::RequestWork(WorkItem* workItem)
 		key = mRenderManager.mStateManager.mSurfaceKey++;
 		break;
 	case WorkItemType::Volume_Create:
-		key = mRenderManager.mStateManager.mSurfaceKey++;
+		key = mRenderManager.mStateManager.mVolumeKey++;
 		break;
 	case WorkItemType::Shader_Create:
 		key = mRenderManager.mStateManager.mShaderConverterKey++;
