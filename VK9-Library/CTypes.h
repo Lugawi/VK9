@@ -45,6 +45,15 @@ struct Vertex
 	DWORD color;   // Color of vertex
 };
 
+struct CustomGUID
+{
+	DWORD Data1;
+	WORD  Data2;
+	WORD  Data3;
+	WORD  Data4;
+	uint64_t  Data5; //really this is 6 but we'll just truncate.
+};
+
 /*
 The structure below is using vec4 for position and direction because some implementations handle vec3 strange.
 The alignment requirements are different for vec4 versus int/float so I moved "Type" after the vec4 variables to prevent strange padding in the middle of the structure.

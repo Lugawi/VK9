@@ -106,6 +106,8 @@ ULONG STDMETHODCALLTYPE C9::Release(void)
 
 HRESULT STDMETHODCALLTYPE C9::CheckDepthStencilMatch(UINT Adapter,D3DDEVTYPE DeviceType,D3DFORMAT AdapterFormat,D3DFORMAT RenderTargetFormat,D3DFORMAT DepthStencilFormat)
 {
+	BOOST_LOG_TRIVIAL(info) << "C9::CheckDepthStencilMatch Adapter: " << Adapter;
+
 	if (DepthStencilFormat == D3DFMT_UNKNOWN || (ConvertFormat(AdapterFormat) != vk::Format::eUndefined && ConvertFormat(DepthStencilFormat) != vk::Format::eUndefined))
 	{
 		BOOST_LOG_TRIVIAL(warning) << "C9::CheckDepthStencilMatch (D3D_OK) AdapterFormat: " << AdapterFormat << " CheckFormat: " << DepthStencilFormat;
@@ -122,6 +124,8 @@ HRESULT STDMETHODCALLTYPE C9::CheckDepthStencilMatch(UINT Adapter,D3DDEVTYPE Dev
 
 HRESULT STDMETHODCALLTYPE C9::CheckDeviceFormat(UINT Adapter,D3DDEVTYPE DeviceType,D3DFORMAT AdapterFormat,DWORD Usage,D3DRESOURCETYPE RType,D3DFORMAT CheckFormat)
 {
+	BOOST_LOG_TRIVIAL(info) << "C9::CheckDeviceFormat Adapter: " << Adapter;
+
 	if (CheckFormat == D3DFMT_UNKNOWN || (ConvertFormat(AdapterFormat) != vk::Format::eUndefined && ConvertFormat(CheckFormat) != vk::Format::eUndefined))
 	{
 		BOOST_LOG_TRIVIAL(warning) << "C9::CheckDeviceFormat (D3D_OK) AdapterFormat: " << AdapterFormat << " CheckFormat: " << CheckFormat;
@@ -139,6 +143,8 @@ HRESULT STDMETHODCALLTYPE C9::CheckDeviceFormat(UINT Adapter,D3DDEVTYPE DeviceTy
 
 HRESULT STDMETHODCALLTYPE C9::CheckDeviceFormatConversion(UINT Adapter,D3DDEVTYPE DeviceType,D3DFORMAT SourceFormat,D3DFORMAT TargetFormat)
 {
+	BOOST_LOG_TRIVIAL(info) << "C9::CheckDeviceFormatConversion Adapter: " << Adapter;
+
 	HRESULT result = S_OK;
 
 	//TODO: Implement.
@@ -151,6 +157,8 @@ HRESULT STDMETHODCALLTYPE C9::CheckDeviceFormatConversion(UINT Adapter,D3DDEVTYP
 
 HRESULT STDMETHODCALLTYPE C9::CheckDeviceMultiSampleType(UINT Adapter,D3DDEVTYPE DeviceType,D3DFORMAT SurfaceFormat,BOOL Windowed,D3DMULTISAMPLE_TYPE MultiSampleType,DWORD *pQualityLevels)
 {
+	BOOST_LOG_TRIVIAL(info) << "C9::CheckDeviceMultiSampleType Adapter: " << Adapter;
+
 	if (Adapter >= mMonitors.size())
 	{
 		return D3DERR_INVALIDCALL;
@@ -189,6 +197,8 @@ HRESULT STDMETHODCALLTYPE C9::CheckDeviceType(UINT Adapter,D3DDEVTYPE DeviceType
 
 HRESULT STDMETHODCALLTYPE C9::CreateDevice(UINT Adapter,D3DDEVTYPE DeviceType,HWND hFocusWindow,DWORD BehaviorFlags,D3DPRESENT_PARAMETERS *pPresentationParameters,IDirect3DDevice9 **ppReturnedDeviceInterface)
 {
+	BOOST_LOG_TRIVIAL(info) << "C9::CreateDevice Adapter: " << Adapter;
+
 	HRESULT result = S_OK;
 
 	CDevice9* obj = new CDevice9(this,Adapter,DeviceType,hFocusWindow,BehaviorFlags,pPresentationParameters, nullptr);
@@ -197,11 +207,16 @@ HRESULT STDMETHODCALLTYPE C9::CreateDevice(UINT Adapter,D3DDEVTYPE DeviceType,HW
 
 	obj->Init();
 
+	pPresentationParameters->BackBufferWidth = obj->mPresentationParameters.BackBufferWidth;
+	pPresentationParameters->BackBufferHeight = obj->mPresentationParameters.BackBufferHeight;
+
 	return result;	
 }
 
 HRESULT STDMETHODCALLTYPE C9::EnumAdapterModes(UINT Adapter,D3DFORMAT Format,UINT Mode,D3DDISPLAYMODE *pMode)
 {
+	BOOST_LOG_TRIVIAL(info) << "C9::EnumAdapterModes Adapter: " << Adapter;
+
 	if (Adapter >= mMonitors.size())
 	{
 		return D3DERR_INVALIDCALL;
@@ -307,13 +322,17 @@ HRESULT STDMETHODCALLTYPE C9::EnumAdapterModes(UINT Adapter,D3DFORMAT Format,UIN
 
 UINT STDMETHODCALLTYPE C9::GetAdapterCount()
 {
-	BOOST_LOG_TRIVIAL(warning) << "C9::GetAdapterCount is not implemented!";
+	size_t monitorCount = mMonitors.size();
 
-	return 1;
+	BOOST_LOG_TRIVIAL(warning) << "C9::GetAdapterCount MonitorCount: " << monitorCount;
+
+	return monitorCount;
 }
 
 HRESULT STDMETHODCALLTYPE C9::GetAdapterDisplayMode(UINT Adapter,D3DDISPLAYMODE *pMode)
 {
+	BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterDisplayMode Adapter: " << Adapter;
+
 	Monitor& monitor = mMonitors[Adapter];
 
 	pMode->RefreshRate = monitor.RefreshRate;
@@ -336,6 +355,8 @@ HRESULT STDMETHODCALLTYPE C9::GetAdapterDisplayMode(UINT Adapter,D3DDISPLAYMODE 
 
 HRESULT STDMETHODCALLTYPE C9::GetAdapterIdentifier(UINT Adapter,DWORD Flags,D3DADAPTER_IDENTIFIER9 *pIdentifier)
 {		
+	BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterIdentifier Adapter: " << Adapter;
+
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
 	workItem->WorkItemType = WorkItemType::Instance_GetAdapterIdentifier;
 	workItem->Id = mId;
@@ -349,7 +370,7 @@ HRESULT STDMETHODCALLTYPE C9::GetAdapterIdentifier(UINT Adapter,DWORD Flags,D3DA
 
 UINT STDMETHODCALLTYPE C9::GetAdapterModeCount(UINT Adapter,D3DFORMAT Format)
 {	
-	//TODO: Implement.
+	BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterModeCount Adapter: " << Adapter;
 
 	if (Format == D3DFMT_X8R8G8B8)
 	{
@@ -362,19 +383,28 @@ UINT STDMETHODCALLTYPE C9::GetAdapterModeCount(UINT Adapter,D3DFORMAT Format)
 
 HMONITOR STDMETHODCALLTYPE C9::GetAdapterMonitor(UINT Adapter)
 {
+	BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterMonitor Adapter: " << Adapter;
+
+	HMONITOR returnValue;
 	if ((mMonitors.size()-1) < Adapter)
 	{
-		return mMonitors[0].hMonitor;
+		returnValue - mMonitors[0].hMonitor;
 	}
 	else
 	{
-		return mMonitors[Adapter].hMonitor;
+		returnValue = mMonitors[Adapter].hMonitor;
 	}
+
+	BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterMonitor HMONITOR: " << returnValue;
+
+	return returnValue;
 }
 
 
 HRESULT STDMETHODCALLTYPE C9::GetDeviceCaps(UINT Adapter,D3DDEVTYPE DeviceType,D3DCAPS9 *pCaps)
 {
+	BOOST_LOG_TRIVIAL(info) << "C9::GetDeviceCaps Adapter: " << Adapter;
+
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
 	workItem->WorkItemType = WorkItemType::Instance_GetDeviceCaps;
 	workItem->Id = mId;
@@ -397,7 +427,7 @@ HRESULT STDMETHODCALLTYPE C9::RegisterSoftwareDevice(void *pInitializeFunction)
 
 UINT STDMETHODCALLTYPE C9::GetAdapterModeCountEx(UINT Adapter, const D3DDISPLAYMODEFILTER *pFilter)
 {
-	//TODO: Implement.
+	BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterModeCountEx Adapter: " << Adapter;
 
 	if (pFilter!=nullptr && pFilter->Format == D3DFMT_X8R8G8B8)
 	{
@@ -409,6 +439,8 @@ UINT STDMETHODCALLTYPE C9::GetAdapterModeCountEx(UINT Adapter, const D3DDISPLAYM
 
 HRESULT STDMETHODCALLTYPE C9::EnumAdapterModesEx(UINT Adapter, const D3DDISPLAYMODEFILTER *pFilter, UINT Mode, D3DDISPLAYMODEEX *pMode)
 {
+	BOOST_LOG_TRIVIAL(info) << "C9::EnumAdapterModesEx Adapter: " << Adapter;
+
 	if (Adapter >= mMonitors.size())
 	{
 		return D3DERR_INVALIDCALL;
@@ -421,9 +453,10 @@ HRESULT STDMETHODCALLTYPE C9::EnumAdapterModesEx(UINT Adapter, const D3DDISPLAYM
 
 	Monitor& monitor = mMonitors[Adapter];
 
-
+	pMode->Size = sizeof(D3DDISPLAYMODEEX);
 	pMode->RefreshRate = monitor.RefreshRate;
 	pMode->Format = D3DFMT_X8R8G8B8;
+	pMode->ScanLineOrdering = D3DSCANLINEORDERING_PROGRESSIVE;
 
 	switch (Mode)
 	{
@@ -514,12 +547,16 @@ HRESULT STDMETHODCALLTYPE C9::EnumAdapterModesEx(UINT Adapter, const D3DDISPLAYM
 
 HRESULT STDMETHODCALLTYPE C9::GetAdapterDisplayModeEx(UINT Adapter, D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation)
 {
+	BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterDisplayModeEx Adapter: " << Adapter;
+
 	Monitor& monitor = mMonitors[Adapter];
 
+	pMode->Size = sizeof(D3DDISPLAYMODEEX);
 	pMode->RefreshRate = monitor.RefreshRate;
 	pMode->Format = D3DFMT_X8R8G8B8;
 	pMode->Height = monitor.Height;
 	pMode->Width = monitor.Width;
+	pMode->ScanLineOrdering = D3DSCANLINEORDERING_PROGRESSIVE;
 
 	if (monitor.PixelBits != 32)
 	{
@@ -536,6 +573,8 @@ HRESULT STDMETHODCALLTYPE C9::GetAdapterDisplayModeEx(UINT Adapter, D3DDISPLAYMO
 
 HRESULT STDMETHODCALLTYPE C9::CreateDeviceEx(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode, IDirect3DDevice9Ex **ppReturnedDeviceInterface)
 {
+	BOOST_LOG_TRIVIAL(info) << "C9::CreateDeviceEx Adapter: " << Adapter;
+
 	HRESULT result = S_OK;
 
 	CDevice9* obj = new CDevice9(this, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, pFullscreenDisplayMode);
@@ -544,11 +583,16 @@ HRESULT STDMETHODCALLTYPE C9::CreateDeviceEx(UINT Adapter, D3DDEVTYPE DeviceType
 
 	obj->Init();
 
+	pPresentationParameters->BackBufferWidth = obj->mPresentationParameters.BackBufferWidth;
+	pPresentationParameters->BackBufferHeight = obj->mPresentationParameters.BackBufferHeight;
+
 	return result;
 }
 
 HRESULT STDMETHODCALLTYPE C9::GetAdapterLUID(UINT Adapter, LUID *pLUID)
 {
+	BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterLUID Adapter: " << Adapter;
+
 	(*pLUID) = mLUID;
 
 	return S_OK;

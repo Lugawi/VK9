@@ -59,7 +59,15 @@ CDevice9::CDevice9(C9* Instance, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocu
 {
 	BOOST_LOG_TRIVIAL(info) << "CDevice9::CDevice9";
 
-	memcpy(&mPresentationParameters, pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS));
+	if (pPresentationParameters != nullptr)
+	{
+		if (pPresentationParameters->BackBufferFormat == D3DFMT_UNKNOWN)
+		{
+			pPresentationParameters->BackBufferFormat = D3DFMT_X8R8G8B8;
+		}
+		memcpy(&mPresentationParameters, pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS));
+	}
+	
 	if (pFullscreenDisplayMode != nullptr)
 	{
 		memcpy(&mFullscreenDisplayMode, pFullscreenDisplayMode, sizeof(D3DDISPLAYMODEEX));

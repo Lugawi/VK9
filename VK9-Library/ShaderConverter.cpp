@@ -7551,6 +7551,10 @@ void ShaderConverter::Process_SINCOS()
 	vectorType.ComponentCount = 4;
 	uint32_t vectorTypeId = GetSpirVTypeId(vectorType);
 
+	TypeDescription floatType;
+	floatType.PrimaryType = spv::OpTypeFloat;
+	uint32_t floatTypeId = GetSpirVTypeId(floatType);
+
 	TypeDescription typeDescription = mIdTypePairs[argumentId1];
 
 	spv::Op dataType = typeDescription.PrimaryType;
@@ -7582,8 +7586,19 @@ void ShaderConverter::Process_SINCOS()
 	{
 	case spv::OpTypeFloat:
 		//Per the documentation Z is undefined so I'll just stick the same values in Z & W.
-		PushCos(dataTypeId, cosResultId, argumentId1);
-		PushSin(dataTypeId, sinResultId, argumentId1);
+		if (typeDescription.PrimaryType == spv::OpTypeVector)
+		{
+			uint32_t tempId = GetNextId();
+			PushCompositeExtract(floatTypeId, tempId, argumentId1, 0);
+			PushCos(floatTypeId, cosResultId, tempId);
+			PushSin(floatTypeId, sinResultId, tempId);
+		}
+		else
+		{
+			PushCos(dataTypeId, cosResultId, argumentId1);
+			PushSin(dataTypeId, sinResultId, argumentId1);
+		}
+
 		Push(spv::OpCompositeConstruct, vectorTypeId, resultId, cosResultId, sinResultId, cosResultId, sinResultId);
 		break;
 	default:

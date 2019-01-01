@@ -1803,7 +1803,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					deviceState.mScissor.offset.y = deviceState.m9Scissor.top;
 
 					deviceState.mIsScissorDirty = true;
-				}			
+				}
 			}
 			break;
 			case Device_SetStreamSource:
@@ -2256,17 +2256,21 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 
 				(*pIdentifier) = {}; //zero it out.
 
-				strcpy(pIdentifier->DeviceName, properties.deviceName); //256 to 32 revisit
-				strcpy(pIdentifier->Driver, ""); //revisit
-				strcpy(pIdentifier->Description, ""); //revisit
-				pIdentifier->VendorId = properties.vendorID;
-				pIdentifier->DeviceId = properties.deviceID;
+				strcpy(pIdentifier->DeviceName, "Radeon (TM) RX 480 Graphics"); //properties.deviceName
+				strcpy(pIdentifier->Driver, "aticfx64.dll,aticfx64.dll,aticfx64.dll,aticfx32,aticfx32,aticfx32,atiumd64.dll,atidxx64.dll,atidxx64.dll,atiumdag,atidxx32,atidxx32,atiumdva,atiumd6a.cap,atitmm64.dll"); //revisit
+				strcpy(pIdentifier->Description, "VK9 Emulated Device"); //revisit
+				pIdentifier->VendorId = 0x1002;  //properties.vendorID;
+				pIdentifier->DeviceId = 0x67DF;  //properties.deviceID;
+				pIdentifier->SubSysId = 0x94801682;
+				pIdentifier->Revision = 0x00C7;
+				pIdentifier->WHQLLevel = 1;
+
 				pIdentifier->DriverVersion.QuadPart = properties.driverVersion;
 
-				//pIdentifier->SubSysId = 0;
-				//pIdentifier->Revision = 0;
-				//pIdentifier->DeviceIdentifier = 0;
-				//pIdentifier->WHQLLevel = 0;
+				//little endian assumption.
+				CustomGUID guid = { 0xD7B71EE2 , 0x249F , 0x11CF , 0x3275 , 0x17B57BC2D835};
+				pIdentifier->DeviceIdentifier = bit_cast<GUID>(guid);				
+
 			}
 			break;
 			case Instance_GetDeviceCaps:
@@ -2289,6 +2293,8 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				https://msdn.microsoft.com/en-us/library/windows/desktop/bb172635(v=vs.85).aspx
 				https://msdn.microsoft.com/en-us/library/windows/desktop/bb172591(v=vs.85).aspx
 				*/
+
+				(*pCaps) = {};
 
 				//Translate the vulkan properties & features into D3D9 capabilities.
 				pCaps->DeviceType = DeviceType;
@@ -3069,7 +3075,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				//}
 				//else
 				//{
-					ReallyCopyImage(commandBuffer, volume.mStagingImage, texture.mImage, 0, 0, volume9->mWidth, volume9->mHeight, volume9->mDepth, 0, volume9->mMipIndex, 0, volume9->mTargetLayer);
+				ReallyCopyImage(commandBuffer, volume.mStagingImage, texture.mImage, 0, 0, volume9->mWidth, volume9->mHeight, volume9->mDepth, 0, volume9->mMipIndex, 0, volume9->mTargetLayer);
 				//}
 
 				ReallySetImageLayout(commandBuffer, texture.mImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eGeneral, 1, volume9->mMipIndex, volume9->mTargetLayer + 1);
