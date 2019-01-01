@@ -358,96 +358,10 @@ void StateManager::DestroyTexture(size_t id)
 
 void StateManager::CreateTexture(size_t id, void* argument1)
 {
-	vk::Result result;
 	auto device = mDevices[id];
 	CTexture9* texture9 = bit_cast<CTexture9*>(argument1);
-	std::shared_ptr<RealTexture> ptr = std::make_shared<RealTexture>(device.get());
 
-	ptr->mRealFormat = ConvertFormat(texture9->mFormat);
-
-	if (ptr->mRealFormat == vk::Format::eUndefined)//VK_FORMAT_UNDEFINED
-	{
-		BOOST_LOG_TRIVIAL(fatal) << "StateManager::CreateTexture unknown format: " << texture9->mFormat;
-	}
-
-	ptr->mExtent = vk::Extent3D(texture9->mWidth, texture9->mHeight, 1);
-	ptr->mLevels = texture9->mLevels;
-	ptr->mLayers = 1;
-
-	vk::ImageCreateInfo imageCreateInfo;
-	imageCreateInfo.imageType = vk::ImageType::e2D;
-	imageCreateInfo.format = ptr->mRealFormat; //VK_FORMAT_B8G8R8A8_UNORM
-	imageCreateInfo.extent = ptr->mExtent;
-	imageCreateInfo.mipLevels = texture9->mLevels;
-	imageCreateInfo.arrayLayers = 1;
-	imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
-	imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
-	imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eColorAttachment;
-	//imageCreateInfo.flags = 0;
-	imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined; //VK_IMAGE_LAYOUT_PREINITIALIZED;
-
-	auto& vulkanDevice = device->mDevice;
-
-	VmaAllocationCreateInfo imageAllocInfo = {};
-	imageAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-
-	result = (vk::Result)vmaCreateImage(ptr->mRealDevice->mAllocator, (VkImageCreateInfo*)&imageCreateInfo, &imageAllocInfo, (VkImage*)&ptr->mImage, &ptr->mImageAllocation, &ptr->mImageAllocationInfo);
-	if (result != vk::Result::eSuccess)
-	{
-		BOOST_LOG_TRIVIAL(fatal) << "StateManager::CreateTexture vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
-		return;
-	}
-
-	vk::ImageViewCreateInfo imageViewCreateInfo;
-	imageViewCreateInfo.image = ptr->mImage;
-	imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
-	imageViewCreateInfo.format = ptr->mRealFormat;
-	imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-	imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-	imageViewCreateInfo.subresourceRange.levelCount = 1;
-	imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-	imageViewCreateInfo.subresourceRange.layerCount = 1;
-
-	imageViewCreateInfo.subresourceRange.levelCount = texture9->mLevels;
-
-	/*
-	This block handles the luminance & x formats. They are converted to color formats but need a little mapping to make them work correctly.
-	*/
-	switch (texture9->mFormat)
-	{
-	case D3DFMT_R5G6B5:
-		//Vulkan has a matching format but nvidia doesn't support using it as a color attachment so we just use the other one and re-map the components.
-		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eB, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eOne);
-		break;
-	case D3DFMT_A8:
-		//TODO: Revisit A8 mapping.
-		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eR);
-		break;
-	case D3DFMT_L8:
-		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eOne);
-		break;
-	case D3DFMT_L16:
-		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eOne);
-		break;
-	case D3DFMT_A8L8:
-		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eG);
-		break;
-	case D3DFMT_X8R8G8B8:
-	case D3DFMT_X8B8G8R8:
-		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eB, vk::ComponentSwizzle::eOne);
-		break;
-	default:
-		break;
-	}
-
-	result = vulkanDevice.createImageView(&imageViewCreateInfo, nullptr, &ptr->mImageView);
-	if (result != vk::Result::eSuccess)
-	{
-		BOOST_LOG_TRIVIAL(fatal) << "StateManager::CreateTexture vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
-		return;
-	}
-
-	device->SetImageLayout(ptr->mImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+	std::shared_ptr<RealTexture> ptr = std::make_shared<RealTexture>(device.get(), texture9);
 
 	mTextures.push_back(ptr);
 }
@@ -459,92 +373,10 @@ void StateManager::DestroyCubeTexture(size_t id)
 
 void StateManager::CreateCubeTexture(size_t id, void* argument1)
 {
-	vk::Result result;
 	auto device = mDevices[id];
 	CCubeTexture9* texture9 = bit_cast<CCubeTexture9*>(argument1);
-	std::shared_ptr<RealTexture> ptr = std::make_shared<RealTexture>(device.get());
 
-	ptr->mRealFormat = ConvertFormat(texture9->mFormat);
-
-	if (ptr->mRealFormat == vk::Format::eUndefined)//VK_FORMAT_UNDEFINED
-	{
-		BOOST_LOG_TRIVIAL(fatal) << "StateManager::CreateCubeTexture unknown format: " << texture9->mFormat;
-	}
-
-	ptr->mExtent = vk::Extent3D(texture9->mEdgeLength, texture9->mEdgeLength, 1);
-	ptr->mLevels = texture9->mLevels;
-	ptr->mLayers = 6;
-
-	vk::ImageCreateInfo imageCreateInfo;
-	imageCreateInfo.imageType = vk::ImageType::e2D;
-	imageCreateInfo.format = ptr->mRealFormat; //VK_FORMAT_B8G8R8A8_UNORM
-	imageCreateInfo.extent = vk::Extent3D(texture9->mEdgeLength, texture9->mEdgeLength, 1);
-	imageCreateInfo.mipLevels = texture9->mLevels;
-	imageCreateInfo.arrayLayers = 6;
-	imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
-	imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
-	imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc;
-	imageCreateInfo.flags = vk::ImageCreateFlagBits::eCubeCompatible;
-	imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined; //VK_IMAGE_LAYOUT_PREINITIALIZED;
-	imageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
-
-	auto& vulkanDevice = device->mDevice;
-
-	VmaAllocationCreateInfo imageAllocInfo = {};
-	imageAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-
-	result = (vk::Result)vmaCreateImage(ptr->mRealDevice->mAllocator, (VkImageCreateInfo*)&imageCreateInfo, &imageAllocInfo, (VkImage*)&ptr->mImage, &ptr->mImageAllocation, &ptr->mImageAllocationInfo);
-	if (result != vk::Result::eSuccess)
-	{
-		BOOST_LOG_TRIVIAL(fatal) << "StateManager::CreateCubeTexture vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
-		return;
-	}
-
-	vk::ImageViewCreateInfo imageViewCreateInfo;
-	imageViewCreateInfo.image = ptr->mImage;
-	imageViewCreateInfo.viewType = vk::ImageViewType::eCube; //e2D
-	imageViewCreateInfo.format = ptr->mRealFormat;
-	imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-	imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-	//imageViewCreateInfo.subresourceRange.levelCount = 1;
-	imageViewCreateInfo.subresourceRange.levelCount = texture9->mLevels;
-	imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-	imageViewCreateInfo.subresourceRange.layerCount = 6;
-
-	/*
-	This block handles the luminance & x formats. They are converted to color formats but need a little mapping to make them work correctly.
-	*/
-	switch (texture9->mFormat)
-	{
-	case D3DFMT_A8:
-		//TODO: Revisit A8 mapping.
-		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eR);
-		break;
-	case D3DFMT_L8:
-		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eOne);
-		break;
-	case D3DFMT_L16:
-		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eOne);
-		break;
-	case D3DFMT_A8L8:
-		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eG);
-		break;
-	case D3DFMT_X8R8G8B8:
-	case D3DFMT_X8B8G8R8:
-		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eB, vk::ComponentSwizzle::eOne);
-		break;
-	default:
-		break;
-	}
-
-	result = vulkanDevice.createImageView(&imageViewCreateInfo, nullptr, &ptr->mImageView);
-	if (result != vk::Result::eSuccess)
-	{
-		BOOST_LOG_TRIVIAL(fatal) << "StateManager::CreateCubeTexture vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
-		return;
-	}
-
-	device->SetImageLayout(ptr->mImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+	std::shared_ptr<RealTexture> ptr = std::make_shared<RealTexture>(device.get(), texture9);
 
 	mTextures.push_back(ptr);
 }
@@ -556,92 +388,10 @@ void StateManager::DestroyVolumeTexture(size_t id)
 
 void StateManager::CreateVolumeTexture(size_t id, void* argument1)
 {
-	vk::Result result;
 	std::shared_ptr<RealDevice> device = mDevices[id];
 	CVolumeTexture9* texture9 = bit_cast<CVolumeTexture9*>(argument1);
-	std::shared_ptr<RealTexture> ptr = std::make_shared<RealTexture>(device.get());
 
-	ptr->mRealFormat = ConvertFormat(texture9->mFormat);
-
-	if (ptr->mRealFormat == vk::Format::eUndefined)//VK_FORMAT_UNDEFINED
-	{
-		BOOST_LOG_TRIVIAL(fatal) << "StateManager::CreateVolumeTexture unknown format: " << texture9->mFormat;
-	}
-
-	ptr->mExtent = vk::Extent3D(texture9->mWidth, texture9->mHeight, 1);
-	ptr->mLevels = texture9->mLevels;
-	ptr->mLayers = 1;
-
-	vk::ImageCreateInfo imageCreateInfo;
-	imageCreateInfo.imageType = vk::ImageType::e3D;
-	imageCreateInfo.format = ptr->mRealFormat;
-	imageCreateInfo.extent = vk::Extent3D(texture9->mWidth, texture9->mHeight, texture9->mDepth);
-	imageCreateInfo.mipLevels = texture9->mLevels;
-	imageCreateInfo.arrayLayers = 1;
-	imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
-	imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
-	imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc;
-	//imageCreateInfo.flags = vk::ImageCreateFlagBits::eVolumeCompatible;
-	imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined; //VK_IMAGE_LAYOUT_PREINITIALIZED;
-	imageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
-
-	auto& vulkanDevice = device->mDevice;
-
-	VmaAllocationCreateInfo imageAllocInfo = {};
-	imageAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-
-	result = (vk::Result)vmaCreateImage(ptr->mRealDevice->mAllocator, (VkImageCreateInfo*)&imageCreateInfo, &imageAllocInfo, (VkImage*)&ptr->mImage, &ptr->mImageAllocation, &ptr->mImageAllocationInfo);
-	if (result != vk::Result::eSuccess)
-	{
-		BOOST_LOG_TRIVIAL(fatal) << "StateManager::CreateVolumeTexture vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
-		return;
-	}
-
-	vk::ImageViewCreateInfo imageViewCreateInfo;
-	imageViewCreateInfo.image = ptr->mImage;
-	imageViewCreateInfo.viewType = vk::ImageViewType::e3D;
-	imageViewCreateInfo.format = ptr->mRealFormat;
-	imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-	imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-	//imageViewCreateInfo.subresourceRange.levelCount = 1;
-	imageViewCreateInfo.subresourceRange.levelCount = texture9->mLevels;
-	imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-	imageViewCreateInfo.subresourceRange.layerCount = 1;
-
-	/*
-	This block handles the luminance & x formats. They are converted to color formats but need a little mapping to make them work correctly.
-	*/
-	switch (texture9->mFormat)
-	{
-	case D3DFMT_A8:
-		//TODO: Revisit A8 mapping.
-		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eR);
-		break;
-	case D3DFMT_L8:
-		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eOne);
-		break;
-	case D3DFMT_L16:
-		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eOne);
-		break;
-	case D3DFMT_A8L8:
-		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eG);
-		break;
-	case D3DFMT_X8R8G8B8:
-	case D3DFMT_X8B8G8R8:
-		imageViewCreateInfo.components = vk::ComponentMapping(vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eB, vk::ComponentSwizzle::eOne);
-		break;
-	default:
-		break;
-	}
-
-	result = vulkanDevice.createImageView(&imageViewCreateInfo, nullptr, &ptr->mImageView);
-	if (result != vk::Result::eSuccess)
-	{
-		BOOST_LOG_TRIVIAL(fatal) << "StateManager::CreateVolumeTexture vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
-		return;
-	}
-
-	device->SetImageLayout(ptr->mImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+	std::shared_ptr<RealTexture> ptr = std::make_shared<RealTexture>(device.get(), texture9);
 
 	mTextures.push_back(ptr);
 }
@@ -667,24 +417,6 @@ void StateManager::CreateSurface(size_t id, void* argument1)
 
 	std::shared_ptr<RealSurface> ptr = std::make_shared<RealSurface>(device.get(), surface9, parentImage);
 
-	auto& realFormat = ptr->mRealFormat;
-	if (realFormat == vk::Format::eD16UnormS8Uint || realFormat == vk::Format::eD24UnormS8Uint || realFormat == vk::Format::eD32SfloatS8Uint)
-	{
-		device->SetImageLayout(ptr->mStagingImage, vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
-	}
-	else if (realFormat == vk::Format::eS8Uint)
-	{
-		device->SetImageLayout(ptr->mStagingImage, vk::ImageAspectFlagBits::eStencil, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
-	}
-	else if (realFormat == vk::Format::eD16Unorm)
-	{
-		device->SetImageLayout(ptr->mStagingImage, vk::ImageAspectFlagBits::eDepth, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
-	}
-	else
-	{
-		device->SetImageLayout(ptr->mStagingImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
-	}
-
 	mSurfaces.push_back(ptr);
 }
 
@@ -697,9 +429,8 @@ void StateManager::CreateVolume(size_t id, void* argument1)
 {
 	auto device = mDevices[id];
 	CVolume9* volume9 = bit_cast<CVolume9*>(argument1);
-	std::shared_ptr<RealSurface> ptr = std::make_shared<RealSurface>(device.get(), volume9);
 
-	device->SetImageLayout(ptr->mStagingImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+	std::shared_ptr<RealSurface> ptr = std::make_shared<RealSurface>(device.get(), volume9);
 
 	mSurfaces.push_back(ptr);
 }

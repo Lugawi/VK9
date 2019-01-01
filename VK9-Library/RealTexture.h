@@ -23,6 +23,10 @@ misrepresented as being the original software.
 
 #include "RealDevice.h"
 
+class CTexture9;
+class CCubeTexture9;
+class CVolumeTexture9;
+
 #ifndef REALTEXTURE_H
 #define REALTEXTURE_H
 
@@ -41,8 +45,15 @@ struct RealTexture
 	uint32_t mLevels = 1;
 	uint32_t mLayers = 1;
 
+	CTexture9* mTexture9 = nullptr;
+	CCubeTexture9* mCubeTexture9 = nullptr;
+	CVolumeTexture9* mVolumeTexture9 = nullptr;
+
 	RealDevice* mRealDevice = nullptr; //null if not owner.
-	RealTexture(RealDevice* realDevice);
+	RealTexture(RealDevice* realDevice, CTexture9* texture9);
+	RealTexture(RealDevice* realDevice, CCubeTexture9* texture9);
+	RealTexture(RealDevice* realDevice, CVolumeTexture9* texture9);
+
 	~RealTexture();
 };
 

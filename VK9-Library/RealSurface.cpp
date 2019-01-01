@@ -243,6 +243,23 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 			return;
 		}
 	}
+
+	if (mRealFormat == vk::Format::eD16UnormS8Uint || mRealFormat == vk::Format::eD24UnormS8Uint || mRealFormat == vk::Format::eD32SfloatS8Uint)
+	{
+		realDevice->SetImageLayout(mStagingImage, vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+	}
+	else if (mRealFormat == vk::Format::eS8Uint)
+	{
+		realDevice->SetImageLayout(mStagingImage, vk::ImageAspectFlagBits::eStencil, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+	}
+	else if (mRealFormat == vk::Format::eD16Unorm)
+	{
+		realDevice->SetImageLayout(mStagingImage, vk::ImageAspectFlagBits::eDepth, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+	}
+	else
+	{
+		realDevice->SetImageLayout(mStagingImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+	}
 }
 
 RealSurface::RealSurface(RealDevice* realDevice, CVolume9* volume9)
@@ -307,6 +324,8 @@ RealSurface::RealSurface(RealDevice* realDevice, CVolume9* volume9)
 
 	//BOOST_LOG_TRIVIAL(info) << "RealSurface::RealSurface (CVolume9) using format " << (VkFormat)mRealFormat;
 	realDevice->mDevice.getImageSubresourceLayout(mStagingImage, &mSubresource, &mLayouts[0]);
+
+	realDevice->SetImageLayout(mStagingImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
 }
 
 RealSurface::~RealSurface()
