@@ -3048,29 +3048,29 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				region.srcSubresource = subResource1;
 				region.dstSubresource = subResource2;
 
-				if (volume.mDirtyRects.size())
-				{
-					std::vector<vk::ImageBlit> regions;
-					for (auto& dirtyRect : volume.mDirtyRects)
-					{
-						region.srcOffsets[0] = dirtyRect[0];
-						region.srcOffsets[1] = dirtyRect[1];
-						region.dstOffsets[0] = dirtyRect[0];
-						region.dstOffsets[1] = dirtyRect[1];
+				//if (volume.mDirtyRects.size())
+				//{
+				//	std::vector<vk::ImageBlit> regions;
+				//	for (auto& dirtyRect : volume.mDirtyRects)
+				//	{
+				//		region.srcOffsets[0] = dirtyRect[0];
+				//		region.srcOffsets[1] = dirtyRect[1];
+				//		region.dstOffsets[0] = dirtyRect[0];
+				//		region.dstOffsets[1] = dirtyRect[1];
 
-						regions.push_back(region);
+				//		regions.push_back(region);
 
-						commandBuffer.blitImage(
-							volume.mStagingImage, vk::ImageLayout::eTransferSrcOptimal,
-							texture.mImage, vk::ImageLayout::eTransferDstOptimal,
-							1, &regions[regions.size() - 1], vk::Filter::eLinear);
-					}
-					volume.mDirtyRects.clear();
-				}
-				else
-				{
+				//		commandBuffer.blitImage(
+				//			volume.mStagingImage, vk::ImageLayout::eTransferSrcOptimal,
+				//			texture.mImage, vk::ImageLayout::eTransferDstOptimal,
+				//			1, &regions[regions.size() - 1], vk::Filter::eLinear);
+				//	}
+				//	volume.mDirtyRects.clear();
+				//}
+				//else
+				//{
 					ReallyCopyImage(commandBuffer, volume.mStagingImage, texture.mImage, 0, 0, volume9->mWidth, volume9->mHeight, volume9->mDepth, 0, volume9->mMipIndex, 0, volume9->mTargetLayer);
-				}
+				//}
 
 				ReallySetImageLayout(commandBuffer, texture.mImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eGeneral, 1, volume9->mMipIndex, volume9->mTargetLayer + 1);
 

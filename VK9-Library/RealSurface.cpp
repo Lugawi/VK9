@@ -33,8 +33,6 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 	mParentImage(parentImage),
 	mSurface9(surface9)
 {
-	BOOST_LOG_TRIVIAL(info) << "RealSurface::RealSurface";
-
 	vk::Result result;
 
 	mRealFormat = ConvertFormat(surface9->mFormat);
@@ -52,11 +50,11 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 				'\0'
 			};
 
-			BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface unknown format: " << four;
+			BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface (CSurface9*) unknown format: " << four;
 		}
 		else
 		{
-			BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface unknown format: " << surface9->mFormat;
+			BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface (CSurface9*) unknown format: " << surface9->mFormat;
 		}
 
 	}
@@ -147,7 +145,12 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 	result = (vk::Result)vmaCreateImage(mRealDevice->mAllocator, (VkImageCreateInfo*)&imageCreateInfo, &imageAllocInfo, (VkImage*)&mStagingImage, &mImageAllocation, &mImageAllocationInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
+		BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface (CSurface9*) vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
+		BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface (CSurface9*)" <<
+			" format:" << (uint32_t)imageCreateInfo.format <<
+			" imageType:" << (uint32_t)imageCreateInfo.imageType <<
+			" tiling:" << (uint32_t)imageCreateInfo.tiling <<
+			" usage:" << (uint32_t)imageCreateInfo.usage;
 		return;
 	}
 
@@ -225,7 +228,7 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 		result = realDevice->mDevice.createImageView(&imageViewCreateInfo, nullptr, &mStagingImageView);
 		if (result != vk::Result::eSuccess)
 		{
-			BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
+			BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface (CSurface9*) vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
 			return;
 		}
 	}
@@ -236,7 +239,7 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 		result = realDevice->mDevice.createImageView(&imageViewCreateInfo, nullptr, &mStagingImageView);
 		if (result != vk::Result::eSuccess)
 		{
-			BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
+			BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface (CSurface9*) vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
 			return;
 		}
 	}
@@ -245,8 +248,6 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 RealSurface::RealSurface(RealDevice* realDevice, CVolume9* volume9)
 	: mRealDevice(realDevice)
 {
-	BOOST_LOG_TRIVIAL(info) << "RealSurface::RealSurface";
-
 	vk::Result result;
 
 	mRealFormat = ConvertFormat(volume9->mFormat);
@@ -264,11 +265,11 @@ RealSurface::RealSurface(RealDevice* realDevice, CVolume9* volume9)
 				'\0'
 			};
 
-			BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface unknown format: " << four;
+			BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface (CVolume9*) unknown format: " << four;
 		}
 		else
 		{
-			BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface unknown format: " << volume9->mFormat;
+			BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface (CVolume9*) unknown format: " << volume9->mFormat;
 		}
 
 	}
@@ -276,11 +277,11 @@ RealSurface::RealSurface(RealDevice* realDevice, CVolume9* volume9)
 	vk::ImageCreateInfo imageCreateInfo;
 	imageCreateInfo.imageType = vk::ImageType::e3D;
 	imageCreateInfo.format = mRealFormat;
-	imageCreateInfo.extent = vk::Extent3D(volume9->mWidth, volume9->mHeight, volume9->mDepth);
+	imageCreateInfo.extent = vk::Extent3D(volume9->mWidth, volume9->mHeight, volume9->mDepth); //volume9->mDepth
 	imageCreateInfo.mipLevels = 1;
 	imageCreateInfo.arrayLayers = 1;
 	imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
-	imageCreateInfo.tiling = vk::ImageTiling::eLinear;
+	imageCreateInfo.tiling = vk::ImageTiling::eOptimal; //vk::ImageTiling::eLinear
 	imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst;
 	imageCreateInfo.initialLayout = vk::ImageLayout::ePreinitialized;
 
@@ -291,7 +292,12 @@ RealSurface::RealSurface(RealDevice* realDevice, CVolume9* volume9)
 	result = (vk::Result)vmaCreateImage(mRealDevice->mAllocator, (VkImageCreateInfo*)&imageCreateInfo, &imageAllocInfo, (VkImage*)&mStagingImage, &mImageAllocation, &mImageAllocationInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
+		BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface (CVolume9*) vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
+		BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface (CVolume9*)" <<
+			" format:" << (uint32_t)imageCreateInfo.format <<
+			" imageType:" << (uint32_t)imageCreateInfo.imageType <<
+			" tiling:" << (uint32_t)imageCreateInfo.tiling <<
+			" usage:" << (uint32_t)imageCreateInfo.usage;
 		return;
 	}
 
@@ -305,7 +311,6 @@ RealSurface::RealSurface(RealDevice* realDevice, CVolume9* volume9)
 
 RealSurface::~RealSurface()
 {
-	BOOST_LOG_TRIVIAL(info) << "RealSurface::~RealSurface";
 	if (mRealDevice != nullptr)
 	{
 		auto& device = mRealDevice->mDevice;

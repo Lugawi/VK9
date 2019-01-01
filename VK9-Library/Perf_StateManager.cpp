@@ -394,7 +394,7 @@ void StateManager::CreateTexture(size_t id, void* argument1)
 	result = (vk::Result)vmaCreateImage(ptr->mRealDevice->mAllocator, (VkImageCreateInfo*)&imageCreateInfo, &imageAllocInfo, (VkImage*)&ptr->mImage, &ptr->mImageAllocation, &ptr->mImageAllocationInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
+		BOOST_LOG_TRIVIAL(fatal) << "StateManager::CreateTexture vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -496,7 +496,7 @@ void StateManager::CreateCubeTexture(size_t id, void* argument1)
 	result = (vk::Result)vmaCreateImage(ptr->mRealDevice->mAllocator, (VkImageCreateInfo*)&imageCreateInfo, &imageAllocInfo, (VkImage*)&ptr->mImage, &ptr->mImageAllocation, &ptr->mImageAllocationInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
+		BOOST_LOG_TRIVIAL(fatal) << "StateManager::CreateCubeTexture vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -593,7 +593,7 @@ void StateManager::CreateVolumeTexture(size_t id, void* argument1)
 	result = (vk::Result)vmaCreateImage(ptr->mRealDevice->mAllocator, (VkImageCreateInfo*)&imageCreateInfo, &imageAllocInfo, (VkImage*)&ptr->mImage, &ptr->mImageAllocation, &ptr->mImageAllocationInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSurface::RealSurface vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
+		BOOST_LOG_TRIVIAL(fatal) << "StateManager::CreateVolumeTexture vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
