@@ -24,6 +24,7 @@ misrepresented as being the original software.
 
 #include "Perf_CommandStreamManager.h"
 #include "Perf_ProcessQueue.h"
+#include "Utilities.h"
 
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
@@ -42,67 +43,36 @@ misrepresented as being the original software.
 #include <winuser.h>
 
 CommandStreamManager::CommandStreamManager()
-	: mWorkerThread(ProcessQueue, this), mRenderManager(mOptions)
+	: mWorkerThread(ProcessQueue, this), mRenderManager(mConfiguration)
 {
-	//Setup configuration & logging.
-	mOptionDescriptions.add_options()
-		("LogFile", boost::program_options::value<std::string>(), "The location of the log file.")
-		("LogLevel", boost::program_options::value<uint32_t>(), "The level of the log file.")
-		("EnableDebugLayers", boost::program_options::value<uint32_t>(), "Enable validation layers?");
+	//Setup Defaults;
+	mConfiguration["LogFile"] = "VK9.log";
 
+	//Load Configuration
+	LoadConfiguration("VK9.conf");
+
+	//Setup Logging.
 	boost::log::add_console_log(
 		std::cout, 
 		boost::log::keywords::format = "[%TimeStamp%]: %Message%",
 		boost::log::keywords::auto_flush = true
 	);
 
-	try
+	std::ofstream outfile(mConfiguration["LogFile"]);
+	if (!outfile)
 	{
-		boost::program_options::store(boost::program_options::parse_config_file<char>("VK9.conf", mOptionDescriptions), mOptions);
+		MessageBox(nullptr,
+			TEXT("The application does not have permission to write to the log file location. If running on Windows try running as administrator."),
+			TEXT("No Write Permission!"),
+			IDOK | MB_ICONERROR);
 	}
-	catch(const std::exception& ex)
-	{
-		BOOST_LOG_TRIVIAL(warning) << "program_options::parse_config_file: " << ex.what()
-								   << ", using default values";
-	}
-	boost::program_options::notify(mOptions);
+	outfile.close();
 
-	if (mOptions.count("LogFile"))
-	{
-		std::ofstream outfile(mOptions["LogFile"].as<std::string>());
-		if (!outfile)
-		{
-			MessageBox(nullptr,
-				TEXT("The application does not have permission to write to the log file location. If running on Windows try running as administrator."),
-				TEXT("No Write Permission!"),
-				IDOK | MB_ICONERROR);
-		}
-		outfile.close();
-
-		boost::log::add_file_log(
-			boost::log::keywords::file_name = mOptions["LogFile"].as<std::string>(),
-			boost::log::keywords::format = "[%TimeStamp%]: %Message%",
-			boost::log::keywords::auto_flush = true
-		);	
-	}
-	else
-	{
-		std::ofstream outfile("VK9.log");
-		if (!outfile)
-		{
-			MessageBox(nullptr,
-				TEXT("The application does not have permission to write to the log file location. If running on Windows try running as administrator."),
-				TEXT("No Write Permission!"),
-				IDOK | MB_ICONERROR);
-		}
-		outfile.close();
-
-		boost::log::add_file_log(
-			boost::log::keywords::file_name = "VK9.log",
-			boost::log::keywords::format = "[%TimeStamp%]: %Message%",
-			boost::log::keywords::auto_flush = true
-		);
-	}
+	boost::log::add_file_log(
+		boost::log::keywords::file_name = mConfiguration["LogFile"],
+		boost::log::keywords::format = "[%TimeStamp%]: %Message%",
+		boost::log::keywords::auto_flush = true
+	);
 
 	/*
 	trace,
@@ -118,9 +88,9 @@ CommandStreamManager::CommandStreamManager()
 	boost::log::trivial::severity_level logLevel = boost::log::trivial::warning;
 #endif
 
-	if (mOptions.count("LogLevel"))
+	if (!mConfiguration["LogLevel"].empty())
 	{
-		logLevel = (boost::log::trivial::severity_level)mOptions["LogLevel"].as<uint32_t>();
+		logLevel = (boost::log::trivial::severity_level)std::stoi(mConfiguration["LogLevel"]);
 	}
 
 	boost::log::core::get()->set_filter(boost::log::trivial::severity >= logLevel);
@@ -216,4 +186,30 @@ WorkItem* CommandStreamManager::GetWorkItem(IUnknown* caller)
 	returnValue->Caller = caller;
 
 	return returnValue;
+}
+
+void CommandStreamManager::LoadConfiguration(std::string filename)
+{
+	std::string key;
+	std::string value;
+	std::ifstream input(filename);
+
+	while (input)
+	{
+		//load key/value pair
+		std::getline(input, key, '=');
+		std::getline(input, value, '\n');
+
+		//scrub \r out just in case this is a DOS/Windows format file.
+		key.erase(std::remove(key.begin(), key.end(), '\r'), key.end());
+		value.erase(std::remove(value.begin(), value.end(), '\r'), value.end());
+
+		//Handle leading and trailing spaces.
+		Trim(key);
+		Trim(value);
+
+		mConfiguration[key] = value;
+	}
+
+	input.close();
 }

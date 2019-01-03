@@ -210,8 +210,8 @@ VKAPI_ATTR void VKAPI_CALL vkDebugReportMessageEXT(
 	);
 }
 
-StateManager::StateManager(boost::program_options::variables_map& options)
-	: mOptions(options)
+StateManager::StateManager(std::map<std::string, std::string>& configuration)
+	: mConfiguration(configuration)
 {
 
 }
@@ -278,9 +278,9 @@ void StateManager::CreateInstance()
 	bool enableDebugLayers = false;
 #endif
 
-	if (mOptions.count("EnableDebugLayers"))
+	if (!mConfiguration["EnableDebugLayers"].empty())
 	{
-		enableDebugLayers = mOptions["EnableDebugLayers"].as<uint32_t>();
+		enableDebugLayers = std::stoi(mConfiguration["EnableDebugLayers"]);
 	}
 
 	auto ptr = std::make_shared<RealInstance>(enableDebugLayers);

@@ -27,12 +27,13 @@ misrepresented as being the original software.
 
 struct RenderManager
 {
-	boost::program_options::variables_map& mOptions;
+	std::map<std::string, std::string>& mConfiguration; //should be static after load.
+
 	StateManager mStateManager;
 
 	float mEpsilon = std::numeric_limits<float>::epsilon();
 
-	RenderManager(boost::program_options::variables_map& options);
+	RenderManager(std::map<std::string, std::string>& configuration);
 	~RenderManager();
 
 	void UpdateBuffer(std::shared_ptr<RealDevice> realDevice);

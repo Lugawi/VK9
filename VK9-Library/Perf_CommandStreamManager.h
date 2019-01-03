@@ -20,10 +20,6 @@ misrepresented as being the original software.
 
 #include <atomic>
 #include <thread>
-#include <boost/lockfree/queue.hpp>
-#include <boost/lockfree/spsc_queue.hpp>
-#include <boost/program_options.hpp>
-#include <boost/program_options/parsers.hpp>
 
 #include "Perf_RenderManager.h"
 #include "WorkItemType.h"
@@ -47,13 +43,8 @@ misrepresented as being the original software.
 
 struct CommandStreamManager
 { 	
-	boost::program_options::variables_map mOptions;
-	boost::program_options::options_description mOptionDescriptions;
 	std::thread mWorkerThread;
 	RenderManager mRenderManager;
-
-	//boost::lockfree::spsc_queue<WorkItem*, boost::lockfree::capacity<14>> mWorkItems;
-	//boost::lockfree::spsc_queue<WorkItem*, boost::lockfree::capacity<14>> mUnusedWorkItems;
 
 	TinyQueue<WorkItem> mWorkItems;
 	TinyQueue<WorkItem> mUnusedWorkItems;
@@ -64,12 +55,17 @@ struct CommandStreamManager
 	std::atomic<vk::Result> mResult = vk::Result::eSuccess;
 	std::atomic<uint32_t> mFrameBit = 1;
 
+	std::map<std::string, std::string> mConfiguration; //should be static after load.
+
 	CommandStreamManager();
 	~CommandStreamManager();
 
 	size_t RequestWork(WorkItem* workItem);
 	size_t RequestWorkAndWait(WorkItem* workItem);
 	WorkItem* GetWorkItem(IUnknown* caller);
+
+private:
+	void LoadConfiguration(std::string filename);
 };
 
 #endif // COMMANDSTREAMMANAGER_H
