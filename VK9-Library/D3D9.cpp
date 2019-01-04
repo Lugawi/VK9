@@ -25,7 +25,7 @@ misrepresented as being the original software.
 #include "d3d9.h"
 #include "C9.h"
 
-//#include "PrivateTypes.h"
+#include "Utilities.h"
 
 IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
 {

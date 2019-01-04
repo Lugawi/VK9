@@ -803,23 +803,23 @@ vk::ShaderModule LoadShaderFromFile(vk::Device device, const char *filename)
 			result = device.createShaderModule(&moduleCreateInfo, nullptr, &module);
 			if (result != vk::Result::eSuccess)
 			{
-				BOOST_LOG_TRIVIAL(fatal) << "LoadShaderFromFile vkCreateShaderModule failed with return code of " << GetResultString((VkResult)result);
+				Log(fatal) << "LoadShaderFromFile vkCreateShaderModule failed with return code of " << GetResultString((VkResult)result);
 			}
 			else
 			{
-				BOOST_LOG_TRIVIAL(info) << "LoadShaderFromFile vkCreateShaderModule succeeded. " << filename;
+				Log(info) << "LoadShaderFromFile vkCreateShaderModule succeeded. " << filename;
 			}
 		}
 		else
 		{
-			BOOST_LOG_TRIVIAL(fatal) << "LoadShaderFromFile unable to read file. " << filename;
+			Log(fatal) << "LoadShaderFromFile unable to read file. " << filename;
 		}
 		free(data);
 		fclose(fp);
 	}
 	else
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "LoadShaderFromFile unable to open file. " << filename;
+		Log(fatal) << "LoadShaderFromFile unable to open file. " << filename;
 	}
 
 	return module;
@@ -837,7 +837,7 @@ vk::ShaderModule LoadShaderFromResource(vk::Device device, WORD resource)
 
 	if (res == FALSE)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "LoadShaderFromResource dllModule is null.";
+		Log(fatal) << "LoadShaderFromResource dllModule is null.";
 	}
 	else
 	{
@@ -856,21 +856,21 @@ vk::ShaderModule LoadShaderFromResource(vk::Device device, WORD resource)
 				result = device.createShaderModule(&moduleCreateInfo, nullptr, &module);
 				if (result != vk::Result::eSuccess)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "LoadShaderFromResource vkCreateShaderModule failed with return code of " << GetResultString((VkResult)result);
+					Log(fatal) << "LoadShaderFromResource vkCreateShaderModule failed with return code of " << GetResultString((VkResult)result);
 				}
 				else
 				{
-					BOOST_LOG_TRIVIAL(info) << "LoadShaderFromResource vkCreateShaderModule succeeded.";
+					Log(info) << "LoadShaderFromResource vkCreateShaderModule succeeded.";
 				}
 			}
 			else
 			{
-				BOOST_LOG_TRIVIAL(fatal) << "LoadShaderFromResource resource data is null.";
+				Log(fatal) << "LoadShaderFromResource resource data is null.";
 			}
 		}
 		else
 		{
-			BOOST_LOG_TRIVIAL(fatal) << "LoadShaderFromResource resource not found.";
+			Log(fatal) << "LoadShaderFromResource resource not found.";
 		}
 
 		FreeLibrary(dllModule);

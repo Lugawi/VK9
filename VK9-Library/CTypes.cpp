@@ -23,8 +23,9 @@ misrepresented as being the original software.
 */
 
 #include "CTypes.h"
-
 #include "CVertexBuffer9.h"
+
+#include "Utilities.h"
 
 StreamSource::StreamSource()
 	: StreamSource(0, nullptr, 0, 0)

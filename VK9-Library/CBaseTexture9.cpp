@@ -91,7 +91,7 @@ HRESULT STDMETHODCALLTYPE CBaseTexture9::FreePrivateData(REFGUID refguid)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CBaseTexture9::FreePrivateData is not implemented!";
+	Log(warning) << "CBaseTexture9::FreePrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -100,7 +100,7 @@ DWORD STDMETHODCALLTYPE CBaseTexture9::GetPriority()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CBaseTexture9::GetPriority is not implemented!";
+	Log(warning) << "CBaseTexture9::GetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -109,7 +109,7 @@ HRESULT STDMETHODCALLTYPE CBaseTexture9::GetPrivateData(REFGUID refguid, void* p
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CBaseTexture9::GetPrivateData is not implemented!";
+	Log(warning) << "CBaseTexture9::GetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -118,7 +118,7 @@ void STDMETHODCALLTYPE CBaseTexture9::PreLoad()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CBaseTexture9::PreLoad is not implemented!";
+	Log(warning) << "CBaseTexture9::PreLoad is not implemented!" << std::endl;
 
 	return; 
 }
@@ -127,7 +127,7 @@ DWORD STDMETHODCALLTYPE CBaseTexture9::SetPriority(DWORD PriorityNew)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CBaseTexture9::SetPriority is not implemented!";
+	Log(warning) << "CBaseTexture9::SetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -136,7 +136,7 @@ HRESULT STDMETHODCALLTYPE CBaseTexture9::SetPrivateData(REFGUID refguid, const v
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CBaseTexture9::SetPrivateData is not implemented!";
+	Log(warning) << "CBaseTexture9::SetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -145,7 +145,7 @@ VOID STDMETHODCALLTYPE CBaseTexture9::GenerateMipSubLevels()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CBaseTexture9::GenerateMipSubLevels is not implemented!";
+	Log(warning) << "CBaseTexture9::GenerateMipSubLevels is not implemented!" << std::endl;
 
 	return;
 }
@@ -154,7 +154,7 @@ D3DTEXTUREFILTERTYPE STDMETHODCALLTYPE CBaseTexture9::GetAutoGenFilterType()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CBaseTexture9::GetAutoGenFilterType is not implemented!";
+	Log(warning) << "CBaseTexture9::GetAutoGenFilterType is not implemented!" << std::endl;
 
 	return D3DTEXF_NONE;
 }
@@ -163,7 +163,7 @@ DWORD STDMETHODCALLTYPE CBaseTexture9::GetLOD()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CBaseTexture9::GetLOD is not implemented!";
+	Log(warning) << "CBaseTexture9::GetLOD is not implemented!" << std::endl;
 
 	return 0;
 }
@@ -173,7 +173,7 @@ DWORD STDMETHODCALLTYPE CBaseTexture9::GetLevelCount()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CBaseTexture9::GetLevelCount is not implemented!";
+	Log(warning) << "CBaseTexture9::GetLevelCount is not implemented!" << std::endl;
 
 	return 0;
 }
@@ -183,7 +183,7 @@ HRESULT STDMETHODCALLTYPE CBaseTexture9::SetAutoGenFilterType(D3DTEXTUREFILTERTY
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CBaseTexture9::SetAutoGenFilterType is not implemented!";
+	Log(warning) << "CBaseTexture9::SetAutoGenFilterType is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -192,7 +192,7 @@ DWORD STDMETHODCALLTYPE CBaseTexture9::SetLOD(DWORD LODNew)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CBaseTexture9::SetLOD is not implemented!";
+	Log(warning) << "CBaseTexture9::SetLOD is not implemented!" << std::endl;
 
 	return 0;
 }

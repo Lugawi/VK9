@@ -26,7 +26,6 @@ misrepresented as being the original software.
 #include "d3d9.h"
 #include "d3d11shader.h"
 #include "ShaderConverter.h"
-#include <boost/log/trivial.hpp>
 #include <fstream>
 
 #include "CDevice9.h"
@@ -51,7 +50,7 @@ const uint16_t mShaderTypeVertex = 0xFFFE;
     ((uint32_t)(uint8_t)(c2) << 8) | \
     ((uint32_t)(uint8_t)(c3)))
 
-boost::log::basic_record_ostream<char>& operator<< (boost::log::basic_record_ostream<char>& os, GLSLstd450 code)
+std::ostream& operator<< (std::ostream& os, GLSLstd450 code)
 {
 	switch (code)
 	{
@@ -141,7 +140,7 @@ boost::log::basic_record_ostream<char>& operator<< (boost::log::basic_record_ost
 	return os << static_cast<std::uint32_t>(code);
 }
 
-boost::log::basic_record_ostream<char>& operator<< (boost::log::basic_record_ostream<char>& os, spv::Op code)
+std::ostream& operator<< (std::ostream& os, spv::Op code)
 {
 	switch (code)
 	{
@@ -482,7 +481,7 @@ boost::log::basic_record_ostream<char>& operator<< (boost::log::basic_record_ost
 	return os << static_cast<std::uint32_t>(code);
 }
 
-boost::log::basic_record_ostream<char>& operator<< (boost::log::basic_record_ostream<char>& os, TypeDescription& typeDescription)
+std::ostream& operator<< (std::ostream& os, TypeDescription& typeDescription)
 {
 	if (typeDescription.PrimaryType == spv::OpTypePointer)
 	{
@@ -784,7 +783,7 @@ uint32_t ShaderConverter::GetSpirVTypeId(TypeDescription& registerType, uint32_t
 		mTypeInstructions.push_back(id); //Id		
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "GetSpirVTypeId - Unsupported data type " << registerType.PrimaryType;
+		Log(warning) << "GetSpirVTypeId - Unsupported data type " << registerType.PrimaryType << std::endl;
 		break;
 	}
 
@@ -1225,14 +1224,14 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "GetIdByRegister - Id not found register " << registerNumber << " (" << registerType << ")";
+		Log(warning) << "GetIdByRegister - Id not found register " << registerNumber << " (" << registerType << ")" << std::endl;
 		break;
 	}
 
 
 	if (!id)
 	{
-		BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::GetIdByRegister - Id was zero!";
+		Log(warning) << "ShaderConverter::GetIdByRegister - Id was zero!" << std::endl;
 	}
 
 	return id;
@@ -1465,10 +1464,10 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 		break;
 	case D3DSPSM_BIAS:
 		//Nobody seems to know what bias does.
-		BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::GetSwizzledId - Unsupported modifier type D3DSPSM_BIAS";
+		Log(warning) << "ShaderConverter::GetSwizzledId - Unsupported modifier type D3DSPSM_BIAS" << std::endl;
 		break;
 	case D3DSPSM_BIASNEG:
-		BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::GetSwizzledId - Unsupported modifier type D3DSPSM_BIASNEG";
+		Log(warning) << "ShaderConverter::GetSwizzledId - Unsupported modifier type D3DSPSM_BIASNEG" << std::endl;
 		break;
 	case D3DSPSM_SIGN:
 		if (loadedType.PrimaryType == spv::OpTypeFloat || loadedType.SecondaryType == spv::OpTypeFloat)
@@ -1529,16 +1528,16 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 		}
 		break;
 	case D3DSPSM_X2:
-		BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::GetSwizzledId - Unsupported modifier type D3DSPSM_X2";
+		Log(warning) << "ShaderConverter::GetSwizzledId - Unsupported modifier type D3DSPSM_X2" << std::endl;
 		break;
 	case D3DSPSM_X2NEG:
-		BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::GetSwizzledId - Unsupported modifier type D3DSPSM_X2NEG";
+		Log(warning) << "ShaderConverter::GetSwizzledId - Unsupported modifier type D3DSPSM_X2NEG" << std::endl;
 		break;
 	case D3DSPSM_DZ:
-		BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::GetSwizzledId - Unsupported modifier type D3DSPSM_DZ";
+		Log(warning) << "ShaderConverter::GetSwizzledId - Unsupported modifier type D3DSPSM_DZ" << std::endl;
 		break;
 	case D3DSPSM_DW:
-		BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::GetSwizzledId - Unsupported modifier type D3DSPSM_DW";
+		Log(warning) << "ShaderConverter::GetSwizzledId - Unsupported modifier type D3DSPSM_DW" << std::endl;
 		break;
 	case D3DSPSM_ABS:
 		if (loadedType.PrimaryType == spv::OpTypeFloat || loadedType.SecondaryType == spv::OpTypeFloat)
@@ -1583,10 +1582,10 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 		}
 		break;
 	case D3DSPSM_NOT:
-		BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::GetSwizzledId - Unsupported modifier type D3DSPSM_NOT";
+		Log(warning) << "ShaderConverter::GetSwizzledId - Unsupported modifier type D3DSPSM_NOT" << std::endl;
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::GetSwizzledId - Unsupported modifier type " << modifier;
+		Log(warning) << "ShaderConverter::GetSwizzledId - Unsupported modifier type " << modifier << std::endl;
 		break;
 	}
 
@@ -1722,7 +1721,7 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 		Push(spv::OpVectorShuffle, vectorTypeId, outputId, loadedId, loadedId, xIndex, yIndex, zIndex, wIndex);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "GetSwizzledId - Unsupported component count  " << outputComponentCount;
+		Log(warning) << "GetSwizzledId - Unsupported component count  " << outputComponentCount << std::endl;
 		break;
 	}
 
@@ -1894,7 +1893,7 @@ uint32_t ShaderConverter::SwizzleValue(const Token& token, uint32_t inputId)
 			Push(spv::OpVectorShuffle, outputTypeId, outputId, inputId, inputId, index[0], index[1], index[2], index[3]);
 			break;
 		default:
-			BOOST_LOG_TRIVIAL(warning) << "GetSwizzledId - Unsupported component count  " << outputComponentCount;
+			Log(warning) << "GetSwizzledId - Unsupported component count  " << outputComponentCount << std::endl;
 			break;
 		}
 	}
@@ -2224,7 +2223,7 @@ uint32_t ShaderConverter::ApplyWriteMask(const Token& token, uint32_t modifiedId
 			}
 			else
 			{
-				BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::ApplyWriteMask - unsupported data type for clamp!";
+				Log(warning) << "ShaderConverter::ApplyWriteMask - unsupported data type for clamp!" << std::endl;
 			}
 		}
 		else if (saturatedInputType.PrimaryType == spv::OpTypeFloat)
@@ -2237,7 +2236,7 @@ uint32_t ShaderConverter::ApplyWriteMask(const Token& token, uint32_t modifiedId
 		}
 		else
 		{
-			BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::ApplyWriteMask - unsupported data type for clamp!";
+			Log(warning) << "ShaderConverter::ApplyWriteMask - unsupported data type for clamp!" << std::endl;
 		}
 
 		inputId = saturatedInputId;
@@ -2245,12 +2244,12 @@ uint32_t ShaderConverter::ApplyWriteMask(const Token& token, uint32_t modifiedId
 
 	if (token.i & D3DSPDM_PARTIALPRECISION)
 	{
-		BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::ApplyWriteMask - D3DSPDM_PARTIALPRECISION is not supported!";
+		Log(warning) << "ShaderConverter::ApplyWriteMask - D3DSPDM_PARTIALPRECISION is not supported!" << std::endl;
 	}
 
 	if (token.i & D3DSPDM_MSAMPCENTROID)
 	{
-		BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::ApplyWriteMask - D3DSPDM_MSAMPCENTROID is not supported!";
+		Log(warning) << "ShaderConverter::ApplyWriteMask - D3DSPDM_MSAMPCENTROID is not supported!" << std::endl;
 	}
 
 	/*
@@ -2735,7 +2734,7 @@ void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t input
 	PushName(inputId, registerName);
 
 #ifdef _EXTRA_SHADER_DEBUG_INFO
-	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::GenerateDecoration created " << registerName << " @ " << location;
+	Log(info) << "ShaderConverter::GenerateDecoration created " << registerName << " @ " << location << std::endl;
 #endif
 }
 
@@ -3187,7 +3186,7 @@ void ShaderConverter::CreateSpirVModule()
 
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::CreateSpirVModule vkCreateShaderModule failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "ShaderConverter::CreateSpirVModule vkCreateShaderModule failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 }
@@ -3512,22 +3511,22 @@ void ShaderConverter::PushInverseSqrt(uint32_t resultTypeId, uint32_t resultId, 
 
 	if (resultType.PrimaryType != argumentType.PrimaryType)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushInverseSqrt PrimaryType mismatch " << resultType.PrimaryType << " != " << argumentType.PrimaryType;
+		Log(fatal) << "ShaderConverter::PushInverseSqrt PrimaryType mismatch " << resultType.PrimaryType << " != " << argumentType.PrimaryType << std::endl;
 	}
 
 	if (resultType.SecondaryType != argumentType.SecondaryType)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushInverseSqrt SecondaryType mismatch " << resultType.SecondaryType << " != " << argumentType.SecondaryType;
+		Log(fatal) << "ShaderConverter::PushInverseSqrt SecondaryType mismatch " << resultType.SecondaryType << " != " << argumentType.SecondaryType << std::endl;
 	}
 
 	if (resultType.TernaryType != argumentType.TernaryType)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushInverseSqrt TernaryType mismatch " << resultType.TernaryType << " != " << argumentType.TernaryType;
+		Log(fatal) << "ShaderConverter::PushInverseSqrt TernaryType mismatch " << resultType.TernaryType << " != " << argumentType.TernaryType << std::endl;
 	}
 
 	if (resultType.ComponentCount != argumentType.ComponentCount)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushInverseSqrt ComponentCount mismatch " << resultType.ComponentCount << " != " << argumentType.ComponentCount;
+		Log(fatal) << "ShaderConverter::PushInverseSqrt ComponentCount mismatch " << resultType.ComponentCount << " != " << argumentType.ComponentCount << std::endl;
 	}
 #endif
 
@@ -3547,22 +3546,22 @@ void ShaderConverter::PushCos(uint32_t resultTypeId, uint32_t resultId, uint32_t
 
 	if (resultType.PrimaryType != argumentType.PrimaryType)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushCos PrimaryType mismatch " << resultType.PrimaryType << " != " << argumentType.PrimaryType;
+		Log(fatal) << "ShaderConverter::PushCos PrimaryType mismatch " << resultType.PrimaryType << " != " << argumentType.PrimaryType << std::endl;
 	}
 
 	if (resultType.SecondaryType != argumentType.SecondaryType)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushCos SecondaryType mismatch " << resultType.SecondaryType << " != " << argumentType.SecondaryType;
+		Log(fatal) << "ShaderConverter::PushCos SecondaryType mismatch " << resultType.SecondaryType << " != " << argumentType.SecondaryType << std::endl;
 	}
 
 	if (resultType.TernaryType != argumentType.TernaryType)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushCos TernaryType mismatch " << resultType.TernaryType << " != " << argumentType.TernaryType;
+		Log(fatal) << "ShaderConverter::PushCos TernaryType mismatch " << resultType.TernaryType << " != " << argumentType.TernaryType << std::endl;
 	}
 
 	if (resultType.ComponentCount != argumentType.ComponentCount)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushCos ComponentCount mismatch " << resultType.ComponentCount << " != " << argumentType.ComponentCount;
+		Log(fatal) << "ShaderConverter::PushCos ComponentCount mismatch " << resultType.ComponentCount << " != " << argumentType.ComponentCount << std::endl;
 	}
 #endif
 
@@ -3582,22 +3581,22 @@ void ShaderConverter::PushSin(uint32_t resultTypeId, uint32_t resultId, uint32_t
 
 	if (resultType.PrimaryType != argumentType.PrimaryType)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushSin PrimaryType mismatch " << resultType.PrimaryType << " != " << argumentType.PrimaryType;
+		Log(fatal) << "ShaderConverter::PushSin PrimaryType mismatch " << resultType.PrimaryType << " != " << argumentType.PrimaryType << std::endl;
 	}
 
 	if (resultType.SecondaryType != argumentType.SecondaryType)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushSin SecondaryType mismatch " << resultType.SecondaryType << " != " << argumentType.SecondaryType;
+		Log(fatal) << "ShaderConverter::PushSin SecondaryType mismatch " << resultType.SecondaryType << " != " << argumentType.SecondaryType << std::endl;
 	}
 
 	if (resultType.TernaryType != argumentType.TernaryType)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushSin TernaryType mismatch " << resultType.TernaryType << " != " << argumentType.TernaryType;
+		Log(fatal) << "ShaderConverter::PushSin TernaryType mismatch " << resultType.TernaryType << " != " << argumentType.TernaryType << std::endl;
 	}
 
 	if (resultType.ComponentCount != argumentType.ComponentCount)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushSin ComponentCount mismatch " << resultType.ComponentCount << " != " << argumentType.ComponentCount;
+		Log(fatal) << "ShaderConverter::PushSin ComponentCount mismatch " << resultType.ComponentCount << " != " << argumentType.ComponentCount << std::endl;
 	}
 #endif
 
@@ -3617,22 +3616,22 @@ void ShaderConverter::PushLoad(uint32_t resultTypeId, uint32_t resultId, uint32_
 
 	if (pointerType.PrimaryType != spv::OpTypePointer)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushLoad PrimaryType is not OpPointer " << pointerType.PrimaryType;
+		Log(fatal) << "ShaderConverter::PushLoad PrimaryType is not OpPointer " << pointerType.PrimaryType << std::endl;
 	}
 
 	if (pointerType.SecondaryType != resultType.PrimaryType)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushLoad PrimaryType mismatch " << pointerType.SecondaryType << " != " << resultType.PrimaryType;
+		Log(fatal) << "ShaderConverter::PushLoad PrimaryType mismatch " << pointerType.SecondaryType << " != " << resultType.PrimaryType << std::endl;
 	}
 
 	if (pointerType.TernaryType != resultType.SecondaryType)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushLoad SecondaryType mismatch " << pointerType.TernaryType << " != " << resultType.SecondaryType;
+		Log(fatal) << "ShaderConverter::PushLoad SecondaryType mismatch " << pointerType.TernaryType << " != " << resultType.SecondaryType << std::endl;
 	}
 
 	if (pointerType.ComponentCount != resultType.ComponentCount)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushLoad ComponentCount mismatch " << pointerType.ComponentCount << " != " << resultType.ComponentCount;
+		Log(fatal) << "ShaderConverter::PushLoad ComponentCount mismatch " << pointerType.ComponentCount << " != " << resultType.ComponentCount << std::endl;
 	}
 #endif
 
@@ -3654,22 +3653,22 @@ void ShaderConverter::PushStore(uint32_t pointerId, uint32_t objectId)
 
 	if (pointerType.PrimaryType != spv::OpTypePointer)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushStore PrimaryType is not OpPointer " << pointerType.PrimaryType;
+		Log(fatal) << "ShaderConverter::PushStore PrimaryType is not OpPointer " << pointerType.PrimaryType << std::endl;
 	}
 
 	if (pointerType.SecondaryType != objectType.PrimaryType)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushStore PrimaryType mismatch " << pointerType.SecondaryType << " != " << objectType.PrimaryType;
+		Log(fatal) << "ShaderConverter::PushStore PrimaryType mismatch " << pointerType.SecondaryType << " != " << objectType.PrimaryType << std::endl;
 	}
 
 	if (pointerType.TernaryType != objectType.SecondaryType)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushStore SecondaryType mismatch " << pointerType.TernaryType << " != " << objectType.SecondaryType;
+		Log(fatal) << "ShaderConverter::PushStore SecondaryType mismatch " << pointerType.TernaryType << " != " << objectType.SecondaryType << std::endl;
 	}
 
 	if (pointerType.ComponentCount != objectType.ComponentCount)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::PushStore ComponentCount mismatch " << pointerType.ComponentCount << " != " << objectType.ComponentCount;
+		Log(fatal) << "ShaderConverter::PushStore ComponentCount mismatch " << pointerType.ComponentCount << " != " << objectType.ComponentCount << std::endl;
 	}
 #endif
 
@@ -3688,7 +3687,7 @@ void ShaderConverter::Push(spv::Op code)
 {
 	mFunctionDefinitionInstructions.push_back(Pack(1, code)); //size,Type
 
-	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::Push " << code;
+	Log(info) << "ShaderConverter::Push " << code << std::endl;
 }
 
 void ShaderConverter::Push(spv::Op code, uint32_t argument1)
@@ -3699,7 +3698,7 @@ void ShaderConverter::Push(spv::Op code, uint32_t argument1)
 #ifdef _EXTRA_SHADER_DEBUG_INFO
 	auto& argumentType1 = mIdTypePairs[argument1];
 
-	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")";
+	Log(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << std::endl;
 #endif
 }
 
@@ -3713,7 +3712,7 @@ void ShaderConverter::Push(spv::Op code, uint32_t argument1, uint32_t argument2)
 	auto& argumentType1 = mIdTypePairs[argument1];
 	auto& argumentType2 = mIdTypePairs[argument2];
 
-	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")";
+	Log(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << std::endl;
 #endif	
 }
 
@@ -3729,7 +3728,7 @@ void ShaderConverter::Push(spv::Op code, uint32_t argument1, uint32_t argument2,
 	auto& argumentType2 = mIdTypePairs[argument2];
 	auto& argumentType3 = mIdTypePairs[argument3];
 
-	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")";
+	Log(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << std::endl;
 #endif	
 }
 
@@ -3747,7 +3746,7 @@ void ShaderConverter::Push(spv::Op code, uint32_t argument1, uint32_t argument2,
 	auto& argumentType3 = mIdTypePairs[argument3];
 	auto& argumentType4 = mIdTypePairs[argument4];
 
-	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")";
+	Log(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << std::endl;
 #endif
 }
 
@@ -3767,7 +3766,7 @@ void ShaderConverter::Push(spv::Op code, uint32_t argument1, uint32_t argument2,
 	auto& argumentType4 = mIdTypePairs[argument4];
 	auto& argumentType5 = mIdTypePairs[argument5];
 
-	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")";
+	Log(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")" << std::endl;
 #endif
 }
 
@@ -3787,7 +3786,7 @@ void ShaderConverter::Push(spv::Op code, uint32_t argument1, uint32_t argument2,
 	auto& argumentType4 = mIdTypePairs[argument4];
 	auto& argumentType5 = mIdTypePairs[argument5];
 
-	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")";
+	Log(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")" << std::endl;
 #endif
 }
 
@@ -3809,7 +3808,7 @@ void ShaderConverter::Push(spv::Op code, uint32_t argument1, uint32_t argument2,
 	auto& argumentType5 = mIdTypePairs[argument5];
 	auto& argumentType6 = mIdTypePairs[argument6];
 
-	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")" << ", " << argument6 << "(" << argumentType6 << ")";
+	Log(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")" << ", " << argument6 << "(" << argumentType6 << ")" << std::endl;
 #endif
 }
 
@@ -3831,7 +3830,7 @@ void ShaderConverter::Push(spv::Op code, uint32_t argument1, uint32_t argument2,
 	auto& argumentType5 = mIdTypePairs[argument5];
 	auto& argumentType6 = mIdTypePairs[argument6];
 
-	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")" << ", " << argument6 << "(" << argumentType6 << ")";
+	Log(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")" << ", " << argument6 << "(" << argumentType6 << ")" << std::endl;
 #endif
 }
 
@@ -3855,7 +3854,7 @@ void ShaderConverter::Push(spv::Op code, uint32_t argument1, uint32_t argument2,
 	auto& argumentType6 = mIdTypePairs[argument6];
 	auto& argumentType7 = mIdTypePairs[argument7];
 
-	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")" << ", " << argument6 << "(" << argumentType6 << ")" << ", " << argument7 << "(" << argumentType7 << ")";
+	Log(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")" << ", " << argument6 << "(" << argumentType6 << ")" << ", " << argument7 << "(" << argumentType7 << ")" << std::endl;
 #endif
 }
 
@@ -3881,7 +3880,7 @@ void ShaderConverter::Push(spv::Op code, uint32_t argument1, uint32_t argument2,
 	auto& argumentType7 = mIdTypePairs[argument7];
 	auto& argumentType8 = mIdTypePairs[argument8];
 
-	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")" << ", " << argument6 << "(" << argumentType6 << ")" << ", " << argument7 << "(" << argumentType7 << ")" << ", " << argument8 << "(" << argumentType8 << ")";
+	Log(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")" << ", " << argument6 << "(" << argumentType6 << ")" << ", " << argument7 << "(" << argumentType7 << ")" << ", " << argument8 << "(" << argumentType8 << ")" << std::endl;
 #endif
 }
 
@@ -3909,7 +3908,7 @@ void ShaderConverter::Push(spv::Op code, uint32_t argument1, uint32_t argument2,
 	auto& argumentType8 = mIdTypePairs[argument8];
 	auto& argumentType9 = mIdTypePairs[argument9];
 
-	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")" << ", " << argument6 << "(" << argumentType6 << ")" << ", " << argument7 << "(" << argumentType7 << ")" << ", " << argument8 << "(" << argumentType8 << ")" << ", " << argument9 << "(" << argumentType9 << ")";
+	Log(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")" << ", " << argument6 << "(" << argumentType6 << ")" << ", " << argument7 << "(" << argumentType7 << ")" << ", " << argument8 << "(" << argumentType8 << ")" << ", " << argument9 << "(" << argumentType9 << ")" << std::endl;
 #endif
 }
 
@@ -3939,7 +3938,7 @@ void ShaderConverter::Push(spv::Op code, uint32_t argument1, uint32_t argument2,
 	auto& argumentType9 = mIdTypePairs[argument9];
 	auto& argumentType10 = mIdTypePairs[argument10];
 
-	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")" << ", " << argument6 << "(" << argumentType6 << ")" << ", " << argument7 << "(" << argumentType7 << ")" << ", " << argument8 << "(" << argumentType8 << ")" << ", " << argument9 << "(" << argumentType9 << ")" << ", " << argument10 << "(" << argumentType10 << ")";
+	Log(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")" << ", " << argument6 << "(" << argumentType6 << ")" << ", " << argument7 << "(" << argumentType7 << ")" << ", " << argument8 << "(" << argumentType8 << ")" << ", " << argument9 << "(" << argumentType9 << ")" << ", " << argument10 << "(" << argumentType10 << ")" << std::endl;
 #endif
 }
 
@@ -3971,7 +3970,7 @@ void ShaderConverter::Push(spv::Op code, uint32_t argument1, uint32_t argument2,
 	auto& argumentType10 = mIdTypePairs[argument10];
 	auto& argumentType11 = mIdTypePairs[argument11];
 
-	BOOST_LOG_TRIVIAL(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")" << ", " << argument6 << "(" << argumentType6 << ")" << ", " << argument7 << "(" << argumentType7 << ")" << ", " << argument8 << "(" << argumentType8 << ")" << ", " << argument9 << "(" << argumentType9 << ")" << ", " << argument10 << "(" << argumentType10 << ")" << ", " << argument11 << "(" << argumentType11 << ")";
+	Log(info) << "ShaderConverter::Push " << code << " " << argument1 << "(" << argumentType1 << ")" << ", " << argument2 << "(" << argumentType2 << ")" << ", " << argument3 << "(" << argumentType3 << ")" << ", " << argument4 << "(" << argumentType4 << ")" << ", " << argument5 << "(" << argumentType5 << ")" << ", " << argument6 << "(" << argumentType6 << ")" << ", " << argument7 << "(" << argumentType7 << ")" << ", " << argument8 << "(" << argumentType8 << ")" << ", " << argument9 << "(" << argumentType9 << ")" << ", " << argument10 << "(" << argumentType10 << ")" << ", " << argument11 << "(" << argumentType11 << ")" << std::endl;
 #endif
 }
 
@@ -4029,7 +4028,7 @@ void ShaderConverter::Process_DCL_Pixel()
 			typeDescription.ComponentCount = 4;
 			break;
 		default:
-			BOOST_LOG_TRIVIAL(warning) << "Process_DCL - Unsupported component type " << registerComponents;
+			Log(warning) << "Process_DCL - Unsupported component type " << registerComponents << std::endl;
 			break;
 		}
 	}
@@ -4092,13 +4091,13 @@ void ShaderConverter::Process_DCL_Pixel()
 
 		break;
 	case D3DSPR_MISCTYPE:
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::Process_DCL_Pixel unsupported register type D3DSPR_MISCTYPE";
+		Log(fatal) << "ShaderConverter::Process_DCL_Pixel unsupported register type D3DSPR_MISCTYPE" << std::endl;
 	default:
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::Process_DCL_Pixel unsupported register type " << registerType;
+		Log(fatal) << "ShaderConverter::Process_DCL_Pixel unsupported register type " << registerType << std::endl;
 		break;
 	}
 
-	BOOST_LOG_TRIVIAL(info) << "DCL " << GetUsageName((_D3DDECLUSAGE)usage) << "(" << usageIndex << ") - " << GetRegisterTypeName(registerType) << "(" << registerNumber << ") = " << typeDescription;
+	Log(info) << "DCL " << GetUsageName((_D3DDECLUSAGE)usage) << "(" << usageIndex << ") - " << GetRegisterTypeName(registerType) << "(" << registerNumber << ") = " << typeDescription << std::endl;
 }
 
 void ShaderConverter::Process_DCL_Vertex()
@@ -4175,7 +4174,7 @@ void ShaderConverter::Process_DCL_Vertex()
 		typeDescription.ComponentCount = 4;
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_DCL - Unsupported component type " << registerComponents;
+		Log(warning) << "Process_DCL - Unsupported component type " << registerComponents << std::endl;
 		break;
 	}
 
@@ -4328,11 +4327,11 @@ void ShaderConverter::Process_DCL_Vertex()
 
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(fatal) << "ShaderConverter::Process_DCL_Vertex unsupported register type " << registerType;
+		Log(fatal) << "ShaderConverter::Process_DCL_Vertex unsupported register type " << registerType << std::endl;
 		break;
 	}
 
-	BOOST_LOG_TRIVIAL(info) << "DCL " << GetUsageName((_D3DDECLUSAGE)usage) << "(" << usageIndex << ") - " << GetRegisterTypeName(registerType) << "(" << registerNumber << ") = " << typeDescription;
+	Log(info) << "DCL " << GetUsageName((_D3DDECLUSAGE)usage) << "(" << usageIndex << ") - " << GetRegisterTypeName(registerType) << "(" << registerNumber << ") = " << typeDescription << std::endl;
 }
 
 void ShaderConverter::Process_DCL()
@@ -4350,7 +4349,7 @@ void ShaderConverter::Process_DCL()
 		else
 		{
 			Process_DCL_Vertex();
-			//BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::Process_DCL unsupported shader version " << mMajorVersion;
+			//Log(warning) << "ShaderConverter::Process_DCL unsupported shader version " << mMajorVersion;
 		}
 	}
 	else
@@ -4366,7 +4365,7 @@ void ShaderConverter::Process_DCL()
 		else
 		{
 			Process_DCL_Pixel();
-			//BOOST_LOG_TRIVIAL(warning) << "ShaderConverter::Process_DCL unsupported shader version " << mMajorVersion;
+			//Log(warning) << "ShaderConverter::Process_DCL unsupported shader version " << mMajorVersion;
 		}
 	}
 }
@@ -4490,7 +4489,7 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 			Push(spv::OpFOrdGreaterThan, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		default:
-			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
+			Log(warning) << "Process_IFC - Unsupported data type " << dataType << std::endl;
 			break;
 		}
 		break;
@@ -4507,7 +4506,7 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 			Push(spv::OpFOrdEqual, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		default:
-			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
+			Log(warning) << "Process_IFC - Unsupported data type " << dataType << std::endl;
 			break;
 		}
 		break;
@@ -4524,7 +4523,7 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 			Push(spv::OpFOrdGreaterThanEqual, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		default:
-			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
+			Log(warning) << "Process_IFC - Unsupported data type " << dataType << std::endl;
 			break;
 		}
 		break;
@@ -4541,7 +4540,7 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 			Push(spv::OpFOrdLessThan, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		default:
-			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
+			Log(warning) << "Process_IFC - Unsupported data type " << dataType << std::endl;
 			break;
 		}
 		break;
@@ -4558,7 +4557,7 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 			Push(spv::OpFOrdNotEqual, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		default:
-			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
+			Log(warning) << "Process_IFC - Unsupported data type " << dataType << std::endl;
 			break;
 		}
 		break;
@@ -4575,12 +4574,12 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 			Push(spv::OpFOrdLessThanEqual, resultTypeId, resultId, argumentId1, argumentId2);
 			break;
 		default:
-			BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported data type " << dataType;
+			Log(warning) << "Process_IFC - Unsupported data type " << dataType << std::endl;
 			break;
 		}
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_IFC - Unsupported compare type " << extraInfo;
+		Log(warning) << "Process_IFC - Unsupported compare type " << extraInfo << std::endl;
 		break;
 	}
 
@@ -4690,7 +4689,7 @@ void ShaderConverter::Process_IF()
 		Push(spv::OpLabel, trueLabelId);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_IF - Unsupported data type " << dataType;
+		Log(warning) << "Process_IF - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -4940,7 +4939,7 @@ void ShaderConverter::Process_NRM()
 		Push(spv::OpExtInst, dataTypeId, resultId, mGlslExtensionId, GLSLstd450::GLSLstd450Normalize, argumentId1);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_NRM - Unsupported data type " << dataType;
+		Log(warning) << "Process_NRM - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -5083,7 +5082,7 @@ void ShaderConverter::Process_RSQ()
 		PushInverseSqrt(dataTypeId, resultId, argumentId1);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_RSQ - Unsupported data type " << dataType;
+		Log(warning) << "Process_RSQ - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -5138,7 +5137,7 @@ void ShaderConverter::Process_RCP()
 	case spv::OpTypeInt:
 		if (typeDescription.PrimaryType == spv::OpTypeVector)
 		{
-			BOOST_LOG_TRIVIAL(warning) << "Process_RCP - Unsupported data type vector of int.";
+			Log(warning) << "Process_RCP - Unsupported data type vector of int." << std::endl;
 		}
 		else
 		{
@@ -5146,7 +5145,7 @@ void ShaderConverter::Process_RCP()
 		}
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_RCP - Unsupported data type " << dataType;
+		Log(warning) << "Process_RCP - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -5417,7 +5416,7 @@ void ShaderConverter::Process_DST()
 		Push(spv::OpExtInst, dataTypeId, resultId, mGlslExtensionId, GLSLstd450::GLSLstd450Distance, argumentId1, argumentId2);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_DST - Unsupported data type " << dataType;
+		Log(warning) << "Process_DST - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -5478,7 +5477,7 @@ void ShaderConverter::Process_CRS()
 		Push(spv::OpExtInst, dataTypeId, resultId, mGlslExtensionId, GLSLstd450::GLSLstd450Cross, argumentId1, argumentId2);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_CRS - Unsupported data type " << dataType;
+		Log(warning) << "Process_CRS - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -5539,7 +5538,7 @@ void ShaderConverter::Process_POW()
 		Push(spv::OpExtInst, dataTypeId, resultId, mGlslExtensionId, GLSLstd450::GLSLstd450Pow, argumentId1, argumentId2);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_POW - Unsupported data type " << dataType;
+		Log(warning) << "Process_POW - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -5649,7 +5648,7 @@ void ShaderConverter::Process_MUL()
 		mIdTypePairs[resultId] = typeDescription;
 		Push(spv::OpFMul, dataTypeId, resultId, argumentId1, argumentId2);
 
-		BOOST_LOG_TRIVIAL(warning) << "Process_MUL - Unsupported data types " << argumentType1.PrimaryType << " " << argumentType2.PrimaryType;
+		Log(warning) << "Process_MUL - Unsupported data types " << argumentType1.PrimaryType << " " << argumentType2.PrimaryType << std::endl;
 	}
 
 	resultId = ApplyWriteMask(resultToken, resultId);
@@ -5709,7 +5708,7 @@ void ShaderConverter::Process_EXP()
 		Push(spv::OpExtInst, dataTypeId, resultId, mGlslExtensionId, GLSLstd450::GLSLstd450Exp2, argumentId1);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_EXP - Unsupported data type " << dataType;
+		Log(warning) << "Process_EXP - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -5765,7 +5764,7 @@ void ShaderConverter::Process_EXPP()
 		Push(spv::OpExtInst, dataTypeId, resultId, mGlslExtensionId, GLSLstd450::GLSLstd450Exp2, argumentId1);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_EXPP - Unsupported data type " << dataType;
+		Log(warning) << "Process_EXPP - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -5826,7 +5825,7 @@ void ShaderConverter::Process_LOG()
 		Push(spv::OpExtInst, dataTypeId, resultId, mGlslExtensionId, GLSLstd450::GLSLstd450Log2, argumentId1);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_LOG - Unsupported data type " << dataType;
+		Log(warning) << "Process_LOG - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -5887,7 +5886,7 @@ void ShaderConverter::Process_LOGP()
 		Push(spv::OpExtInst, dataTypeId, resultId, mGlslExtensionId, GLSLstd450::GLSLstd450Log2, argumentId1);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_LOGP - Unsupported data type " << dataType;
+		Log(warning) << "Process_LOGP - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -5992,7 +5991,7 @@ void ShaderConverter::Process_ABS()
 		Push(spv::OpExtInst, dataTypeId, resultId, mGlslExtensionId, GLSLstd450::GLSLstd450FAbs, argumentId1);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_ABS - Unsupported data type " << dataType;
+		Log(warning) << "Process_ABS - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -6125,7 +6124,7 @@ void ShaderConverter::Process_ADD()
 		mIdTypePairs[resultId] = typeDescription;
 		Push(spv::OpFAdd, dataTypeId, resultId, argumentId1, argumentId2);
 
-		BOOST_LOG_TRIVIAL(warning) << "Process_ADD - Unsupported data types " << argumentType1.PrimaryType << " " << argumentType2.PrimaryType;
+		Log(warning) << "Process_ADD - Unsupported data types " << argumentType1.PrimaryType << " " << argumentType2.PrimaryType << std::endl;
 	}
 
 	resultId = ApplyWriteMask(resultToken, resultId);
@@ -6256,7 +6255,7 @@ void ShaderConverter::Process_SUB()
 		mIdTypePairs[resultId] = typeDescription;
 		Push(spv::OpFSub, dataTypeId, resultId, argumentId1, argumentId2);
 
-		BOOST_LOG_TRIVIAL(warning) << "Process_SUB - Unsupported data types " << argumentType1.PrimaryType << " " << argumentType2.PrimaryType;
+		Log(warning) << "Process_SUB - Unsupported data types " << argumentType1.PrimaryType << " " << argumentType2.PrimaryType << std::endl;
 	}
 
 	resultId = ApplyWriteMask(resultToken, resultId);
@@ -6316,7 +6315,7 @@ void ShaderConverter::Process_MIN()
 		Push(spv::OpExtInst, dataTypeId, resultId, mGlslExtensionId, GLSLstd450::GLSLstd450FMin, argumentId1, argumentId2);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_MIN - Unsupported data type " << dataType;
+		Log(warning) << "Process_MIN - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -6377,7 +6376,7 @@ void ShaderConverter::Process_MAX()
 		Push(spv::OpExtInst, dataTypeId, resultId, mGlslExtensionId, GLSLstd450::GLSLstd450FMax, argumentId1, argumentId2);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_MAX - Unsupported data type " << dataType;
+		Log(warning) << "Process_MAX - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -6442,7 +6441,7 @@ void ShaderConverter::Process_SGE()
 		Push(spv::OpFUnordGreaterThanEqual, booleanTypeId, resultId, argumentId1, argumentId2);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_SGE - Unsupported data type " << dataType;
+		Log(warning) << "Process_SGE - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -6507,7 +6506,7 @@ void ShaderConverter::Process_SLT()
 		Push(spv::OpFUnordLessThan, booleanTypeId, resultId, argumentId1, argumentId2);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_SLT - Unsupported data type " << dataType;
+		Log(warning) << "Process_SLT - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -6755,7 +6754,7 @@ void ShaderConverter::Process_M4x4()
 		Push(spv::OpVectorTimesMatrix, dataTypeId, resultId, argumentId1, argumentId2);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_M4x4 - Unsupported data type " << dataType;
+		Log(warning) << "Process_M4x4 - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -6810,7 +6809,7 @@ void ShaderConverter::Process_M4x3()
 		Push(spv::OpVectorTimesMatrix, dataTypeId, resultId, argumentId1, argumentId2);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_M4x3 - Unsupported data type " << dataType;
+		Log(warning) << "Process_M4x3 - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -6865,7 +6864,7 @@ void ShaderConverter::Process_M3x4()
 		Push(spv::OpVectorTimesMatrix, dataTypeId, resultId, argumentId1, argumentId2);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_M3x4 - Unsupported data type " << dataType;
+		Log(warning) << "Process_M3x4 - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -6920,7 +6919,7 @@ void ShaderConverter::Process_M3x3()
 		Push(spv::OpVectorTimesMatrix, dataTypeId, resultId, argumentId1, argumentId2);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_M3x3 - Unsupported data type " << dataType;
+		Log(warning) << "Process_M3x3 - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -6975,7 +6974,7 @@ void ShaderConverter::Process_M3x2()
 		Push(spv::OpVectorTimesMatrix, dataTypeId, resultId, argumentId1, argumentId2);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_M3x2 - Unsupported data type " << dataType;
+		Log(warning) << "Process_M3x2 - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -7222,7 +7221,7 @@ void ShaderConverter::Process_MAD()
 		Push(spv::OpFMul, dataTypeId, resultId, argumentId1, argumentId2);
 		Push(spv::OpFAdd, dataTypeId, resultId2, resultId, argumentId3);
 
-		BOOST_LOG_TRIVIAL(warning) << "Process_MAD - Unsupported data types " << argumentType1.PrimaryType << " " << argumentType2.PrimaryType << " " << argumentType3.PrimaryType;;
+		Log(warning) << "Process_MAD - Unsupported data types " << argumentType1.PrimaryType << " " << argumentType2.PrimaryType << " " << argumentType3.PrimaryType << std::endl;
 	}
 
 	resultId2 = ApplyWriteMask(resultToken, resultId2);
@@ -7389,7 +7388,7 @@ void ShaderConverter::Process_CMP()
 	}
 	else
 	{
-		BOOST_LOG_TRIVIAL(warning) << "Process_CMP - Unsupported data type " << argumentType1.PrimaryType << " " << argumentType2.PrimaryType << " " << argumentType3.PrimaryType;
+		Log(warning) << "Process_CMP - Unsupported data type " << argumentType1.PrimaryType << " " << argumentType2.PrimaryType << " " << argumentType3.PrimaryType << std::endl;
 	}
 
 	resultId2 = ApplyWriteMask(resultToken, resultId2);
@@ -7452,7 +7451,7 @@ void ShaderConverter::Process_DP2ADD()
 		Push(spv::OpFAdd, dataTypeId, resultId2, resultId, argumentId3);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_DP2ADD - Unsupported data type " << dataType;
+		Log(warning) << "Process_DP2ADD - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -7518,7 +7517,7 @@ void ShaderConverter::Process_LRP()
 		Push(spv::OpExtInst, dataTypeId, resultId, mGlslExtensionId, GLSLstd450::GLSLstd450FMix, argumentId1, argumentId2, argumentId3);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_LRP - Unsupported data type " << dataType;
+		Log(warning) << "Process_LRP - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -7602,7 +7601,7 @@ void ShaderConverter::Process_SINCOS()
 		Push(spv::OpCompositeConstruct, vectorTypeId, resultId, cosResultId, sinResultId, cosResultId, sinResultId);
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "Process_SINCOS - Unsupported data type " << dataType;
+		Log(warning) << "Process_SINCOS - Unsupported data type " << dataType << std::endl;
 		break;
 	}
 
@@ -7631,12 +7630,12 @@ ConvertedShader ShaderConverter::Convert(uint32_t* shader)
 	if ((token & 0xFFFF0000) == 0xFFFF0000)
 	{
 		mIsVertexShader = false;
-		BOOST_LOG_TRIVIAL(info) << "PS " << mMajorVersion << "." << mMinorVersion;
+		Log(info) << "PS " << mMajorVersion << "." << mMinorVersion << std::endl;
 	}
 	else
 	{
 		mIsVertexShader = true;
-		BOOST_LOG_TRIVIAL(info) << "VS" << mMajorVersion << "." << mMinorVersion;
+		Log(info) << "VS" << mMajorVersion << "." << mMinorVersion << std::endl;
 	}
 	//Probably more info in this word but I'll handle that later.
 
@@ -7752,7 +7751,7 @@ ConvertedShader ShaderConverter::Convert(uint32_t* shader)
 			}
 			break;
 		case D3DSIO_RET:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_RET.";
+			Log(warning) << "Unsupported instruction D3DSIO_RET." << std::endl;
 			break;
 		case D3DSIO_ENDLOOP:
 			Process_ENDLOOP();
@@ -7761,88 +7760,88 @@ ConvertedShader ShaderConverter::Convert(uint32_t* shader)
 			Process_BREAK();
 			break;
 		case D3DSIO_TEXDEPTH:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXDEPTH.";
+			Log(warning) << "Unsupported instruction D3DSIO_TEXDEPTH." << std::endl;
 			SkipTokens(1);
 			break;
 		case D3DSIO_TEXKILL:
 			Process_TEXKILL();
 			break;
 		case D3DSIO_BEM:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_BEM.";
+			Log(warning) << "Unsupported instruction D3DSIO_BEM." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_TEXBEM:
 			Process_TEXBEM();
 			break;
 		case D3DSIO_TEXBEML:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXBEML.";
+			Log(warning) << "Unsupported instruction D3DSIO_TEXBEML." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_TEXDP3:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXDP3.";
+			Log(warning) << "Unsupported instruction D3DSIO_TEXDP3." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_TEXDP3TEX:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXDP3TEX.";
+			Log(warning) << "Unsupported instruction D3DSIO_TEXDP3TEX." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_TEXM3x2DEPTH:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXM3x2DEPTH.";
+			Log(warning) << "Unsupported instruction D3DSIO_TEXM3x2DEPTH." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_TEXM3x2TEX:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXM3x2TEX.";
+			Log(warning) << "Unsupported instruction D3DSIO_TEXM3x2TEX." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_TEXM3x3:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXM3x3.";
+			Log(warning) << "Unsupported instruction D3DSIO_TEXM3x3." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_TEXM3x3PAD:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXM3x3PAD.";
+			Log(warning) << "Unsupported instruction D3DSIO_TEXM3x3PAD." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_TEXM3x3TEX:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXM3x3TEX.";
+			Log(warning) << "Unsupported instruction D3DSIO_TEXM3x3TEX." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_TEXM3x3VSPEC:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXM3x3VSPEC.";
+			Log(warning) << "Unsupported instruction D3DSIO_TEXM3x3VSPEC." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_TEXREG2AR:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXREG2AR.";
+			Log(warning) << "Unsupported instruction D3DSIO_TEXREG2AR." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_TEXREG2GB:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXREG2GB.";
+			Log(warning) << "Unsupported instruction D3DSIO_TEXREG2GB." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_TEXREG2RGB:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXREG2RGB.";
+			Log(warning) << "Unsupported instruction D3DSIO_TEXREG2RGB." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_LABEL:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_LABEL.";
+			Log(warning) << "Unsupported instruction D3DSIO_LABEL." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_CALL:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_CALL.";
+			Log(warning) << "Unsupported instruction D3DSIO_CALL." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_LOOP:
 			Process_LOOP();
 			break;
 		case D3DSIO_BREAKP:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_BREAKP.";
+			Log(warning) << "Unsupported instruction D3DSIO_BREAKP." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_DSX:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_DSX.";
+			Log(warning) << "Unsupported instruction D3DSIO_DSX." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_DSY:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_DSY.";
+			Log(warning) << "Unsupported instruction D3DSIO_DSY." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_IFC:
@@ -7894,14 +7893,14 @@ ConvertedShader ShaderConverter::Convert(uint32_t* shader)
 			Process_FRC();
 			break;
 		case D3DSIO_LIT:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_LIT.";
+			Log(warning) << "Unsupported instruction D3DSIO_LIT." << std::endl;
 			SkipTokens(2);
 			break;
 		case D3DSIO_ABS:
 			Process_ABS();
 			break;
 		case D3DSIO_TEXM3x3SPEC:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXM3x3SPEC.";
+			Log(warning) << "Unsupported instruction D3DSIO_TEXM3x3SPEC." << std::endl;
 			SkipTokens(3);
 			break;
 		case D3DSIO_M4x4:
@@ -7920,15 +7919,15 @@ ConvertedShader ShaderConverter::Convert(uint32_t* shader)
 			Process_M3x2();
 			break;
 		case D3DSIO_CALLNZ:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_CALLNZ.";
+			Log(warning) << "Unsupported instruction D3DSIO_CALLNZ." << std::endl;
 			SkipTokens(3);
 			break;
 		case D3DSIO_SETP:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_SETP.";
+			Log(warning) << "Unsupported instruction D3DSIO_SETP." << std::endl;
 			SkipTokens(3);
 			break;
 		case D3DSIO_BREAKC:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_BREAKC.";
+			Log(warning) << "Unsupported instruction D3DSIO_BREAKC." << std::endl;
 			SkipTokens(3);
 			break;
 		case D3DSIO_ADD:
@@ -7974,11 +7973,11 @@ ConvertedShader ShaderConverter::Convert(uint32_t* shader)
 			Process_LRP();
 			break;
 		case D3DSIO_SGN:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_SGN.";
+			Log(warning) << "Unsupported instruction D3DSIO_SGN." << std::endl;
 			SkipTokens(4);
 			break;
 		case D3DSIO_CND:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_CND.";
+			Log(warning) << "Unsupported instruction D3DSIO_CND." << std::endl;
 			SkipTokens(4);
 			break;
 		case D3DSIO_CMP:
@@ -7991,7 +7990,7 @@ ConvertedShader ShaderConverter::Convert(uint32_t* shader)
 			Process_MAD();
 			break;
 		case D3DSIO_TEXLDD:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXLDD.";
+			Log(warning) << "Unsupported instruction D3DSIO_TEXLDD." << std::endl;
 			SkipTokens(5);
 			break;
 		case D3DSIO_TEXCOORD:
@@ -8001,7 +8000,7 @@ ConvertedShader ShaderConverter::Convert(uint32_t* shader)
 			Process_TEX();
 			break;
 		case D3DSIO_TEXLDL:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction D3DSIO_TEXLDL.";
+			Log(warning) << "Unsupported instruction D3DSIO_TEXLDL." << std::endl;
 			SkipTokens(3);
 			break;
 		case D3DSIO_DCL:
@@ -8023,7 +8022,7 @@ ConvertedShader ShaderConverter::Convert(uint32_t* shader)
 			//Nothing
 			break;
 		default:
-			BOOST_LOG_TRIVIAL(warning) << "Unsupported instruction " << instruction << ".";
+			Log(warning) << "Unsupported instruction " << instruction << "." << std::endl;
 			break;
 		}
 
@@ -8054,7 +8053,7 @@ ConvertedShader ShaderConverter::Convert(uint32_t* shader)
 		auto& inputRegisterType = mIdTypePairs[inputRegister];
 		auto& inputRegisterName = mNameIdPairs[inputRegister];
 
-		BOOST_LOG_TRIVIAL(info) << "ShaderConverter::Convert " << inputRegisterName << "(" << inputRegister << ") as " << inputRegisterType << "(Input)";
+		Log(info) << "ShaderConverter::Convert " << inputRegisterName << "(" << inputRegister << ") as " << inputRegisterType << "(Input)" << std::endl;
 #endif
 	}
 	for (const auto& outputRegister : mOutputRegisters)
@@ -8065,7 +8064,7 @@ ConvertedShader ShaderConverter::Convert(uint32_t* shader)
 		auto& outputRegisterType = mIdTypePairs[outputRegister];
 		auto& outputRegisterName = mNameIdPairs[outputRegister];
 
-		BOOST_LOG_TRIVIAL(info) << "ShaderConverter::Convert " << outputRegisterName << "(" << outputRegister << ") as " << outputRegisterType << "(Output)";
+		Log(info) << "ShaderConverter::Convert " << outputRegisterName << "(" << outputRegister << ") as " << outputRegisterType << "(Output)" << std::endl;
 #endif
 	}
 

@@ -24,6 +24,7 @@ misrepresented as being the original software.
 
 #include "CRenderTargetSurface9.h"
 #include "CDevice9.h"
+
 #include "Utilities.h"
 
 CRenderTargetSurface9::CRenderTargetSurface9(CDevice9* Device, UINT Width, UINT Height, D3DFORMAT Format)
@@ -101,7 +102,7 @@ HRESULT STDMETHODCALLTYPE CRenderTargetSurface9::FreePrivateData(REFGUID refguid
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CRenderTargetSurface9::FreePrivateData is not implemented!";
+	Log(warning) << "CRenderTargetSurface9::FreePrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -110,7 +111,7 @@ DWORD STDMETHODCALLTYPE CRenderTargetSurface9::GetPriority()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CRenderTargetSurface9::GetPriority is not implemented!";
+	Log(warning) << "CRenderTargetSurface9::GetPriority is not implemented!" << std::endl;
 
 	return 0;
 }
@@ -119,7 +120,7 @@ HRESULT STDMETHODCALLTYPE CRenderTargetSurface9::GetPrivateData(REFGUID refguid,
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CRenderTargetSurface9::GetPrivateData is not implemented!";
+	Log(warning) << "CRenderTargetSurface9::GetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -133,7 +134,7 @@ void STDMETHODCALLTYPE CRenderTargetSurface9::PreLoad()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CRenderTargetSurface9::PreLoad is not implemented!";
+	Log(warning) << "CRenderTargetSurface9::PreLoad is not implemented!" << std::endl;
 
 	return;
 }
@@ -142,7 +143,7 @@ DWORD STDMETHODCALLTYPE CRenderTargetSurface9::SetPriority(DWORD PriorityNew)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CRenderTargetSurface9::SetPriority is not implemented!";
+	Log(warning) << "CRenderTargetSurface9::SetPriority is not implemented!" << std::endl;
 
 	return 0;
 }
@@ -151,7 +152,7 @@ HRESULT STDMETHODCALLTYPE CRenderTargetSurface9::SetPrivateData(REFGUID refguid,
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CRenderTargetSurface9::SetPrivateData is not implemented!";
+	Log(warning) << "CRenderTargetSurface9::SetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -161,7 +162,7 @@ HRESULT STDMETHODCALLTYPE CRenderTargetSurface9::GetContainer(REFIID riid, void*
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CRenderTargetSurface9::GetContainer is not implemented!";
+	Log(warning) << "CRenderTargetSurface9::GetContainer is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -170,7 +171,7 @@ HRESULT STDMETHODCALLTYPE CRenderTargetSurface9::GetDC(HDC* phdc)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CRenderTargetSurface9::GetDC is not implemented!";
+	Log(warning) << "CRenderTargetSurface9::GetDC is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -194,7 +195,7 @@ HRESULT STDMETHODCALLTYPE CRenderTargetSurface9::LockRect(D3DLOCKED_RECT* pLocke
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CRenderTargetSurface9::LockRect is not implemented!";
+	Log(warning) << "CRenderTargetSurface9::LockRect is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -203,7 +204,7 @@ HRESULT STDMETHODCALLTYPE CRenderTargetSurface9::ReleaseDC(HDC hdc)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CRenderTargetSurface9::ReleaseDC is not implemented!";
+	Log(warning) << "CRenderTargetSurface9::ReleaseDC is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -212,7 +213,7 @@ HRESULT STDMETHODCALLTYPE CRenderTargetSurface9::UnlockRect()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CRenderTargetSurface9::UnlockRect is not implemented!";
+	Log(warning) << "CRenderTargetSurface9::UnlockRect is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }

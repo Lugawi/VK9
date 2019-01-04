@@ -36,8 +36,9 @@ misrepresented as being the original software.
 #include "CDevice9.h"
 #include "CStateBlock9.h"
 #include "CTexture9.h"
-#include "Utilities.h"
 #include "Perf_StateManager.h"
+
+#include "Utilities.h"
 
 const uint32_t VERTEX_BUFFER_XYZRHW_VERT[] =
 #include "VertexBuffer_XYZRHW.vert.h"
@@ -153,7 +154,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	mInstance(instance),
 	mPhysicalDevice(physicalDevice)
 {
-	BOOST_LOG_TRIVIAL(info) << "RealDevice::RealDevice";
+	Log(info) << "RealDevice::RealDevice";
 
 	vk::Result result;
 
@@ -214,7 +215,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = physicalDevice.createDevice(&device_info, nullptr, &mDevice);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealDevice::RealDevice vkCreateDevice failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vkCreateDevice failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -260,7 +261,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = mDevice.createDescriptorPool(&descriptorPoolCreateInfo, nullptr, &mDescriptorPool);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealDevice::RealDevice vkCreateDescriptorPool failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vkCreateDescriptorPool failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -268,7 +269,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	{
 		mEstimatedMemory += mPhysicalDeviceMemoryProperties.memoryHeaps[i].size;
 	}
-	BOOST_LOG_TRIVIAL(info) << "RealDevice::RealDevice The total size of all heaps is " << mEstimatedMemory;
+	Log(info) << "RealDevice::RealDevice The total size of all heaps is " << mEstimatedMemory;
 
 	vk::Bool32 doesSupportGraphics = false;
 	uint32_t graphicsQueueIndex = 0;
@@ -293,7 +294,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = mDevice.createCommandPool(&commandPoolInfo, nullptr, &mCommandPool);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealDevice::RealDevice vkCreateCommandPool failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vkCreateCommandPool failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -308,7 +309,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = mDevice.allocateCommandBuffers(&commandBufferInfo, mCommandBuffers);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealDevice::RealDevice vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -491,7 +492,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = mDevice.createDescriptorSetLayout(&mDescriptorSetLayoutCreateInfo, nullptr, &mDescriptorSetLayout);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealDevice::RealDevice vkCreateDescriptorSetLayout failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vkCreateDescriptorSetLayout failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -531,7 +532,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = mDevice.createPipelineCache(&mPipelineCacheCreateInfo, nullptr, &mPipelineCache);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealDevice::RealDevice vkCreatePipelineCache failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vkCreatePipelineCache failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -555,7 +556,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = mDevice.createSampler(&samplerCreateInfo, nullptr, &mSampler);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealDevice::RealDevice vkCreateSampler failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vkCreateSampler failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -588,7 +589,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = (vk::Result)vmaCreateImage(mAllocator, (VkImageCreateInfo*)&imageCreateInfo2, &imageAllocInfo2, (VkImage*)&mImage, &mImageAllocation, &mImageAllocationInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealDevice::RealDevice vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -602,20 +603,20 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	int32_t x = 0;
 	int32_t y = 0;
 
-	//BOOST_LOG_TRIVIAL(info) << "RealDevice::RealDevice using format " << (VkFormat)textureFormat;
+	//Log(info) << "RealDevice::RealDevice using format " << (VkFormat)textureFormat;
 	mDevice.getImageSubresourceLayout(mImage, &imageSubresource, &subresourceLayout);
 
 	//data = mDevice.mapMemory((vk::DeviceMemory)mImageAllocationInfo.deviceMemory, 0, (vk::DeviceSize)mImageAllocationInfo.size, vk::MemoryMapFlags()).value;
 	//if (data == nullptr)
 	//{
-	//	BOOST_LOG_TRIVIAL(fatal) << "RealDevice::RealDevice vkMapMemory failed.";
+	//	Log(fatal) << "RealDevice::RealDevice vkMapMemory failed.";
 	//	return;
 	//}
 
 	result = (vk::Result)vmaMapMemory(mAllocator, mImageAllocation, &data);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealDevice::RealDevice vmaMapMemory failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vmaMapMemory failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -649,7 +650,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = mDevice.createImageView(&imageViewCreateInfo2, nullptr, &mImageView);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealDevice::RealDevice vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -800,7 +801,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 
 RealDevice::~RealDevice()
 {
-	BOOST_LOG_TRIVIAL(info) << "RealDevice::~RealDevice";
+	Log(info) << "RealDevice::~RealDevice";
 	delete[] mQueueFamilyProperties;
 	if (mDevice == vk::Device())
 	{
@@ -913,7 +914,7 @@ void RealDevice::SetImageLayout(vk::Image image, vk::ImageAspectFlags aspectMask
 	result = mDevice.allocateCommandBuffers(&commandBufferInfo, &commandBuffer);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealDevice::SetImageLayout vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::SetImageLayout vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -927,7 +928,7 @@ void RealDevice::SetImageLayout(vk::Image image, vk::ImageAspectFlags aspectMask
 	result = commandBuffer.begin(&commandBufferBeginInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealDevice::SetImageLayout vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::SetImageLayout vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -946,7 +947,7 @@ void RealDevice::SetImageLayout(vk::Image image, vk::ImageAspectFlags aspectMask
 	result = mQueue.submit(1, &submitInfo, nullFence);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealDevice::SetImageLayout vkQueueSubmit failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::SetImageLayout vkQueueSubmit failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -966,7 +967,7 @@ void RealDevice::CreateBuffer(vk::DeviceSize size, const vk::BufferUsageFlags& u
 	result = mDevice.createBuffer(&bufferInfo, nullptr, &buffer);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealDevice::CreateBuffer vkCreateBuffer failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::CreateBuffer vkCreateBuffer failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -979,14 +980,14 @@ void RealDevice::CreateBuffer(vk::DeviceSize size, const vk::BufferUsageFlags& u
 
 	if (!GetMemoryTypeFromProperties(mPhysicalDeviceMemoryProperties, memoryRequirements.memoryTypeBits, properties, &allocInfo.memoryTypeIndex))
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "Memory type index not found!";
+		Log(fatal) << "Memory type index not found!";
 		return;
 	}
 
 	result = mDevice.allocateMemory(&allocInfo, nullptr, &deviceMemory);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealDevice::CreateBuffer vkCreateBuffer failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::CreateBuffer vkCreateBuffer failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -1101,7 +1102,7 @@ void RealDevice::SetRenderTarget(CDevice9* device9, DWORD renderTargetIndex, CSu
 		}
 		else if (renderTarget->mCubeTexture != nullptr)
 		{
-			BOOST_LOG_TRIVIAL(fatal) << "Cube texture not supported for render target!";
+			Log(fatal) << "Cube texture not supported for render target!";
 		}
 		else
 		{
@@ -1195,7 +1196,7 @@ void RealDevice::Clear(DWORD Count, const D3DRECT *pRects, DWORD Flags, D3DCOLOR
 
 	if (Count > 0 && pRects != nullptr)
 	{
-		BOOST_LOG_TRIVIAL(warning) << "RenderManager::Clear is not fully implemented!";
+		Log(warning) << "RenderManager::Clear is not fully implemented!";
 		return;
 	}
 

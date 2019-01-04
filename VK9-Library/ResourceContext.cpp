@@ -24,11 +24,13 @@ misrepresented as being the original software.
 
 #include "ResourceContext.h"
 
+#include "Utilities.h"
+
 ResourceContext::~ResourceContext()
 {
 	if (mRealDevice != nullptr)
 	{
-		//BOOST_LOG_TRIVIAL(warning) << "ResourceContext::~ResourceContext";
+		//Log(warning) << "ResourceContext::~ResourceContext";
 		auto& device = mRealDevice->mDevice;
 		device.freeDescriptorSets(mRealDevice->mDescriptorPool, 1, &DescriptorSet);
 	}

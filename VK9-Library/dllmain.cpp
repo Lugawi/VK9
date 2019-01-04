@@ -26,6 +26,7 @@ misrepresented as being the original software.
 
 //#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
+
 #include "Utilities.h"
 
 BOOL APIENTRY DllMain( HMODULE hModule,

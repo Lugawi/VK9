@@ -32,17 +32,6 @@ misrepresented as being the original software.
 
 #include "Perf_RenderManager.h"
 
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/sinks/text_file_backend.hpp>
-#include <boost/log/utility/setup/file.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sources/record_ostream.hpp>
-#include <boost/format.hpp>
-
-#include "Utilities.h"
 #include "CTypes.h"
 
 #include "CCubeTexture9.h"
@@ -54,6 +43,8 @@ misrepresented as being the original software.
 #include "CVertexDeclaration9.h"
 #include "CPixelShader9.h"
 #include "CVertexShader9.h"
+
+#include "Utilities.h"
 
 RenderManager::RenderManager(std::map<std::string, std::string>& configuration)
 	: mConfiguration(configuration), mStateManager(configuration)
@@ -291,7 +282,7 @@ void RenderManager::CopyImage(std::shared_ptr<RealDevice> realDevice, vk::Image 
 	result = device.allocateCommandBuffers(&commandBufferInfo, &commandBuffer);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CopyImage vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RenderManager::CopyImage vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -310,7 +301,7 @@ void RenderManager::CopyImage(std::shared_ptr<RealDevice> realDevice, vk::Image 
 	result = commandBuffer.begin(&commandBufferBeginInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CopyImage vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RenderManager::CopyImage vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -332,7 +323,7 @@ void RenderManager::CopyImage(std::shared_ptr<RealDevice> realDevice, vk::Image 
 	result = realDevice->mQueue.submit(1, &submitInfo, nullFence);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CopyImage vkQueueSubmit failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RenderManager::CopyImage vkQueueSubmit failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -372,12 +363,12 @@ vk::Result RenderManager::Present(std::shared_ptr<RealDevice> realDevice, const 
 
 	if (pSourceRect != nullptr || pDestRect != nullptr)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::Present RECT not supported.";
+		Log(fatal) << "RenderManager::Present RECT not supported." << std::endl;
 	}
 
 	if (pDirtyRegion != nullptr)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::Present RGNDATA not supported.";
+		Log(fatal) << "RenderManager::Present RGNDATA not supported." << std::endl;
 	}
 
 	realDevice->mDescriptorSetIndex = 0;
@@ -401,7 +392,7 @@ void RenderManager::DrawIndexedPrimitive(std::shared_ptr<RealDevice> realDevice,
 
 	if (deviceState.mIndexBuffer == nullptr)
 	{
-		BOOST_LOG_TRIVIAL(warning) << "CDevice9::DrawIndexedPrimitive called with null index buffer.";
+		Log(warning) << "CDevice9::DrawIndexedPrimitive called with null index buffer." << std::endl;
 		return;
 	}
 
@@ -467,7 +458,7 @@ void RenderManager::StretchRect(std::shared_ptr<RealDevice> realDevice, IDirect3
 	result = device.allocateCommandBuffers(&commandBufferInfo, &commandBuffer);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::UpdateTexture vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RenderManager::UpdateTexture vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -486,7 +477,7 @@ void RenderManager::StretchRect(std::shared_ptr<RealDevice> realDevice, IDirect3
 	result = commandBuffer.begin(&commandBufferBeginInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::UpdateTexture vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RenderManager::UpdateTexture vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -548,7 +539,7 @@ void RenderManager::StretchRect(std::shared_ptr<RealDevice> realDevice, IDirect3
 	result = realDevice->mQueue.submit(1, &submitInfo, nullFence);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::UpdateTexture vkQueueSubmit failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RenderManager::UpdateTexture vkQueueSubmit failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -576,7 +567,7 @@ void RenderManager::UpdateSurface(std::shared_ptr<RealDevice> realDevice, IDirec
 	result = device.allocateCommandBuffers(&commandBufferInfo, &commandBuffer);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::UpdateTexture vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RenderManager::UpdateTexture vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -595,7 +586,7 @@ void RenderManager::UpdateSurface(std::shared_ptr<RealDevice> realDevice, IDirec
 	result = commandBuffer.begin(&commandBufferBeginInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::UpdateTexture vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RenderManager::UpdateTexture vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -657,7 +648,7 @@ void RenderManager::UpdateSurface(std::shared_ptr<RealDevice> realDevice, IDirec
 	result = realDevice->mQueue.submit(1, &submitInfo, nullFence);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::UpdateTexture vkQueueSubmit failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RenderManager::UpdateTexture vkQueueSubmit failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -685,7 +676,7 @@ void RenderManager::UpdateTexture(std::shared_ptr<RealDevice> realDevice, IDirec
 	result = device.allocateCommandBuffers(&commandBufferInfo, &commandBuffer);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::UpdateTexture vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RenderManager::UpdateTexture vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -704,7 +695,7 @@ void RenderManager::UpdateTexture(std::shared_ptr<RealDevice> realDevice, IDirec
 	result = commandBuffer.begin(&commandBufferBeginInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::UpdateTexture vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RenderManager::UpdateTexture vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -819,7 +810,7 @@ void RenderManager::UpdateTexture(std::shared_ptr<RealDevice> realDevice, IDirec
 	}
 	else
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::UpdateTexture supported texture type pair" << sourceType << " " << targetType;
+		Log(fatal) << "RenderManager::UpdateTexture supported texture type pair" << sourceType << " " << targetType << std::endl;
 	}
 
 	commandBuffer.end();
@@ -839,7 +830,7 @@ void RenderManager::UpdateTexture(std::shared_ptr<RealDevice> realDevice, IDirec
 	result = realDevice->mQueue.submit(1, &submitInfo, nullFence);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::UpdateTexture vkQueueSubmit failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RenderManager::UpdateTexture vkQueueSubmit failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -1075,7 +1066,7 @@ void RenderManager::BeginDraw(std::shared_ptr<RealDevice> realDevice, std::share
 			result = device.allocateDescriptorSets(&descriptorSetInfo, &descriptorSet);
 			if (result != vk::Result::eSuccess)
 			{
-				BOOST_LOG_TRIVIAL(fatal) << "RenderManager::BeginDraw vkAllocateDescriptorSets failed with return code of " << GetResultString((VkResult)result);
+				Log(fatal) << "RenderManager::BeginDraw vkAllocateDescriptorSets failed with return code of " << GetResultString((VkResult)result) << std::endl;
 				return;
 			}
 			realDevice->mDescriptorSets.push_back(descriptorSet);
@@ -1242,7 +1233,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 	}
 	else
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe unsupported layout definition.";
+		Log(fatal) << "RenderManager::CreatePipe unsupported layout definition." << std::endl;
 	}
 
 	attributeCount += hasPosition;
@@ -1363,7 +1354,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 
 				if (deviceRenderState.pointSpriteEnable)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && !hasColor && !hasNormal && " << textureCount;
+					Log(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && !hasColor && !hasNormal && " << textureCount << std::endl;
 				}
 				else
 				{
@@ -1382,7 +1373,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 
 				if (deviceRenderState.pointSpriteEnable)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && !hasColor && !hasNormal && " << textureCount;
+					Log(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && !hasColor && !hasNormal && " << textureCount << std::endl;
 				}
 				else
 				{
@@ -1401,7 +1392,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 
 				if (deviceRenderState.pointSpriteEnable)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && !hasColor && !hasNormal && " << textureCount;
+					Log(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && !hasColor && !hasNormal && " << textureCount << std::endl;
 				}
 				else
 				{
@@ -1409,7 +1400,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 				}
 				break;
 			default:
-				BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe unsupported texture count " << textureCount;
+				Log(fatal) << "RenderManager::CreatePipe unsupported texture count " << textureCount << std::endl;
 				break;
 			}
 		}
@@ -1450,7 +1441,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 
 				if (deviceRenderState.pointSpriteEnable)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && hasColor && !hasNormal && " << textureCount;
+					Log(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && hasColor && !hasNormal && " << textureCount << std::endl;
 				}
 				else
 				{
@@ -1469,7 +1460,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 
 				if (deviceRenderState.pointSpriteEnable)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && hasColor && !hasNormal && " << textureCount;
+					Log(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && hasColor && !hasNormal && " << textureCount << std::endl;
 				}
 				else
 				{
@@ -1477,7 +1468,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 				}
 				break;
 			default:
-				BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe unsupported texture count " << textureCount;
+				Log(fatal) << "RenderManager::CreatePipe unsupported texture count " << textureCount << std::endl;
 				break;
 			}
 		}
@@ -1489,7 +1480,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 				realDevice->mPipelineShaderStageCreateInfo[0].module = realDevice->mVertShaderModule_XYZ_NORMAL_DIFFUSE_TEX2;
 				if (deviceRenderState.pointSpriteEnable)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && hasColor && hasNormal && " << textureCount;
+					Log(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && hasColor && hasNormal && " << textureCount << std::endl;
 				}
 				else
 				{
@@ -1500,7 +1491,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 				realDevice->mPipelineShaderStageCreateInfo[0].module = realDevice->mVertShaderModule_XYZ_NORMAL_DIFFUSE_TEX1;
 				if (deviceRenderState.pointSpriteEnable)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && hasColor && hasNormal && " << textureCount;
+					Log(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && hasColor && hasNormal && " << textureCount << std::endl;
 				}
 				else
 				{
@@ -1511,7 +1502,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 				realDevice->mPipelineShaderStageCreateInfo[0].module = realDevice->mVertShaderModule_XYZ_NORMAL_DIFFUSE;
 				if (deviceRenderState.pointSpriteEnable)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && hasColor && hasNormal && " << textureCount;
+					Log(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && hasColor && hasNormal && " << textureCount << std::endl;
 				}
 				else
 				{
@@ -1519,7 +1510,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 				}
 				break;
 			default:
-				BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe unsupported texture count " << textureCount;
+				Log(fatal) << "RenderManager::CreatePipe unsupported texture count " << textureCount << std::endl;
 				break;
 			}
 		}
@@ -1531,7 +1522,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 				realDevice->mPipelineShaderStageCreateInfo[0].module = realDevice->mVertShaderModule_XYZ_NORMAL;
 				if (deviceRenderState.pointSpriteEnable)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && !hasColor && hasNormal && " << textureCount;
+					Log(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && !hasColor && hasNormal && " << textureCount << std::endl;
 				}
 				else
 				{
@@ -1542,7 +1533,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 				realDevice->mPipelineShaderStageCreateInfo[0].module = realDevice->mVertShaderModule_XYZ_NORMAL_TEX1;
 				if (deviceRenderState.pointSpriteEnable)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && !hasColor && hasNormal && " << textureCount;
+					Log(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && !hasColor && hasNormal && " << textureCount << std::endl;
 				}
 				else
 				{
@@ -1553,7 +1544,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 				realDevice->mPipelineShaderStageCreateInfo[0].module = realDevice->mVertShaderModule_XYZ_NORMAL_TEX2;
 				if (deviceRenderState.pointSpriteEnable)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && !hasColor && hasNormal && " << textureCount;
+					Log(fatal) << "RenderManager::CreatePipe point sprite not supported with hasPosition && !hasColor && hasNormal && " << textureCount << std::endl;
 				}
 				else
 				{
@@ -1561,19 +1552,19 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 				}
 				break;
 			default:
-				BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe unsupported texture count " << textureCount;
+				Log(fatal) << "RenderManager::CreatePipe unsupported texture count " << textureCount << std::endl;
 				break;
 			}
 		}
 		else
 		{
-			BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe unsupported layout.";
-			BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe hasPosition = " << hasPosition;
-			BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe hasNormal = " << hasNormal;
-			BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe hasPSize = " << hasPSize;
-			BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe hasColor1 = " << hasColor1;
-			BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe hasColor2 = " << hasColor2;
-			BOOST_LOG_TRIVIAL(fatal) << "RenderManager::CreatePipe textureCount = " << textureCount;
+			Log(fatal) << "RenderManager::CreatePipe unsupported layout." << std::endl;
+			Log(fatal) << "RenderManager::CreatePipe hasPosition = " << hasPosition << std::endl;
+			Log(fatal) << "RenderManager::CreatePipe hasNormal = " << hasNormal << std::endl;
+			Log(fatal) << "RenderManager::CreatePipe hasPSize = " << hasPSize << std::endl;
+			Log(fatal) << "RenderManager::CreatePipe hasColor1 = " << hasColor1 << std::endl;
+			Log(fatal) << "RenderManager::CreatePipe hasColor2 = " << hasColor2 << std::endl;
+			Log(fatal) << "RenderManager::CreatePipe textureCount = " << textureCount << std::endl;
 		}
 	}
 
@@ -1671,7 +1662,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 	}
 	else
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::BeginDraw unknown vertex format.";
+		Log(fatal) << "RenderManager::BeginDraw unknown vertex format." << std::endl;
 	}
 
 	/**********************************************
@@ -1691,7 +1682,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 	result = device.createPipelineLayout(&realDevice->mPipelineLayoutCreateInfo, nullptr, &context->PipelineLayout);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::BeginDraw vkCreatePipelineLayout failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RenderManager::BeginDraw vkCreatePipelineLayout failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -1702,7 +1693,7 @@ void RenderManager::CreatePipe(std::shared_ptr<RealDevice> realDevice, std::shar
 	//result = vkCreateGraphicsPipelines(mDevice->mDevice, VK_NULL_HANDLE, 1, &mGraphicsPipelineCreateInfo, nullptr, &context.Pipeline);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::BeginDraw vkCreateGraphicsPipelines failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RenderManager::BeginDraw vkCreateGraphicsPipelines failed with return code of " << GetResultString((VkResult)result) << std::endl;
 	}
 
 	context->LastUsed = std::chrono::steady_clock::now();
@@ -1768,7 +1759,7 @@ void RenderManager::CreateSampler(std::shared_ptr<RealDevice> realDevice, std::s
 	result = device.createSampler(&samplerCreateInfo, nullptr, &request->Sampler);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RenderManager::GenerateSampler vkCreateSampler failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RenderManager::GenerateSampler vkCreateSampler failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 

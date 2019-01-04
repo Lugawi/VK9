@@ -23,6 +23,7 @@ misrepresented as being the original software.
 */
 #include "GarbageManager.h"
 
+#include "Utilities.h"
 
 GarbageManager::GarbageManager()
 {

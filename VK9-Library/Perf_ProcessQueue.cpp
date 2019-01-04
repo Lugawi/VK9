@@ -282,7 +282,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				if (iSwapChain)
 				{
 					//TODO: Implement.
-					BOOST_LOG_TRIVIAL(warning) << "ProcessQueue multiple swapchains are not implemented!";
+					Log(warning) << "ProcessQueue multiple swapchains are not implemented!" << std::endl;
 				}
 				else
 				{
@@ -304,7 +304,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				if (iSwapChain)
 				{
 					//TODO: Implement.
-					BOOST_LOG_TRIVIAL(warning) << "ProcessQueue multiple swapchains are not implemented!";
+					Log(warning) << "ProcessQueue multiple swapchains are not implemented!" << std::endl;
 				}
 				else
 				{
@@ -759,7 +759,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					(*pValue) = constants->mRenderState.blendOperationAlpha;
 					break;
 				default:
-					BOOST_LOG_TRIVIAL(warning) << "ProcessQueue unknown state! " << State;
+					Log(warning) << "ProcessQueue unknown state! " << State << std::endl;
 					break;
 				}
 			}
@@ -943,7 +943,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					(*pMatrix) = deviceState.mShaderState.mTextureStages[7].textureTransformationMatrix;
 					break;
 				default:
-					BOOST_LOG_TRIVIAL(warning) << "Unknown transformation type " << State;
+					Log(warning) << "Unknown transformation type " << State << std::endl;
 					break;
 				}
 			}
@@ -1200,7 +1200,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 
 				if (nSegments > 0.0f)
 				{
-					BOOST_LOG_TRIVIAL(warning) << "ProcessQueue nPatch greater than zero not supported.";
+					Log(warning) << "ProcessQueue nPatch greater than zero not supported." << std::endl;
 				}
 
 				if (realDevice->mCurrentStateRecording != nullptr)
@@ -1744,7 +1744,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					state->wasBlendGroupModified = true;
 					break;
 				default:
-					BOOST_LOG_TRIVIAL(warning) << "ProcessQueue unknown state! " << State;
+					Log(warning) << "ProcessQueue unknown state! " << State << std::endl;
 					break;
 				}
 			}
@@ -1995,7 +1995,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 						deviceState.mAreTextureStagesDirty = true;
 						break;
 					default:
-						BOOST_LOG_TRIVIAL(warning) << "Unknown transformation type " << State;
+						Log(warning) << "Unknown transformation type " << State << std::endl;
 						break;
 					}
 				}
@@ -2050,7 +2050,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 						deviceState.mAreTextureStagesDirty = true;
 						break;
 					default:
-						BOOST_LOG_TRIVIAL(warning) << "Unknown transformation type " << State;
+						Log(warning) << "Unknown transformation type " << State << std::endl;
 						break;
 					}
 				}
@@ -2096,7 +2096,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				if (realDevice->mCurrentStateRecording != nullptr)
 				{
 					auto& deviceState = realDevice->mCurrentStateRecording->mDeviceState;
-					//BOOST_LOG_TRIVIAL(info) << "Recorded VertexShader";
+					//Log(info) << "Recorded VertexShader"<< std::endl;
 					deviceState.mVertexShader = (CVertexShader9*)pShader;
 					deviceState.mHasVertexShader = true;
 				}
@@ -2513,7 +2513,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				result = device.allocateCommandBuffers(&commandBufferInfo, &commandBuffer);
 				if (result != vk::Result::eSuccess)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "ProcessQueue vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
+					Log(fatal) << "ProcessQueue vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result) << std::endl;
 					break;
 				}
 
@@ -2532,7 +2532,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				result = commandBuffer.begin(&commandBufferBeginInfo);
 				if (result != vk::Result::eSuccess)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "ProcessQueue vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
+					Log(fatal) << "ProcessQueue vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result) << std::endl;
 					break;
 				}
 
@@ -2607,7 +2607,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				result = realDevice->mQueue.submit(1, &submitInfo, nullFence);
 				if (result != vk::Result::eSuccess)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "ProcessQueue vkQueueSubmit failed with return code of " << GetResultString((VkResult)result);
+					Log(fatal) << "ProcessQueue vkQueueSubmit failed with return code of " << GetResultString((VkResult)result) << std::endl;
 					break;
 				}
 
@@ -2638,7 +2638,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				result = device.allocateCommandBuffers(&commandBufferInfo, &commandBuffer);
 				if (result != vk::Result::eSuccess)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "ProcessQueue vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
+					Log(fatal) << "ProcessQueue vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
 					break;
 				}
 
@@ -2657,7 +2657,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				result = commandBuffer.begin(&commandBufferBeginInfo);
 				if (result != vk::Result::eSuccess)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "ProcessQueue vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
+					Log(fatal) << "ProcessQueue vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result) << std::endl;
 					break;
 				}
 
@@ -2732,7 +2732,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				result = realDevice->mQueue.submit(1, &submitInfo, nullFence);
 				if (result != vk::Result::eSuccess)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "ProcessQueue vkQueueSubmit failed with return code of " << GetResultString((VkResult)result);
+					Log(fatal) << "ProcessQueue vkQueueSubmit failed with return code of " << GetResultString((VkResult)result) << std::endl;
 					break;
 				}
 
@@ -2763,7 +2763,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				result = device.allocateCommandBuffers(&commandBufferInfo, &commandBuffer);
 				if (result != vk::Result::eSuccess)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "ProcessQueue vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
+					Log(fatal) << "ProcessQueue vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result) << std::endl;
 					break;
 				}
 
@@ -2782,7 +2782,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				result = commandBuffer.begin(&commandBufferBeginInfo);
 				if (result != vk::Result::eSuccess)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "ProcessQueue vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
+					Log(fatal) << "ProcessQueue vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result) << std::endl;
 					break;
 				}
 
@@ -2857,7 +2857,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				result = realDevice->mQueue.submit(1, &submitInfo, nullFence);
 				if (result != vk::Result::eSuccess)
 				{
-					BOOST_LOG_TRIVIAL(fatal) << "ProcessQueue vkQueueSubmit failed with return code of " << GetResultString((VkResult)result);
+					Log(fatal) << "ProcessQueue vkQueueSubmit failed with return code of " << GetResultString((VkResult)result) << std::endl;
 					break;
 				}
 
@@ -2921,7 +2921,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 					realDevice->mCommandBuffers[realDevice->mCurrentCommandBuffer].endQuery(realQuery.mQueryPool, 0);
 					break;
 				default:
-					BOOST_LOG_TRIVIAL(error) << "ProcessQueue unknown query issue type " << dwIssueFlags;
+					Log(error) << "ProcessQueue unknown query issue type " << dwIssueFlags << std::endl;
 					break;
 				}
 
@@ -2942,23 +2942,23 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 			break;
 			case Query_GetDataSize:
 			{
-				BOOST_LOG_TRIVIAL(warning) << "ProcessQueue assuming 4 byte query result size.";
+				Log(warning) << "ProcessQueue assuming 4 byte query result size." << std::endl;
 			}
 			break;
 			default:
 			{
-				BOOST_LOG_TRIVIAL(error) << "ProcessQueue unknown work item " << workItem->WorkItemType;
+				Log(error) << "ProcessQueue unknown work item " << workItem->WorkItemType << std::endl;
 			}
 			break;
 			}
 			//}
 			//catch (const std::exception& ex)
 			//{
-			//	BOOST_LOG_TRIVIAL(warning) << "ProcessQueue - " << workItem->WorkItemType << " " << ex.what();
+			//	Log(warning) << "ProcessQueue - " << workItem->WorkItemType << " " << ex.what()<< std::endl;
 			//}
 			//catch (...)
 			//{
-			//	BOOST_LOG_TRIVIAL(warning) << "ProcessQueue - " << workItem->WorkItemType;
+			//	Log(warning) << "ProcessQueue - " << workItem->WorkItemType << std::endl;
 			//}
 
 			if (workItem->WillWait)

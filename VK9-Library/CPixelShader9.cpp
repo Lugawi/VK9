@@ -32,12 +32,12 @@ CPixelShader9::CPixelShader9(CDevice9* device,const DWORD* pFunction)
 	mFunction((DWORD*)pFunction),
 	mId(0)
 {
-	BOOST_LOG_TRIVIAL(info) << "CPixelShader9::CPixelShader9";
+	Log(info) << "CPixelShader9::CPixelShader9" << std::endl;
 }
 
 CPixelShader9::~CPixelShader9()
 {
-	BOOST_LOG_TRIVIAL(info) << "CPixelShader9::~CPixelShader9";
+	Log(info) << "CPixelShader9::~CPixelShader9" << std::endl;
 
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(nullptr);
 	workItem->WorkItemType = WorkItemType::Shader_Destroy;
@@ -106,7 +106,7 @@ HRESULT STDMETHODCALLTYPE CPixelShader9::FreePrivateData(REFGUID refguid)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CPixelShader9::FreePrivateData is not implemented!";
+	Log(warning) << "CPixelShader9::FreePrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -115,7 +115,7 @@ DWORD STDMETHODCALLTYPE CPixelShader9::GetPriority()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CPixelShader9::GetPriority is not implemented!";
+	Log(warning) << "CPixelShader9::GetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -124,7 +124,7 @@ HRESULT STDMETHODCALLTYPE CPixelShader9::GetPrivateData(REFGUID refguid, void* p
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CPixelShader9::GetPrivateData is not implemented!";
+	Log(warning) << "CPixelShader9::GetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -133,7 +133,7 @@ D3DRESOURCETYPE STDMETHODCALLTYPE CPixelShader9::GetType()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CPixelShader9::GetType is not implemented!";
+	Log(warning) << "CPixelShader9::GetType is not implemented!" << std::endl;
 
 	return D3DRTYPE_SURFACE;
 }
@@ -142,7 +142,7 @@ void STDMETHODCALLTYPE CPixelShader9::PreLoad()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CPixelShader9::PreLoad is not implemented!";
+	Log(warning) << "CPixelShader9::PreLoad is not implemented!" << std::endl;
 
 	return; 
 }
@@ -151,7 +151,7 @@ DWORD STDMETHODCALLTYPE CPixelShader9::SetPriority(DWORD PriorityNew)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CPixelShader9::SetPriority is not implemented!";
+	Log(warning) << "CPixelShader9::SetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -160,7 +160,7 @@ HRESULT STDMETHODCALLTYPE CPixelShader9::SetPrivateData(REFGUID refguid, const v
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CPixelShader9::SetPrivateData is not implemented!";
+	Log(warning) << "CPixelShader9::SetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }

@@ -435,6 +435,7 @@
     </ClCompile>
     <ClCompile Include="DrawContext.cpp" />
     <ClCompile Include="GarbageManager.cpp" />
+    <ClCompile Include="LogManager.cpp" />
     <ClCompile Include="pch\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdafx.h</PrecompiledHeaderFile>
@@ -495,6 +496,7 @@
     <ClInclude Include="CVolumeTexture9.h" />
     <ClInclude Include="DrawContext.h" />
     <ClInclude Include="GarbageManager.h" />
+    <ClInclude Include="LogManager.h" />
     <ClInclude Include="pch\stdafx.h" />
     <ClInclude Include="Perf_CommandStreamManager.h" />
     <ClInclude Include="Perf_ProcessQueue.h" />

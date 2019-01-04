@@ -70,7 +70,7 @@ CVertexDeclaration9::CVertexDeclaration9(CDevice9* device, const D3DVERTEXELEMEN
 			mTextureCount++;
 			break;
 		default:
-			BOOST_LOG_TRIVIAL(fatal) << "CVertexDeclaration9::CVertexDeclaration9 unknown vertex usage " << (uint32_t)pVertexElements[i].Usage;
+			Log(fatal) << "CVertexDeclaration9::CVertexDeclaration9 unknown vertex usage " << (uint32_t)pVertexElements[i].Usage << std::endl;
 			break;
 		}
 

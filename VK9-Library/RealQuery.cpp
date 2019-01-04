@@ -24,16 +24,18 @@ misrepresented as being the original software.
 
 #include "RealQuery.h"
 
+#include "Utilities.h"
+
 RealQuery::RealQuery(RealDevice* realDevice)
 	: mRealDevice(realDevice),
 	mSize(0)
 {
-	BOOST_LOG_TRIVIAL(info) << "RealQuery::RealQuery";
+	Log(info) << "RealQuery::RealQuery";
 }
 
 RealQuery::~RealQuery()
 {
-	BOOST_LOG_TRIVIAL(info) << "RealQuery::~RealQuery";
+	Log(info) << "RealQuery::~RealQuery";
 	if (mRealDevice != nullptr)
 	{
 		auto& device = mRealDevice->mDevice;

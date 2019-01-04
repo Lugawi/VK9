@@ -25,13 +25,14 @@ misrepresented as being the original software.
 #include "CSwapChain9.h"
 #include "CSurface9.h"
 #include "CDevice9.h"
+
 #include "Utilities.h"
 
 CSwapChain9::CSwapChain9(CDevice9* Device, D3DPRESENT_PARAMETERS *pPresentationParameters)
 	: mDevice(Device),
 	mPresentationParameters(pPresentationParameters)
 {
-	BOOST_LOG_TRIVIAL(info) << "CSwapChain9::CSwapChain9";
+	Log(info) << "CSwapChain9::CSwapChain9" << std::endl;
 
 	if (pPresentationParameters->BackBufferFormat == D3DFMT_A8R8G8B8)
 	{
@@ -46,7 +47,7 @@ CSwapChain9::CSwapChain9(CDevice9* Device, D3DPRESENT_PARAMETERS *pPresentationP
 
 CSwapChain9::~CSwapChain9()
 {
-	BOOST_LOG_TRIVIAL(info) << "CSwapChain9::~CSwapChain9";
+	Log(info) << "CSwapChain9::~CSwapChain9" << std::endl;
 
 	delete mBackBuffer;
 	delete mFrontBuffer;
@@ -116,13 +117,13 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::GetBackBuffer(UINT BackBuffer, D3DBACKBUF
 		return S_OK;
 		break;
 	case D3DBACKBUFFER_TYPE_LEFT:
-		BOOST_LOG_TRIVIAL(warning) << "CSwapChain9::GetBackBuffer left type is not implemented!";
+		Log(warning) << "CSwapChain9::GetBackBuffer left type is not implemented!" << std::endl;
 		return E_NOTIMPL;
 	case D3DBACKBUFFER_TYPE_RIGHT:
-		BOOST_LOG_TRIVIAL(warning) << "CSwapChain9::GetBackBuffer right type is not implemented!";
+		Log(warning) << "CSwapChain9::GetBackBuffer right type is not implemented!" << std::endl;
 		return E_NOTIMPL;
 	default:
-		BOOST_LOG_TRIVIAL(warning) << "CSwapChain9::GetBackBuffer unknown type is not implemented!";
+		Log(warning) << "CSwapChain9::GetBackBuffer unknown type is not implemented!" << std::endl;
 		return E_NOTIMPL;
 	}
 }
@@ -146,7 +147,7 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::GetDisplayMode(D3DDISPLAYMODE *pMode)
 
 HRESULT STDMETHODCALLTYPE CSwapChain9::GetFrontBufferData(IDirect3DSurface9 *pDestSurface)
 {
-	BOOST_LOG_TRIVIAL(warning) << "CSurface9::GetFrontBufferData is not implemented!";
+	Log(warning) << "CSurface9::GetFrontBufferData is not implemented!" << std::endl;
 
 	return E_NOTIMPL; //TODO: Implement.
 }
@@ -162,7 +163,7 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::GetRasterStatus(D3DRASTER_STATUS *pRaster
 {
 	(*pRasterStatus) = {};
 
-	BOOST_LOG_TRIVIAL(warning) << "CSurface9::GetRasterStatus is not implemented!";
+	Log(warning) << "CSurface9::GetRasterStatus is not implemented!" << std::endl;
 
 	return S_OK; //TODO: Implement.
 }
@@ -176,7 +177,7 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::GetLastPresentCount(UINT *pLastPresentCou
 {
 	(*pLastPresentCount) = {};
 
-	BOOST_LOG_TRIVIAL(warning) << "CSurface9::GetLastPresentCount is not implemented!";
+	Log(warning) << "CSurface9::GetLastPresentCount is not implemented!" << std::endl;
 
 	return S_OK; //TODO: Implement.
 }
@@ -185,7 +186,7 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::GetPresentStats(D3DPRESENTSTATS *pPresent
 {
 	(*pPresentationStatistics) = {};
 
-	BOOST_LOG_TRIVIAL(warning) << "CSurface9::GetPresentStats is not implemented!";
+	Log(warning) << "CSurface9::GetPresentStats is not implemented!" << std::endl;
 
 	return S_OK; //TODO: Implement.
 }

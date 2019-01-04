@@ -57,7 +57,7 @@ CDevice9::CDevice9(C9* Instance, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocu
 	mFocusWindow(hFocusWindow),
 	mBehaviorFlags(BehaviorFlags)
 {
-	BOOST_LOG_TRIVIAL(info) << "CDevice9::CDevice9";
+	Log(info) << "CDevice9::CDevice9" << std::endl;
 
 	if (pPresentationParameters != nullptr)
 	{
@@ -79,7 +79,7 @@ CDevice9::CDevice9(C9* Instance, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocu
 CDevice9::~CDevice9()
 {
 	Destroy();
-	BOOST_LOG_TRIVIAL(info) << "CDevice9::~CDevice9";
+	Log(info) << "CDevice9::~CDevice9" << std::endl;
 }
 
 void CDevice9::Init()
@@ -275,7 +275,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::ColorFill(IDirect3DSurface9 *pSurface, const
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::ColorFill is not implemented!";
+	Log(warning) << "CDevice9::ColorFill is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -544,7 +544,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DeletePatch(UINT Handle)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::DeletePatch is not implemented!";
+	Log(warning) << "CDevice9::DeletePatch is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -789,7 +789,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawRectPatch(UINT Handle, const float *pNum
 
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::DrawRectPatch is not implemented!";
+	Log(warning) << "CDevice9::DrawRectPatch is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -803,7 +803,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawTriPatch(UINT Handle, const float *pNumS
 
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::DrawTriPatch is not implemented!";
+	Log(warning) << "CDevice9::DrawTriPatch is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -823,7 +823,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::EvictManagedResources()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::EvictManagedResources is not implemented!";
+	Log(warning) << "CDevice9::EvictManagedResources is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -847,7 +847,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetClipPlane(DWORD Index, float *pPlane)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::GetClipPlane is not implemented!";
+	Log(warning) << "CDevice9::GetClipPlane is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -856,7 +856,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetClipStatus(D3DCLIPSTATUS9 *pClipStatus)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::GetClipStatus is not implemented!";
+	Log(warning) << "CDevice9::GetClipStatus is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -875,7 +875,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetCurrentTexturePalette(UINT *pPaletteNumbe
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::GetCurrentTexturePalette is not implemented!";
+	Log(warning) << "CDevice9::GetCurrentTexturePalette is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -1022,7 +1022,7 @@ UINT STDMETHODCALLTYPE CDevice9::GetNumberOfSwapChains()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::GetNumberOfSwapChains is not implemented!";
+	Log(warning) << "CDevice9::GetNumberOfSwapChains is not implemented!" << std::endl;
 
 	return 0;
 }
@@ -1031,7 +1031,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetPaletteEntries(UINT PaletteNumber, PALETT
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::GetPaletteEntries is not implemented!";
+	Log(warning) << "CDevice9::GetPaletteEntries is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -1120,7 +1120,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetRenderTargetData(IDirect3DSurface9 *pRend
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::GetRenderTargetData is not implemented!";
+	Log(warning) << "CDevice9::GetRenderTargetData is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -1153,7 +1153,7 @@ BOOL STDMETHODCALLTYPE CDevice9::GetSoftwareVertexProcessing()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::GetSoftwareVertexProcessing is not implemented!";
+	Log(warning) << "CDevice9::GetSoftwareVertexProcessing is not implemented!" << std::endl;
 
 	return true;
 }
@@ -1176,7 +1176,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetStreamSourceFreq(UINT StreamNumber, UINT 
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::GetStreamSourceFreq is not implemented!";
+	Log(warning) << "CDevice9::GetStreamSourceFreq is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -1331,7 +1331,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::MultiplyTransform(D3DTRANSFORMSTATETYPE Stat
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::MultiplyTransform is not implemented!";
+	Log(warning) << "CDevice9::MultiplyTransform is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -1340,7 +1340,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::ProcessVertices(UINT SrcStartIndex, UINT Des
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::ProcessVertices is not implemented!";
+	Log(warning) << "CDevice9::ProcessVertices is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -1374,7 +1374,7 @@ HRESULT CDevice9::SetClipPlane(DWORD Index, const float *pPlane)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetClipPlane is not implemented!";
+	Log(warning) << "CDevice9::SetClipPlane is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -1383,7 +1383,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetClipStatus(const D3DCLIPSTATUS9 *pClipSta
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetClipStatus is not implemented!";
+	Log(warning) << "CDevice9::SetClipStatus is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -1392,7 +1392,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetCurrentTexturePalette(UINT PaletteNumber)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetCurrentTexturePalette is not implemented!";
+	Log(warning) << "CDevice9::SetCurrentTexturePalette is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -1401,7 +1401,7 @@ void STDMETHODCALLTYPE CDevice9::SetCursorPosition(INT X, INT Y, DWORD Flags)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetCursorPosition is not implemented!";
+	Log(warning) << "CDevice9::SetCursorPosition is not implemented!" << std::endl;
 
 	return;
 }
@@ -1410,7 +1410,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetCursorProperties(UINT XHotSpot, UINT YHot
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetCursorProperties is not implemented!";
+	Log(warning) << "CDevice9::SetCursorProperties is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -1419,7 +1419,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetDepthStencilSurface(IDirect3DSurface9* pN
 {
 	if (pNewZStencil == nullptr)
 	{
-		BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetDepthStencilSurface passing null should disable the stencil operation but this isn't supported yet.";
+		Log(warning) << "CDevice9::SetDepthStencilSurface passing null should disable the stencil operation but this isn't supported yet." << std::endl;
 		return S_OK;
 	}
 
@@ -1445,7 +1445,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetDialogBoxMode(BOOL bEnableDialogs)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetDialogBoxMode is not implemented!";
+	Log(warning) << "CDevice9::SetDialogBoxMode is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -1471,7 +1471,7 @@ void STDMETHODCALLTYPE CDevice9::SetGammaRamp(UINT  iSwapChain, DWORD Flags, con
 	if (Flags != D3DSGR_NO_CALIBRATION)
 	{
 		//TODO: Implement.
-		BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetGammaRamp D3DSGR_CALIBRATE is not implemented!";
+		Log(warning) << "CDevice9::SetGammaRamp D3DSGR_CALIBRATE is not implemented!" << std::endl;
 	}
 }
 
@@ -1529,7 +1529,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPaletteEntries(UINT PaletteNumber, const 
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetPaletteEntries is not implemented!";
+	Log(warning) << "CDevice9::SetPaletteEntries is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -1638,7 +1638,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetSoftwareVertexProcessing(BOOL bSoftware)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetSoftwareVertexProcessing is not implemented!";
+	Log(warning) << "CDevice9::SetSoftwareVertexProcessing is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -1666,7 +1666,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetStreamSourceFreq(UINT StreamNumber, UINT 
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetStreamSourceFreq is not implemented!";
+	Log(warning) << "CDevice9::SetStreamSourceFreq is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -1784,7 +1784,7 @@ BOOL STDMETHODCALLTYPE CDevice9::ShowCursor(BOOL bShow)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::ShowCursor is not implemented!";
+	Log(warning) << "CDevice9::ShowCursor is not implemented!" << std::endl;
 
 	return TRUE;
 }
@@ -1841,7 +1841,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::ValidateDevice(DWORD *pNumPasses)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::ValidateDevice is not implemented!";
+	Log(warning) << "CDevice9::ValidateDevice is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -1850,7 +1850,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetConvolutionMonoKernel(UINT width, UINT he
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::SetConvolutionMonoKernel is not implemented!";
+	Log(warning) << "CDevice9::SetConvolutionMonoKernel is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -1859,7 +1859,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::ComposeRects(IDirect3DSurface9 *pSrc, IDirec
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::ComposeRects is not implemented!";
+	Log(warning) << "CDevice9::ComposeRects is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -1909,7 +1909,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::WaitForVBlank(UINT iSwapChain)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::WaitForVBlank is not implemented!";
+	Log(warning) << "CDevice9::WaitForVBlank is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -1918,7 +1918,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CheckResourceResidency(IDirect3DResource9 **
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::CheckResourceResidency is not implemented!";
+	Log(warning) << "CDevice9::CheckResourceResidency is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -1941,7 +1941,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CheckDeviceState(HWND hDestinationWindow)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CDevice9::CheckDeviceState is not implemented!";
+	Log(warning) << "CDevice9::CheckDeviceState is not implemented!" << std::endl;
 
 	return S_OK;
 }

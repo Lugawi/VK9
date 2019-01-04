@@ -23,6 +23,7 @@ misrepresented as being the original software.
 */
 
 #include "RealSwapChain.h"
+
 #include "Utilities.h"
 
 RealSwapChain::RealSwapChain(vk::Instance instance, vk::PhysicalDevice physicalDevice, vk::Device device, HWND windowHandle, uint32_t width, uint32_t height, bool useVsync)
@@ -34,7 +35,7 @@ RealSwapChain::RealSwapChain(vk::Instance instance, vk::PhysicalDevice physicalD
 	mHeight(height),
 	mUseVsync(useVsync)
 {
-	BOOST_LOG_TRIVIAL(info) << "RealSwapChain::RealSwapChain";
+	Log(info) << "RealSwapChain::RealSwapChain";
 
 	mCommandBufferBeginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 	
@@ -56,7 +57,7 @@ RealSwapChain::RealSwapChain(vk::Instance instance, vk::PhysicalDevice physicalD
 			|| mDevice.createSemaphore(&semaphoreInfo, nullptr, &mRenderFinishedSemaphores[i]) != vk::Result::eSuccess
 			|| mDevice.createFence(&fenceInfo, nullptr, &mInFlightFences[i]) != vk::Result::eSuccess)
 		{
-			BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::RealSwapChain failed to create synchronization objects for a frame!";
+			Log(fatal) << "RealSwapChain::RealSwapChain failed to create synchronization objects for a frame!";
 			return;
 		}
 	}
@@ -94,7 +95,7 @@ RealSwapChain::RealSwapChain(vk::Instance instance, vk::PhysicalDevice physicalD
 
 RealSwapChain::~RealSwapChain()
 {
-	BOOST_LOG_TRIVIAL(info) << "RealSwapChain::~RealSwapChain";
+	Log(info) << "RealSwapChain::~RealSwapChain";
 
 	DestroyDepthBuffer(); //Might not need will revisit later.
 	DestroySwapChain();
@@ -118,14 +119,14 @@ void RealSwapChain::InitSurface()
 	mResult = mInstance.createWin32SurfaceKHR(&surfaceCreateInfo, nullptr, &mSurface);
 	if (mResult != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::InitSurface vkCreateWin32SurfaceKHR failed with a return code of " << GetResultString((VkResult)mResult);
+		Log(fatal) << "RealSwapChain::InitSurface vkCreateWin32SurfaceKHR failed with a return code of " << GetResultString((VkResult)mResult);
 		return;
 	}
 
 	mResult = mPhysicalDevice.getSurfaceCapabilitiesKHR(mSurface, &mSurfaceCapabilities);
 	if (mResult != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::InitSurface vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed with return code of " << GetResultString((VkResult)mResult);
+		Log(fatal) << "RealSwapChain::InitSurface vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed with return code of " << GetResultString((VkResult)mResult);
 		return;
 	}
 
@@ -135,7 +136,7 @@ void RealSwapChain::InitSurface()
 	mResult = mPhysicalDevice.getSurfaceFormatsKHR(mSurface, &mSurfaceFormatCount, nullptr);
 	if (mResult != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::InitSurface vkGetPhysicalDeviceSurfaceFormatsKHR failed with return code of " << GetResultString((VkResult)mResult);
+		Log(fatal) << "RealSwapChain::InitSurface vkGetPhysicalDeviceSurfaceFormatsKHR failed with return code of " << GetResultString((VkResult)mResult);
 		return;
 	}
 
@@ -143,7 +144,7 @@ void RealSwapChain::InitSurface()
 	mResult = mPhysicalDevice.getSurfaceFormatsKHR(mSurface, &mSurfaceFormatCount, mSurfaceFormats);
 	if (mResult != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::InitSurface vkGetPhysicalDeviceSurfaceFormatsKHR failed with return code of " << GetResultString((VkResult)mResult);
+		Log(fatal) << "RealSwapChain::InitSurface vkGetPhysicalDeviceSurfaceFormatsKHR failed with return code of " << GetResultString((VkResult)mResult);
 		return;
 	}
 
@@ -196,7 +197,7 @@ void RealSwapChain::InitSurface()
 	mResult = mPhysicalDevice.getSurfacePresentModesKHR(mSurface, &presentationModeCount, nullptr);
 	if (mResult != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::InitSurface vkGetPhysicalDeviceSurfacePresentModesKHR failed with return code of " << GetResultString((VkResult)mResult);
+		Log(fatal) << "RealSwapChain::InitSurface vkGetPhysicalDeviceSurfacePresentModesKHR failed with return code of " << GetResultString((VkResult)mResult);
 		return;
 	}
 
@@ -204,7 +205,7 @@ void RealSwapChain::InitSurface()
 	mResult = mPhysicalDevice.getSurfacePresentModesKHR(mSurface, &presentationModeCount, presentationModes);
 	if (mResult != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::InitSurface vkGetPhysicalDeviceSurfacePresentModesKHR failed with return code of " << GetResultString((VkResult)mResult);
+		Log(fatal) << "RealSwapChain::InitSurface vkGetPhysicalDeviceSurfacePresentModesKHR failed with return code of " << GetResultString((VkResult)mResult);
 		return;
 	}
 
@@ -259,7 +260,7 @@ void RealSwapChain::InitSwapChain()
 	mResult = mDevice.createSwapchainKHR(&swapchainCreateInfo, nullptr, &mSwapchain);
 	if (mResult != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::InitSwapChain vkCreateSwapchainKHR failed with return code of " << GetResultString((VkResult)mResult);
+		Log(fatal) << "RealSwapChain::InitSwapChain vkCreateSwapchainKHR failed with return code of " << GetResultString((VkResult)mResult);
 		return;
 	}
 
@@ -267,7 +268,7 @@ void RealSwapChain::InitSwapChain()
 	mResult = mDevice.getSwapchainImagesKHR(mSwapchain, &mSwapchainImageCount, nullptr);
 	if (mResult != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::InitSwapChain vkGetSwapchainImagesKHR failed with return code of " << GetResultString((VkResult)mResult);
+		Log(fatal) << "RealSwapChain::InitSwapChain vkGetSwapchainImagesKHR failed with return code of " << GetResultString((VkResult)mResult);
 		return;
 	}
 
@@ -277,7 +278,7 @@ void RealSwapChain::InitSwapChain()
 	mResult = mDevice.getSwapchainImagesKHR(mSwapchain, &mSwapchainImageCount, mImages);
 	if (mResult != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::InitSwapChain vkGetSwapchainImagesKHR failed with return code of " << GetResultString((VkResult)mResult);
+		Log(fatal) << "RealSwapChain::InitSwapChain vkGetSwapchainImagesKHR failed with return code of " << GetResultString((VkResult)mResult);
 		return;
 	}
 
@@ -300,7 +301,7 @@ void RealSwapChain::InitSwapChain()
 		mResult = mDevice.createImageView(&color_image_view, nullptr, &mViews[i]);
 		if (mResult != vk::Result::eSuccess)
 		{
-			BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::InitSwapChain vkCreateImageView failed with return code of " << GetResultString((VkResult)mResult);
+			Log(fatal) << "RealSwapChain::InitSwapChain vkCreateImageView failed with return code of " << GetResultString((VkResult)mResult);
 			return;
 		}
 	}
@@ -358,7 +359,7 @@ void RealSwapChain::InitDepthBuffer()
 	mResult = mDevice.createImage(&imageCreateInfo, nullptr, &mDepthImage);
 	if (mResult != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::InitDepthBuffer vkCreateImage failed with return code of " << GetResultString((VkResult)mResult);
+		Log(fatal) << "RealSwapChain::InitDepthBuffer vkCreateImage failed with return code of " << GetResultString((VkResult)mResult);
 		return;
 	}
 
@@ -377,7 +378,7 @@ void RealSwapChain::InitDepthBuffer()
 	mResult = mDevice.allocateMemory(&depthMemoryAllocateInfo, nullptr, &mDepthDeviceMemory);
 	if (mResult != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::InitDepthBuffer vkAllocateMemory failed with return code of " << GetResultString((VkResult)mResult);
+		Log(fatal) << "RealSwapChain::InitDepthBuffer vkAllocateMemory failed with return code of " << GetResultString((VkResult)mResult);
 		return;
 	}
 
@@ -399,7 +400,7 @@ void RealSwapChain::InitDepthBuffer()
 	mResult = mDevice.createImageView(&imageViewCreateInfo, nullptr, &mDepthView);
 	if (mResult != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::InitDepthBuffer vkCreateImageView failed with return code of " << GetResultString((VkResult)mResult);
+		Log(fatal) << "RealSwapChain::InitDepthBuffer vkCreateImageView failed with return code of " << GetResultString((VkResult)mResult);
 		return;
 	}
 }
@@ -419,7 +420,7 @@ vk::Result RealSwapChain::Present(vk::CommandBuffer& commandBuffer, vk::Queue& q
 	mResult = mDevice.acquireNextImageKHR(mSwapchain, std::numeric_limits<uint64_t>::max(), mImageAvailableSemaphores[mCurrentFrameIndex], nullptr, &mCurrentImageIndex);
 	if (mResult != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::Start vkAcquireNextImageKHR failed with return code of " << GetResultString((VkResult)mResult);
+		Log(fatal) << "RealSwapChain::Start vkAcquireNextImageKHR failed with return code of " << GetResultString((VkResult)mResult);
 		commandBuffer.end();
 		commandBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
 		return mResult;
@@ -517,7 +518,7 @@ vk::Result RealSwapChain::Present(vk::CommandBuffer& commandBuffer, vk::Queue& q
 	mResult = queue.submit(1, &mSubmitInfo, mInFlightFences[mCurrentFrameIndex]);
 	if (mResult != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::Present vkQueueSubmit failed with return code of " << GetResultString((VkResult)mResult);
+		Log(fatal) << "RealSwapChain::Present vkQueueSubmit failed with return code of " << GetResultString((VkResult)mResult);
 		return mResult;
 	}
 
@@ -525,7 +526,7 @@ vk::Result RealSwapChain::Present(vk::CommandBuffer& commandBuffer, vk::Queue& q
 	//mResult = (vk::Result)vkQueueWaitIdle((VkQueue)queue);
 	//if (mResult != vk::Result::eSuccess)
 	//{
-	//	BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::Present vkQueueWaitIdle failed with return code of " << GetResultString((VkResult)mResult);
+	//	Log(fatal) << "RealSwapChain::Present vkQueueWaitIdle failed with return code of " << GetResultString((VkResult)mResult);
 	//	return mResult;
 	//}
 
@@ -535,7 +536,7 @@ vk::Result RealSwapChain::Present(vk::CommandBuffer& commandBuffer, vk::Queue& q
 	mResult = queue.presentKHR(&mPresentInfo);
 	if (mResult != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealSwapChain::Present vkQueuePresentKHR failed with return code of " << GetResultString((VkResult)mResult);
+		Log(fatal) << "RealSwapChain::Present vkQueuePresentKHR failed with return code of " << GetResultString((VkResult)mResult);
 		return mResult;
 	}
 

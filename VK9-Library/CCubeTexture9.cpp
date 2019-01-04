@@ -40,7 +40,7 @@ CCubeTexture9::CCubeTexture9(CDevice9* device, UINT EdgeLength, UINT Levels, DWO
 	mResult(vk::Result::eSuccess),
 	mId(0)
 {
-	BOOST_LOG_TRIVIAL(info) << "CCubeTexture9::CCubeTexture9";
+	Log(info) << "CCubeTexture9::CCubeTexture9" << std::endl;
 	
 	this->mCommandStreamManager = this->mDevice->mCommandStreamManager;
 
@@ -76,7 +76,7 @@ CCubeTexture9::CCubeTexture9(CDevice9* device, UINT EdgeLength, UINT Levels, DWO
 
 CCubeTexture9::~CCubeTexture9()
 {
-	BOOST_LOG_TRIVIAL(info) << "CCubeTexture9::~CCubeTexture9";
+	Log(info) << "CCubeTexture9::~CCubeTexture9" << std::endl;
 
 	for (size_t i = 0; i < 6; i++)
 	{
@@ -170,7 +170,7 @@ HRESULT STDMETHODCALLTYPE CCubeTexture9::FreePrivateData(REFGUID refguid)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CCubeTexture9::FreePrivateData is not implemented!";
+	Log(warning) << "CCubeTexture9::FreePrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -179,7 +179,7 @@ DWORD STDMETHODCALLTYPE CCubeTexture9::GetPriority()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CCubeTexture9::GetPriority is not implemented!";
+	Log(warning) << "CCubeTexture9::GetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -188,7 +188,7 @@ HRESULT STDMETHODCALLTYPE CCubeTexture9::GetPrivateData(REFGUID refguid, void* p
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CCubeTexture9::GetPrivateData is not implemented!";
+	Log(warning) << "CCubeTexture9::GetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -197,7 +197,7 @@ void STDMETHODCALLTYPE CCubeTexture9::PreLoad()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CCubeTexture9::PreLoad is not implemented!";
+	Log(warning) << "CCubeTexture9::PreLoad is not implemented!" << std::endl;
 
 	return; 
 }
@@ -206,7 +206,7 @@ DWORD STDMETHODCALLTYPE CCubeTexture9::SetPriority(DWORD PriorityNew)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CCubeTexture9::SetPriority is not implemented!";
+	Log(warning) << "CCubeTexture9::SetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -215,7 +215,7 @@ HRESULT STDMETHODCALLTYPE CCubeTexture9::SetPrivateData(REFGUID refguid, const v
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CCubeTexture9::SetPrivateData is not implemented!";
+	Log(warning) << "CCubeTexture9::SetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -238,7 +238,7 @@ DWORD STDMETHODCALLTYPE CCubeTexture9::GetLOD()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CCubeTexture9::GetLOD is not implemented!";
+	Log(warning) << "CCubeTexture9::GetLOD is not implemented!" << std::endl;
 
 	return 0;
 }
@@ -259,7 +259,7 @@ DWORD STDMETHODCALLTYPE CCubeTexture9::SetLOD(DWORD LODNew)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CCubeTexture9::SetLOD is not implemented!";
+	Log(warning) << "CCubeTexture9::SetLOD is not implemented!" << std::endl;
 
 	return 0;
 }
@@ -279,7 +279,7 @@ HRESULT STDMETHODCALLTYPE CCubeTexture9::AddDirtyRect(D3DCUBEMAP_FACES FaceType,
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CCubeTexture9::AddDirtyRect is not implemented!";
+	Log(warning) << "CCubeTexture9::AddDirtyRect is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -304,7 +304,7 @@ HRESULT CCubeTexture9::LockRect(D3DCUBEMAP_FACES FaceType, UINT Level, D3DLOCKED
 {
 	//if (Level == 0)
 	//{
-	//	BOOST_LOG_TRIVIAL(info) << "CTexture9::LockRect Level:" << Level << " Handle: " << this;
+	//	Log(info) << "CTexture9::LockRect Level:" << Level << " Handle: " << this;
 	//}
 	HRESULT result = mSurfaces[FaceType][Level]->LockRect(pLockedRect, pRect, Flags);	
 	return result;
@@ -314,7 +314,7 @@ HRESULT CCubeTexture9::UnlockRect(D3DCUBEMAP_FACES FaceType, UINT Level)
 {
 	//if (Level == 0)
 	//{
-	//	BOOST_LOG_TRIVIAL(info) << "CTexture9::UnlockRect Level:" << Level << " Handle: " << this;
+	//	Log(info) << "CTexture9::UnlockRect Level:" << Level << " Handle: " << this;
 	//}
 	HRESULT result = mSurfaces[FaceType][Level]->UnlockRect();
 	return result;

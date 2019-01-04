@@ -128,7 +128,7 @@ HRESULT STDMETHODCALLTYPE CIndexBuffer9::FreePrivateData(REFGUID refguid)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CIndexBuffer9::FreePrivateData is not implemented!";
+	Log(warning) << "CIndexBuffer9::FreePrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -137,7 +137,7 @@ DWORD STDMETHODCALLTYPE CIndexBuffer9::GetPriority()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CIndexBuffer9::GetPriority is not implemented!";
+	Log(warning) << "CIndexBuffer9::GetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -146,7 +146,7 @@ HRESULT STDMETHODCALLTYPE CIndexBuffer9::GetPrivateData(REFGUID refguid, void* p
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CIndexBuffer9::GetPrivateData is not implemented!";
+	Log(warning) << "CIndexBuffer9::GetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -166,7 +166,7 @@ void STDMETHODCALLTYPE CIndexBuffer9::PreLoad()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CIndexBuffer9::PreLoad is not implemented!";
+	Log(warning) << "CIndexBuffer9::PreLoad is not implemented!" << std::endl;
 
 	return; 
 }
@@ -175,7 +175,7 @@ DWORD STDMETHODCALLTYPE CIndexBuffer9::SetPriority(DWORD PriorityNew)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CIndexBuffer9::SetPriority is not implemented!";
+	Log(warning) << "CIndexBuffer9::SetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -184,7 +184,7 @@ HRESULT STDMETHODCALLTYPE CIndexBuffer9::SetPrivateData(REFGUID refguid, const v
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CIndexBuffer9::SetPrivateData is not implemented!";
+	Log(warning) << "CIndexBuffer9::SetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -193,7 +193,7 @@ HRESULT STDMETHODCALLTYPE CIndexBuffer9::GetDesc(D3DINDEXBUFFER_DESC* pDesc)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CIndexBuffer9::GetDesc is not implemented!";
+	Log(warning) << "CIndexBuffer9::GetDesc is not implemented!" << std::endl;
 
 	return S_OK;	
 }

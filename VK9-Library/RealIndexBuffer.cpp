@@ -24,6 +24,8 @@ misrepresented as being the original software.
 
 #include "RealIndexBuffer.h"
 
+#include "Utilities.h"
+
 RealIndexBuffer::RealIndexBuffer(RealDevice* realDevice, size_t length, bool isDynamic, _D3DFORMAT format)
 	: mRealDevice(realDevice)
 {
@@ -49,7 +51,7 @@ RealIndexBuffer::RealIndexBuffer(RealDevice* realDevice, size_t length, bool isD
 		break;
 	default:
 		mSize = 0;
-		BOOST_LOG_TRIVIAL(fatal) << "RealIndexBuffer::RealIndexBuffer invalid D3DFORMAT of " << format;
+		Log(fatal) << "RealIndexBuffer::RealIndexBuffer invalid D3DFORMAT of " << format;
 		break;
 	}
 }

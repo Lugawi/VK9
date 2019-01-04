@@ -128,7 +128,7 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::FreePrivateData(REFGUID refguid)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVertexBuffer9::FreePrivateData is not implemented!";
+	Log(warning) << "CVertexBuffer9::FreePrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -137,7 +137,7 @@ DWORD STDMETHODCALLTYPE CVertexBuffer9::GetPriority()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVertexBuffer9::GetPriority is not implemented!";
+	Log(warning) << "CVertexBuffer9::GetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -146,7 +146,7 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::GetPrivateData(REFGUID refguid, void* 
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVertexBuffer9::GetPrivateData is not implemented!";
+	Log(warning) << "CVertexBuffer9::GetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -166,7 +166,7 @@ void STDMETHODCALLTYPE CVertexBuffer9::PreLoad()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVertexBuffer9::PreLoad is not implemented!";
+	Log(warning) << "CVertexBuffer9::PreLoad is not implemented!" << std::endl;
 
 	return;
 }
@@ -175,7 +175,7 @@ DWORD STDMETHODCALLTYPE CVertexBuffer9::SetPriority(DWORD PriorityNew)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVertexBuffer9::SetPriority is not implemented!";
+	Log(warning) << "CVertexBuffer9::SetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -184,7 +184,7 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::SetPrivateData(REFGUID refguid, const 
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVertexBuffer9::SetPrivateData is not implemented!";
+	Log(warning) << "CVertexBuffer9::SetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -193,7 +193,7 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::GetDesc(D3DVERTEXBUFFER_DESC* pDesc)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVertexBuffer9::GetDesc is not implemented!";
+	Log(warning) << "CVertexBuffer9::GetDesc is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }

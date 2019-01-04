@@ -22,16 +22,15 @@ misrepresented as being the original software.
 #define SHADERCONVERTER_H
 
 #include <stdint.h>
-//#include <vulkan/vulkan.h>
 #include <vulkan/vulkan.hpp>
 #include <vector>
 #include <unordered_map>
 #include <map>
 #include <stack>
-#include <boost/log/trivial.hpp>
 #include <spirv.hpp>
 #include <GLSL.std.450.h>
 #include "CTypes.h"
+#include "LogManager.h"
 
 /*
 http://timjones.io/blog/archive/2015/09/02/parsing-direct3d-shader-bytecode
@@ -148,7 +147,7 @@ struct TypeDescription
 		case spv::OpTypeFunction:
 			return this->PrimaryType == value.PrimaryType && this->SecondaryType == value.SecondaryType && this->TernaryType == value.TernaryType;
 		default:
-			BOOST_LOG_TRIVIAL(warning) << "operator == - Unsupported data type " << this->PrimaryType;
+			Log(warning) << "operator == - Unsupported data type " << this->PrimaryType;
 			return false;
 			break;
 		}
@@ -174,7 +173,7 @@ struct TypeDescription
 		case spv::OpTypeFunction:
 			return this->PrimaryType != value.PrimaryType || this->SecondaryType != value.SecondaryType || this->TernaryType != value.TernaryType;
 		default:
-			BOOST_LOG_TRIVIAL(warning) << "operator != - Unsupported data type " << this->PrimaryType;
+			Log(warning) << "operator != - Unsupported data type " << this->PrimaryType;
 			return false;
 			break;
 		}
@@ -407,44 +406,44 @@ inline uint32_t GetUsageIndex(uint32_t token)
 
 inline void PrintTokenInformation(const char* tokenName)
 {
-	BOOST_LOG_TRIVIAL(info) << tokenName;
+	Log(info) << tokenName << std::endl;
 };
 
 inline void PrintTokenInformation(const char* tokenName, Token argument1)
 {
-	BOOST_LOG_TRIVIAL(info) << tokenName << " - "
-		<< argument1.DestinationParameterToken.RegisterNumber << "(" << GetRegisterTypeName(argument1.i) << ")";
+	Log(info) << tokenName << " - "
+		<< argument1.DestinationParameterToken.RegisterNumber << "(" << GetRegisterTypeName(argument1.i) << ")" << std::endl;
 };
 
 inline void PrintTokenInformation(const char* tokenName, Token result, Token argument1)
 {
-	BOOST_LOG_TRIVIAL(info) << tokenName << " - "
+	Log(info) << tokenName << " - "
 		<< result.DestinationParameterToken.RegisterNumber << "(" << GetRegisterTypeName(result.i) << ") "
-		<< argument1.DestinationParameterToken.RegisterNumber << "(" << GetRegisterTypeName(argument1.i) << ")";
+		<< argument1.DestinationParameterToken.RegisterNumber << "(" << GetRegisterTypeName(argument1.i) << ")" << std::endl;
 };
 
 inline void PrintTokenInformation(const char* tokenName, Token result, uint32_t resultId, Token argument1, uint32_t argument1Id)
 {
-	BOOST_LOG_TRIVIAL(info) << tokenName << " - "
+	Log(info) << tokenName << " - "
 		<< result.DestinationParameterToken.RegisterNumber << "(" << GetRegisterTypeName(result.i) << ") [" << resultId << "] "
-		<< argument1.DestinationParameterToken.RegisterNumber << "(" << GetRegisterTypeName(argument1.i) << ") [" << argument1Id << "]";
+		<< argument1.DestinationParameterToken.RegisterNumber << "(" << GetRegisterTypeName(argument1.i) << ") [" << argument1Id << "]" << std::endl;
 };
 
 inline void PrintTokenInformation(const char* tokenName, Token result, Token argument1, Token argument2)
 {
-	BOOST_LOG_TRIVIAL(info) << tokenName << " - "
+	Log(info) << tokenName << " - "
 		<< result.DestinationParameterToken.RegisterNumber << "(" << GetRegisterTypeName(result.i) << ") "
 		<< argument1.DestinationParameterToken.RegisterNumber << "(" << GetRegisterTypeName(argument1.i) << ") "
-		<< argument2.DestinationParameterToken.RegisterNumber << "(" << GetRegisterTypeName(argument2.i) << ")";
+		<< argument2.DestinationParameterToken.RegisterNumber << "(" << GetRegisterTypeName(argument2.i) << ")" << std::endl;
 };
 
 inline void PrintTokenInformation(const char* tokenName, Token result, Token argument1, Token argument2, Token argument3)
 {
-	BOOST_LOG_TRIVIAL(info) << tokenName << " - "
+	Log(info) << tokenName << " - "
 		<< result.DestinationParameterToken.RegisterNumber << "(" << GetRegisterTypeName(result.i) << ") "
 		<< argument1.DestinationParameterToken.RegisterNumber << "(" << GetRegisterTypeName(argument1.i) << ") "
 		<< argument2.DestinationParameterToken.RegisterNumber << "(" << GetRegisterTypeName(argument2.i) << ") "
-		<< argument3.DestinationParameterToken.RegisterNumber << "(" << GetRegisterTypeName(argument3.i) << ")";
+		<< argument3.DestinationParameterToken.RegisterNumber << "(" << GetRegisterTypeName(argument3.i) << ")" << std::endl;
 };
 
 /*

@@ -32,12 +32,12 @@ CVertexShader9::CVertexShader9(CDevice9* device, const DWORD* pFunction)
 	mFunction((DWORD*)pFunction),
 	mId(0)
 {
-	BOOST_LOG_TRIVIAL(info) << "CVertexShader9::CVertexShader9";
+	Log(info) << "CVertexShader9::CVertexShader9";
 }
 
 CVertexShader9::~CVertexShader9()
 {
-	BOOST_LOG_TRIVIAL(info) << "CVertexShader9::~CVertexShader9";
+	Log(info) << "CVertexShader9::~CVertexShader9";
 
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(nullptr);
 	workItem->WorkItemType = WorkItemType::Shader_Destroy;
@@ -106,7 +106,7 @@ HRESULT STDMETHODCALLTYPE CVertexShader9::FreePrivateData(REFGUID refguid)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVertexShader9::FreePrivateData is not implemented!";
+	Log(warning) << "CVertexShader9::FreePrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -115,7 +115,7 @@ DWORD STDMETHODCALLTYPE CVertexShader9::GetPriority()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVertexShader9::GetPriority is not implemented!";
+	Log(warning) << "CVertexShader9::GetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -124,7 +124,7 @@ HRESULT STDMETHODCALLTYPE CVertexShader9::GetPrivateData(REFGUID refguid, void* 
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVertexShader9::GetPrivateData is not implemented!";
+	Log(warning) << "CVertexShader9::GetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -133,7 +133,7 @@ D3DRESOURCETYPE STDMETHODCALLTYPE CVertexShader9::GetType()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVertexShader9::GetType is not implemented!";
+	Log(warning) << "CVertexShader9::GetType is not implemented!" << std::endl;
 
 	return D3DRTYPE_SURFACE;
 }
@@ -142,7 +142,7 @@ void STDMETHODCALLTYPE CVertexShader9::PreLoad()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVertexShader9::PreLoad is not implemented!";
+	Log(warning) << "CVertexShader9::PreLoad is not implemented!" << std::endl;
 
 	return; 
 }
@@ -151,7 +151,7 @@ DWORD STDMETHODCALLTYPE CVertexShader9::SetPriority(DWORD PriorityNew)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVertexShader9::SetPriority is not implemented!";
+	Log(warning) << "CVertexShader9::SetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -160,7 +160,7 @@ HRESULT STDMETHODCALLTYPE CVertexShader9::SetPrivateData(REFGUID refguid, const 
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVertexShader9::SetPrivateData is not implemented!";
+	Log(warning) << "CVertexShader9::SetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }

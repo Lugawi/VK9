@@ -3,7 +3,7 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 
 /*
-Copyright(c) 2016 Christopher Joseph Dean Schaefer
+Copyright(c) 2019 Christopher Joseph Dean Schaefer
 
 This software is provided 'as-is', without any express or implied
 warranty.In no event will the authors be held liable for any damages
@@ -22,18 +22,50 @@ misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "DrawContext.h"
+#include "LogManager.h"
 
-#include "Utilities.h"
+//#include "Utilities.h"
 
-DrawContext::~DrawContext()
+static char SeverityText[6][20] =
 {
-	if (mRealDevice != nullptr)
-	{
-		//Log(warning) << "DrawContext::~DrawContext" << std::endl;
-		auto& device = mRealDevice->mDevice;
-		device.destroyPipeline(Pipeline, nullptr);
-		device.destroyPipelineLayout(PipelineLayout, nullptr);
-		//device.destroyDescriptorSetLayout(DescriptorSetLayout, nullptr);
-	}
+	"[TRACE] ",
+	"[DEBUG] ",
+	"[INFO] ",
+	"[WARNING] ",
+	"[ERROR] ",
+	"[FATAL] "
+};
+
+LogManager* LogManager::mInstance;
+
+LogManager::LogManager(const std::string& filename, SeverityLevel severityLevel)
+	: mFileStream(filename),
+	mSeverityLevel(severityLevel)
+{
 }
+
+LogManager::~LogManager() 
+{
+}
+
+void LogManager::Create(const std::string& filename, SeverityLevel severityLevel)
+{
+	LogManager::mInstance = new LogManager(filename, severityLevel);
+}
+
+void LogManager::Destroy()
+{
+	delete LogManager::mInstance;
+}
+
+LockedStream Log(SeverityLevel severityLevel)
+{
+	if (severityLevel > LogManager::mInstance->mSeverityLevel)
+	{
+		return LockedStream(LogManager::mInstance->mFileStream, LogManager::mInstance->mMutex);
+	}
+	else
+	{
+		return LockedStream(LogManager::mInstance->mNullStream, LogManager::mInstance->mMutex);
+	}
+};

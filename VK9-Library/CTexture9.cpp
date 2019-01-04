@@ -26,14 +26,14 @@ misrepresented as being the original software.
 #define NOMINMAX
 #endif // NOMINMAX
 
+#include <math.h>
+#include <algorithm>
+
 #include "CTexture9.h"
 #include "CSurface9.h"
 #include "CDevice9.h"
 
 #include "Utilities.h"
-
-#include <math.h>
-#include <algorithm>
 
 CTexture9::CTexture9(CDevice9* device, UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, HANDLE *pSharedHandle)
 	: mDevice(device),
@@ -46,7 +46,7 @@ CTexture9::CTexture9(CDevice9* device, UINT Width, UINT Height, UINT Levels, DWO
 	mSharedHandle(pSharedHandle),
 	mId(0)
 {
-	BOOST_LOG_TRIVIAL(info) << "CTexture9::CTexture9";
+	Log(info) << "CTexture9::CTexture9" << std::endl;
 
 	this->mCommandStreamManager = this->mDevice->mCommandStreamManager;
 	//mDevice->AddRef();
@@ -89,7 +89,7 @@ CTexture9::CTexture9(CDevice9* device, UINT Width, UINT Height, UINT Levels, DWO
 
 CTexture9::~CTexture9()
 {
-	BOOST_LOG_TRIVIAL(info) << "CTexture9::~CTexture9";
+	Log(info) << "CTexture9::~CTexture9" << std::endl;
 
 	for (size_t i = 0; i < mSurfaces.size(); i++)
 	{
@@ -184,7 +184,7 @@ HRESULT STDMETHODCALLTYPE CTexture9::FreePrivateData(REFGUID refguid)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CTexture9::FreePrivateData is not implemented!";
+	Log(warning) << "CTexture9::FreePrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -193,7 +193,7 @@ DWORD STDMETHODCALLTYPE CTexture9::GetPriority()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CTexture9::GetPriority is not implemented!";
+	Log(warning) << "CTexture9::GetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -202,7 +202,7 @@ HRESULT STDMETHODCALLTYPE CTexture9::GetPrivateData(REFGUID refguid, void* pData
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CTexture9::GetPrivateData is not implemented!";
+	Log(warning) << "CTexture9::GetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -211,7 +211,7 @@ void STDMETHODCALLTYPE CTexture9::PreLoad()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CTexture9::PreLoad is not implemented!";
+	Log(warning) << "CTexture9::PreLoad is not implemented!" << std::endl;
 
 	return;
 }
@@ -220,7 +220,7 @@ DWORD STDMETHODCALLTYPE CTexture9::SetPriority(DWORD PriorityNew)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CTexture9::SetPriority is not implemented!";
+	Log(warning) << "CTexture9::SetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -229,7 +229,7 @@ HRESULT STDMETHODCALLTYPE CTexture9::SetPrivateData(REFGUID refguid, const void*
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CTexture9::SetPrivateData is not implemented!";
+	Log(warning) << "CTexture9::SetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -252,7 +252,7 @@ DWORD STDMETHODCALLTYPE CTexture9::GetLOD()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CTexture9::GetLOD is not implemented!";
+	Log(warning) << "CTexture9::GetLOD is not implemented!" << std::endl;
 
 	return 0;
 }
@@ -275,7 +275,7 @@ DWORD STDMETHODCALLTYPE CTexture9::SetLOD(DWORD LODNew)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CTexture9::SetLOD is not implemented!";
+	Log(warning) << "CTexture9::SetLOD is not implemented!" << std::endl;
 
 	return 0;
 }
@@ -295,7 +295,7 @@ HRESULT STDMETHODCALLTYPE CTexture9::AddDirtyRect(const RECT* pDirtyRect)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CTexture9::AddDirtyRect is not implemented!";
+	Log(warning) << "CTexture9::AddDirtyRect is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -361,7 +361,7 @@ HRESULT STDMETHODCALLTYPE CTexture9::LockRect(UINT Level, D3DLOCKED_RECT* pLocke
 
 	if ((Flags & D3DLOCK_DISCARD) == D3DLOCK_DISCARD)
 	{
-		BOOST_LOG_TRIVIAL(warning) << "CTexture9::LockRect D3DLOCK_DISCARD is not implemented!";
+		Log(warning) << "CTexture9::LockRect D3DLOCK_DISCARD is not implemented!" << std::endl;
 	}
 
 	//mLastIndex = mIndex;

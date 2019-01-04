@@ -25,8 +25,8 @@ misrepresented as being the original software.
 #include "RealRenderTarget.h"
 #include "RealSurface.h"
 #include "RealTexture.h"
-#include "Utilities.h"
 
+#include "Utilities.h"
 
 RealRenderTarget::RealRenderTarget(vk::Device device, RealTexture* colorTexture, RealSurface* colorSurface, RealSurface* depthSurface)
 	: mDevice(device),
@@ -38,7 +38,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealTexture* colorTexture,
 	{
 		return;
 	}
-	//BOOST_LOG_TRIVIAL(info) << "RealRenderTarget::RealRenderTarget";
+	//Log(info) << "RealRenderTarget::RealRenderTarget";
 
 	vk::Result result;
 
@@ -97,7 +97,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealTexture* colorTexture,
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mStoreRenderPass);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -111,7 +111,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealTexture* colorTexture,
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mClearColorRenderPass);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -125,7 +125,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealTexture* colorTexture,
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mClearColorDepthRenderPass);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -139,7 +139,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealTexture* colorTexture,
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mClearAllRenderPass);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -153,7 +153,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealTexture* colorTexture,
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mClearDepthRenderPass);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -167,7 +167,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealTexture* colorTexture,
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mClearStencilRenderPass);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -186,7 +186,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealTexture* colorTexture,
 	result = mDevice.createFramebuffer(&framebufferCreateInfo, nullptr, &mFramebuffer);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealRenderTarget::RealRenderTarget vkCreateFramebuffer failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealRenderTarget::RealRenderTarget vkCreateFramebuffer failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -225,7 +225,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealSurface* colorSurface,
 		return;
 	}
 
-	//BOOST_LOG_TRIVIAL(info) << "RealRenderTarget::RealRenderTarget";
+	//Log(info) << "RealRenderTarget::RealRenderTarget";
 
 	vk::Result result;
 
@@ -284,7 +284,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealSurface* colorSurface,
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mStoreRenderPass);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -298,7 +298,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealSurface* colorSurface,
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mClearColorRenderPass);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -312,7 +312,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealSurface* colorSurface,
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mClearColorDepthRenderPass);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -326,7 +326,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealSurface* colorSurface,
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mClearAllRenderPass);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -340,7 +340,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealSurface* colorSurface,
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mClearDepthRenderPass);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -354,7 +354,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealSurface* colorSurface,
 	result = mDevice.createRenderPass(&renderPassCreateInfo, nullptr, &mClearStencilRenderPass);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealRenderTarget::RealRenderTarget vkCreateRenderPass failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -373,7 +373,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealSurface* colorSurface,
 	result = mDevice.createFramebuffer(&framebufferCreateInfo, nullptr, &mFramebuffer);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealRenderTarget::RealRenderTarget vkCreateFramebuffer failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealRenderTarget::RealRenderTarget vkCreateFramebuffer failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -401,7 +401,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealSurface* colorSurface,
 
 RealRenderTarget::~RealRenderTarget()
 {
-	//BOOST_LOG_TRIVIAL(info) << "RealRenderTarget::~RealRenderTarget";
+	//Log(info) << "RealRenderTarget::~RealRenderTarget";
 	mDevice.destroyFramebuffer(mFramebuffer, nullptr);
 	mDevice.destroyRenderPass(mStoreRenderPass, nullptr);
 	mDevice.destroyRenderPass(mClearColorRenderPass, nullptr);
@@ -429,7 +429,7 @@ void RealRenderTarget::StartScene(vk::CommandBuffer command, DeviceState& device
 	}
 	else if (clearDepth && clearStencil)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealRenderTarget::StartScene depth & stencil clear not currently supported";
+		Log(fatal) << "RealRenderTarget::StartScene depth & stencil clear not currently supported";
 	}
 	else if (clearColor)
 	{
@@ -454,7 +454,7 @@ void RealRenderTarget::StartScene(vk::CommandBuffer command, DeviceState& device
 		vk::Result result = command.begin(&mCommandBufferBeginInfo);
 		if (result != vk::Result::eSuccess)
 		{
-			BOOST_LOG_TRIVIAL(fatal) << "RealRenderTarget::StartScene vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
+			Log(fatal) << "RealRenderTarget::StartScene vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
 			return;
 		}
 	}
@@ -502,7 +502,7 @@ void RealRenderTarget::Clear(vk::CommandBuffer command, DeviceState& deviceState
 {
 	if (Count > 0 && pRects != nullptr)
 	{
-		BOOST_LOG_TRIVIAL(warning) << "RealRenderTarget::Clear is not fully implemented!";
+		Log(warning) << "RealRenderTarget::Clear is not fully implemented!";
 		return;
 	}
 
@@ -554,7 +554,7 @@ void RealRenderTarget::Clear(vk::CommandBuffer command, DeviceState& deviceState
 			else
 			{
 				formatAspectMask = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
-				BOOST_LOG_TRIVIAL(warning) << "RealRenderTarget::Clear unknown depth format " << (uint32_t)realFormat;
+				Log(warning) << "RealRenderTarget::Clear unknown depth format " << (uint32_t)realFormat;
 			}
 
 			if (((Flags & D3DCLEAR_STENCIL) == D3DCLEAR_STENCIL) && ((Flags & D3DCLEAR_ZBUFFER) == D3DCLEAR_ZBUFFER))
@@ -572,7 +572,7 @@ void RealRenderTarget::Clear(vk::CommandBuffer command, DeviceState& deviceState
 			else
 			{
 				subResourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
-				BOOST_LOG_TRIVIAL(warning) << "RealRenderTarget::Clear unknown depth/stencil flag combination " << Flags;
+				Log(warning) << "RealRenderTarget::Clear unknown depth/stencil flag combination " << Flags;
 			}
 
 			ReallySetImageLayout(command, mDepthSurface->mStagingImage, formatAspectMask, vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferDstOptimal, 1, 0, 1);

@@ -26,6 +26,7 @@ misrepresented as being the original software.
 #include "CTexture9.h"
 #include "CCubeTexture9.h"
 #include "CVolumeTexture9.h"
+
 #include "Utilities.h"
 
 RealTexture::RealTexture(RealDevice* realDevice, CTexture9* texture9)
@@ -37,7 +38,7 @@ RealTexture::RealTexture(RealDevice* realDevice, CTexture9* texture9)
 
 	if (mRealFormat == vk::Format::eUndefined)//VK_FORMAT_UNDEFINED
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealTexture::RealTexture (CTexture9*) unknown format: " << texture9->mFormat;
+		Log(fatal) << "RealTexture::RealTexture (CTexture9*) unknown format: " << texture9->mFormat;
 	}
 
 	mExtent = vk::Extent3D(texture9->mWidth, texture9->mHeight, 1);
@@ -65,7 +66,7 @@ RealTexture::RealTexture(RealDevice* realDevice, CTexture9* texture9)
 	result = (vk::Result)vmaCreateImage(mRealDevice->mAllocator, (VkImageCreateInfo*)&imageCreateInfo, &imageAllocInfo, (VkImage*)&mImage, &mImageAllocation, &mImageAllocationInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealTexture::RealTexture (CTexture9*) vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealTexture::RealTexture (CTexture9*) vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -114,7 +115,7 @@ RealTexture::RealTexture(RealDevice* realDevice, CTexture9* texture9)
 	result = vulkanDevice.createImageView(&imageViewCreateInfo, nullptr, &mImageView);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealTexture::RealTexture (CTexture9*) vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealTexture::RealTexture (CTexture9*) vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -130,7 +131,7 @@ RealTexture::RealTexture(RealDevice* realDevice, CCubeTexture9* texture9)
 
 	if (mRealFormat == vk::Format::eUndefined)//VK_FORMAT_UNDEFINED
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealTexture::RealTexture (CCubeTexture9*) unknown format: " << texture9->mFormat;
+		Log(fatal) << "RealTexture::RealTexture (CCubeTexture9*) unknown format: " << texture9->mFormat;
 	}
 
 	mExtent = vk::Extent3D(texture9->mEdgeLength, texture9->mEdgeLength, 1);
@@ -159,7 +160,7 @@ RealTexture::RealTexture(RealDevice* realDevice, CCubeTexture9* texture9)
 	result = (vk::Result)vmaCreateImage(mRealDevice->mAllocator, (VkImageCreateInfo*)&imageCreateInfo, &imageAllocInfo, (VkImage*)&mImage, &mImageAllocation, &mImageAllocationInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealTexture::RealTexture (CCubeTexture9*) vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealTexture::RealTexture (CCubeTexture9*) vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -203,7 +204,7 @@ RealTexture::RealTexture(RealDevice* realDevice, CCubeTexture9* texture9)
 	result = vulkanDevice.createImageView(&imageViewCreateInfo, nullptr, &mImageView);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealTexture::RealTexture (CCubeTexture9*) vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealTexture::RealTexture (CCubeTexture9*) vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -219,7 +220,7 @@ RealTexture::RealTexture(RealDevice* realDevice, CVolumeTexture9* texture9)
 
 	if (mRealFormat == vk::Format::eUndefined)//VK_FORMAT_UNDEFINED
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealTexture::RealTexture (CVolumeTexture9*) unknown format: " << texture9->mFormat;
+		Log(fatal) << "RealTexture::RealTexture (CVolumeTexture9*) unknown format: " << texture9->mFormat;
 	}
 
 	mExtent = vk::Extent3D(texture9->mWidth, texture9->mHeight, 1);
@@ -248,7 +249,7 @@ RealTexture::RealTexture(RealDevice* realDevice, CVolumeTexture9* texture9)
 	result = (vk::Result)vmaCreateImage(mRealDevice->mAllocator, (VkImageCreateInfo*)&imageCreateInfo, &imageAllocInfo, (VkImage*)&mImage, &mImageAllocation, &mImageAllocationInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealTexture::RealTexture (CVolumeTexture9*) vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealTexture::RealTexture (CVolumeTexture9*) vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 
@@ -292,7 +293,7 @@ RealTexture::RealTexture(RealDevice* realDevice, CVolumeTexture9* texture9)
 	result = vulkanDevice.createImageView(&imageViewCreateInfo, nullptr, &mImageView);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "RealTexture::RealTexture (CVolumeTexture9*) vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealTexture::RealTexture (CVolumeTexture9*) vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
 		return;
 	}
 

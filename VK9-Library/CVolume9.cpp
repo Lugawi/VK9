@@ -25,9 +25,9 @@ misrepresented as being the original software.
 #include "CDevice9.h"
 #include "CVolume9.h"
 #include "CVolumeTexture9.h"
+#include "CTypes.h"
 
 #include "Utilities.h"
-#include "CTypes.h"
 
 CVolume9::CVolume9(CDevice9* device, CVolumeTexture9* texture, UINT Width, UINT Height, UINT Depth, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, HANDLE *pSharedHandle)
 	: mReferenceCount(1),
@@ -43,12 +43,12 @@ CVolume9::CVolume9(CDevice9* device, CVolumeTexture9* texture, UINT Width, UINT 
 	mId(0),
 	mTextureId(0)
 {
-	BOOST_LOG_TRIVIAL(info) << "CVolume9::CVolume9";
+	Log(info) << "CVolume9::CVolume9" << std::endl;
 }
 
 CVolume9::~CVolume9()
 {
-	BOOST_LOG_TRIVIAL(info) << "CVolume9::~CVolume9";
+	Log(info) << "CVolume9::~CVolume9" << std::endl;
 
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(nullptr);
 	workItem->WorkItemType = WorkItemType::Volume_Destroy;
@@ -58,7 +58,7 @@ CVolume9::~CVolume9()
 
 void CVolume9::Init()
 {
-	BOOST_LOG_TRIVIAL(info) << "CVolume9::Init";
+	Log(info) << "CVolume9::Init" << std::endl;
 
 	//mDevice->AddRef();
 
@@ -151,7 +151,7 @@ HRESULT STDMETHODCALLTYPE CVolume9::SetPrivateData(REFGUID refguid, CONST void* 
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVolume9::SetPrivateData is not implemented!";
+	Log(warning) << "CVolume9::SetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -160,7 +160,7 @@ HRESULT STDMETHODCALLTYPE CVolume9::GetPrivateData(REFGUID refguid, void* pData,
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVolume9::GetPrivateData is not implemented!";
+	Log(warning) << "CVolume9::GetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -169,7 +169,7 @@ HRESULT STDMETHODCALLTYPE CVolume9::FreePrivateData(REFGUID refguid)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVolume9::FreePrivateData is not implemented!";
+	Log(warning) << "CVolume9::FreePrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -178,7 +178,7 @@ HRESULT STDMETHODCALLTYPE CVolume9::GetContainer(REFIID riid, void** ppContainer
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CSurface9::GetContainer is not implemented!";
+	Log(warning) << "CSurface9::GetContainer is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }

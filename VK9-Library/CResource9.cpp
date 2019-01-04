@@ -89,7 +89,7 @@ HRESULT STDMETHODCALLTYPE CResource9::FreePrivateData(REFGUID refguid)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CResource9::FreePrivateData is not implemented!";
+	Log(warning) << "CResource9::FreePrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -98,7 +98,7 @@ DWORD STDMETHODCALLTYPE CResource9::GetPriority()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CResource9::GetPriority is not implemented!";
+	Log(warning) << "CResource9::GetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -107,7 +107,7 @@ HRESULT STDMETHODCALLTYPE CResource9::GetPrivateData(REFGUID refguid, void* pDat
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CResource9::GetPrivateData is not implemented!";
+	Log(warning) << "CResource9::GetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -116,7 +116,7 @@ D3DRESOURCETYPE STDMETHODCALLTYPE CResource9::GetType()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CResource9::GetType is not implemented!";
+	Log(warning) << "CResource9::GetType is not implemented!" << std::endl;
 
 	return D3DRTYPE_SURFACE;
 }
@@ -125,7 +125,7 @@ void STDMETHODCALLTYPE CResource9::PreLoad()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CResource9::PreLoad is not implemented!";
+	Log(warning) << "CResource9::PreLoad is not implemented!" << std::endl;
 
 	return; 
 }
@@ -134,7 +134,7 @@ DWORD STDMETHODCALLTYPE CResource9::SetPriority(DWORD PriorityNew)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CResource9::SetPriority is not implemented!";
+	Log(warning) << "CResource9::SetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -143,7 +143,7 @@ HRESULT STDMETHODCALLTYPE CResource9::SetPrivateData(REFGUID refguid, const void
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CResource9::SetPrivateData is not implemented!";
+	Log(warning) << "CResource9::SetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }

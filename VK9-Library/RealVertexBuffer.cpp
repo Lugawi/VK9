@@ -23,8 +23,9 @@ misrepresented as being the original software.
 */
 
 #include "RealVertexBuffer.h"
-
 #include "RealRenderTarget.h"
+
+#include "Utilities.h"
 
 RealVertexBuffer::RealVertexBuffer(RealDevice* realDevice, size_t length, bool isDynamic, DWORD fvf)
 	: mRealDevice(realDevice),

@@ -44,7 +44,7 @@ C9::C9()
 {
 	mCommandStreamManager = std::make_shared<CommandStreamManager>();
 
-	BOOST_LOG_TRIVIAL(info) << "C9::C9";
+	Log(info) << "C9::C9" << std::endl;
 }
 
 C9::~C9()
@@ -54,7 +54,7 @@ C9::~C9()
 	workItem->Id = mId;
 	mCommandStreamManager->RequestWorkAndWait(workItem);
 
-	BOOST_LOG_TRIVIAL(info) << "C9::~C9";	
+	Log(info) << "C9::~C9" << std::endl;
 }
 
 //IUnknown
@@ -106,17 +106,17 @@ ULONG STDMETHODCALLTYPE C9::Release(void)
 
 HRESULT STDMETHODCALLTYPE C9::CheckDepthStencilMatch(UINT Adapter,D3DDEVTYPE DeviceType,D3DFORMAT AdapterFormat,D3DFORMAT RenderTargetFormat,D3DFORMAT DepthStencilFormat)
 {
-	BOOST_LOG_TRIVIAL(info) << "C9::CheckDepthStencilMatch Adapter: " << Adapter;
+	Log(info) << "C9::CheckDepthStencilMatch Adapter: " << Adapter << std::endl;
 
 	if (DepthStencilFormat == D3DFMT_UNKNOWN || (ConvertFormat(AdapterFormat) != vk::Format::eUndefined && ConvertFormat(DepthStencilFormat) != vk::Format::eUndefined))
 	{
-		BOOST_LOG_TRIVIAL(warning) << "C9::CheckDepthStencilMatch (D3D_OK) AdapterFormat: " << AdapterFormat << " CheckFormat: " << DepthStencilFormat;
+		Log(warning) << "C9::CheckDepthStencilMatch (D3D_OK) AdapterFormat: " << AdapterFormat << " CheckFormat: " << DepthStencilFormat << std::endl;
 
 		return D3D_OK;
 	}
 	else
 	{
-		BOOST_LOG_TRIVIAL(warning) << "C9::CheckDepthStencilMatch (D3DERR_NOTAVAILABLE) AdapterFormat: " << AdapterFormat << " CheckFormat: " << DepthStencilFormat;
+		Log(warning) << "C9::CheckDepthStencilMatch (D3DERR_NOTAVAILABLE) AdapterFormat: " << AdapterFormat << " CheckFormat: " << DepthStencilFormat << std::endl;
 
 		return D3DERR_NOTAVAILABLE;
 	}
@@ -124,17 +124,17 @@ HRESULT STDMETHODCALLTYPE C9::CheckDepthStencilMatch(UINT Adapter,D3DDEVTYPE Dev
 
 HRESULT STDMETHODCALLTYPE C9::CheckDeviceFormat(UINT Adapter,D3DDEVTYPE DeviceType,D3DFORMAT AdapterFormat,DWORD Usage,D3DRESOURCETYPE RType,D3DFORMAT CheckFormat)
 {
-	BOOST_LOG_TRIVIAL(info) << "C9::CheckDeviceFormat Adapter: " << Adapter;
+	Log(info) << "C9::CheckDeviceFormat Adapter: " << Adapter << std::endl;
 
 	if (CheckFormat == D3DFMT_UNKNOWN || (ConvertFormat(AdapterFormat) != vk::Format::eUndefined && ConvertFormat(CheckFormat) != vk::Format::eUndefined))
 	{
-		BOOST_LOG_TRIVIAL(warning) << "C9::CheckDeviceFormat (D3D_OK) AdapterFormat: " << AdapterFormat << " CheckFormat: " << CheckFormat;
+		Log(warning) << "C9::CheckDeviceFormat (D3D_OK) AdapterFormat: " << AdapterFormat << " CheckFormat: " << CheckFormat << std::endl;
 
 		return D3D_OK;
 	}
 	else
 	{
-		BOOST_LOG_TRIVIAL(warning) << "C9::CheckDeviceFormat (D3DERR_NOTAVAILABLE) AdapterFormat: " << AdapterFormat << " CheckFormat: " << CheckFormat;
+		Log(warning) << "C9::CheckDeviceFormat (D3DERR_NOTAVAILABLE) AdapterFormat: " << AdapterFormat << " CheckFormat: " << CheckFormat << std::endl;
 
 		return D3DERR_NOTAVAILABLE;
 	}
@@ -143,13 +143,13 @@ HRESULT STDMETHODCALLTYPE C9::CheckDeviceFormat(UINT Adapter,D3DDEVTYPE DeviceTy
 
 HRESULT STDMETHODCALLTYPE C9::CheckDeviceFormatConversion(UINT Adapter,D3DDEVTYPE DeviceType,D3DFORMAT SourceFormat,D3DFORMAT TargetFormat)
 {
-	BOOST_LOG_TRIVIAL(info) << "C9::CheckDeviceFormatConversion Adapter: " << Adapter;
+	Log(info) << "C9::CheckDeviceFormatConversion Adapter: " << Adapter << std::endl;
 
 	HRESULT result = S_OK;
 
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "C9::CheckDeviceFormatConversion is not implemented!";
+	Log(warning) << "C9::CheckDeviceFormatConversion is not implemented!" << std::endl;
 
 	return result;
 }
@@ -157,7 +157,7 @@ HRESULT STDMETHODCALLTYPE C9::CheckDeviceFormatConversion(UINT Adapter,D3DDEVTYP
 
 HRESULT STDMETHODCALLTYPE C9::CheckDeviceMultiSampleType(UINT Adapter,D3DDEVTYPE DeviceType,D3DFORMAT SurfaceFormat,BOOL Windowed,D3DMULTISAMPLE_TYPE MultiSampleType,DWORD *pQualityLevels)
 {
-	BOOST_LOG_TRIVIAL(info) << "C9::CheckDeviceMultiSampleType Adapter: " << Adapter;
+	Log(info) << "C9::CheckDeviceMultiSampleType Adapter: " << Adapter << std::endl;
 
 	if (Adapter >= mMonitors.size())
 	{
@@ -176,7 +176,7 @@ HRESULT STDMETHODCALLTYPE C9::CheckDeviceMultiSampleType(UINT Adapter,D3DDEVTYPE
 
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "C9::CheckDeviceMultiSampleType is not implemented!";
+	Log(warning) << "C9::CheckDeviceMultiSampleType is not implemented!" << std::endl;
 
 	if (pQualityLevels!= nullptr)
 	{
@@ -190,14 +190,14 @@ HRESULT STDMETHODCALLTYPE C9::CheckDeviceType(UINT Adapter,D3DDEVTYPE DeviceType
 {		
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "C9::CheckDeviceType is not implemented!";
+	Log(warning) << "C9::CheckDeviceType is not implemented!" << std::endl;
 
 	return S_OK;	
 }
 
 HRESULT STDMETHODCALLTYPE C9::CreateDevice(UINT Adapter,D3DDEVTYPE DeviceType,HWND hFocusWindow,DWORD BehaviorFlags,D3DPRESENT_PARAMETERS *pPresentationParameters,IDirect3DDevice9 **ppReturnedDeviceInterface)
 {
-	BOOST_LOG_TRIVIAL(info) << "C9::CreateDevice Adapter: " << Adapter;
+	Log(info) << "C9::CreateDevice Adapter: " << Adapter << std::endl;
 
 	HRESULT result = S_OK;
 
@@ -215,7 +215,7 @@ HRESULT STDMETHODCALLTYPE C9::CreateDevice(UINT Adapter,D3DDEVTYPE DeviceType,HW
 
 HRESULT STDMETHODCALLTYPE C9::EnumAdapterModes(UINT Adapter,D3DFORMAT Format,UINT Mode,D3DDISPLAYMODE *pMode)
 {
-	BOOST_LOG_TRIVIAL(info) << "C9::EnumAdapterModes Adapter: " << Adapter;
+	Log(info) << "C9::EnumAdapterModes Adapter: " << Adapter << std::endl;
 
 	if (Adapter >= mMonitors.size())
 	{
@@ -324,14 +324,14 @@ UINT STDMETHODCALLTYPE C9::GetAdapterCount()
 {
 	size_t monitorCount = mMonitors.size();
 
-	BOOST_LOG_TRIVIAL(warning) << "C9::GetAdapterCount MonitorCount: " << monitorCount;
+	Log(warning) << "C9::GetAdapterCount MonitorCount: " << monitorCount << std::endl;
 
 	return monitorCount;
 }
 
 HRESULT STDMETHODCALLTYPE C9::GetAdapterDisplayMode(UINT Adapter,D3DDISPLAYMODE *pMode)
 {
-	BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterDisplayMode Adapter: " << Adapter;
+	Log(info) << "C9::GetAdapterDisplayMode Adapter: " << Adapter << std::endl;
 
 	Monitor& monitor = mMonitors[Adapter];
 
@@ -342,12 +342,12 @@ HRESULT STDMETHODCALLTYPE C9::GetAdapterDisplayMode(UINT Adapter,D3DDISPLAYMODE 
 
 	if (monitor.PixelBits != 32)
 	{
-		BOOST_LOG_TRIVIAL(info) << Adapter;
-		BOOST_LOG_TRIVIAL(info) << monitor.RefreshRate;
-		BOOST_LOG_TRIVIAL(info) << monitor.Height;
-		BOOST_LOG_TRIVIAL(info) << monitor.Width;
+		Log(info) << Adapter << std::endl;
+		Log(info) << monitor.RefreshRate << std::endl;
+		Log(info) << monitor.Height << std::endl;
+		Log(info) << monitor.Width << std::endl;
 
-		BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterDisplayMode Unknown pixel bit format : " << monitor.PixelBits; //Revisit
+		Log(info) << "C9::GetAdapterDisplayMode Unknown pixel bit format : " << monitor.PixelBits << std::endl; //Revisit
 	}
 
 	return S_OK;	
@@ -355,7 +355,7 @@ HRESULT STDMETHODCALLTYPE C9::GetAdapterDisplayMode(UINT Adapter,D3DDISPLAYMODE 
 
 HRESULT STDMETHODCALLTYPE C9::GetAdapterIdentifier(UINT Adapter,DWORD Flags,D3DADAPTER_IDENTIFIER9 *pIdentifier)
 {		
-	BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterIdentifier Adapter: " << Adapter;
+	Log(info) << "C9::GetAdapterIdentifier Adapter: " << Adapter << std::endl;
 
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
 	workItem->WorkItemType = WorkItemType::Instance_GetAdapterIdentifier;
@@ -370,7 +370,7 @@ HRESULT STDMETHODCALLTYPE C9::GetAdapterIdentifier(UINT Adapter,DWORD Flags,D3DA
 
 UINT STDMETHODCALLTYPE C9::GetAdapterModeCount(UINT Adapter,D3DFORMAT Format)
 {	
-	BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterModeCount Adapter: " << Adapter;
+	Log(info) << "C9::GetAdapterModeCount Adapter: " << Adapter << std::endl;
 
 	if (Format == D3DFMT_X8R8G8B8)
 	{
@@ -383,7 +383,7 @@ UINT STDMETHODCALLTYPE C9::GetAdapterModeCount(UINT Adapter,D3DFORMAT Format)
 
 HMONITOR STDMETHODCALLTYPE C9::GetAdapterMonitor(UINT Adapter)
 {
-	BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterMonitor Adapter: " << Adapter;
+	Log(info) << "C9::GetAdapterMonitor Adapter: " << Adapter << std::endl;
 
 	HMONITOR returnValue;
 	if ((mMonitors.size()-1) < Adapter)
@@ -395,7 +395,7 @@ HMONITOR STDMETHODCALLTYPE C9::GetAdapterMonitor(UINT Adapter)
 		returnValue = mMonitors[Adapter].hMonitor;
 	}
 
-	BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterMonitor HMONITOR: " << returnValue;
+	Log(info) << "C9::GetAdapterMonitor HMONITOR: " << returnValue << std::endl;
 
 	return returnValue;
 }
@@ -403,7 +403,7 @@ HMONITOR STDMETHODCALLTYPE C9::GetAdapterMonitor(UINT Adapter)
 
 HRESULT STDMETHODCALLTYPE C9::GetDeviceCaps(UINT Adapter,D3DDEVTYPE DeviceType,D3DCAPS9 *pCaps)
 {
-	BOOST_LOG_TRIVIAL(info) << "C9::GetDeviceCaps Adapter: " << Adapter;
+	Log(info) << "C9::GetDeviceCaps Adapter: " << Adapter << std::endl;
 
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
 	workItem->WorkItemType = WorkItemType::Instance_GetDeviceCaps;
@@ -420,14 +420,14 @@ HRESULT STDMETHODCALLTYPE C9::RegisterSoftwareDevice(void *pInitializeFunction)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "C9::RegisterSoftwareDevice is not implemented!";
+	Log(warning) << "C9::RegisterSoftwareDevice is not implemented!" << std::endl;
 
 	return S_OK;
 }
 
 UINT STDMETHODCALLTYPE C9::GetAdapterModeCountEx(UINT Adapter, const D3DDISPLAYMODEFILTER *pFilter)
 {
-	BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterModeCountEx Adapter: " << Adapter;
+	Log(info) << "C9::GetAdapterModeCountEx Adapter: " << Adapter << std::endl;
 
 	if (pFilter!=nullptr && pFilter->Format == D3DFMT_X8R8G8B8)
 	{
@@ -439,7 +439,7 @@ UINT STDMETHODCALLTYPE C9::GetAdapterModeCountEx(UINT Adapter, const D3DDISPLAYM
 
 HRESULT STDMETHODCALLTYPE C9::EnumAdapterModesEx(UINT Adapter, const D3DDISPLAYMODEFILTER *pFilter, UINT Mode, D3DDISPLAYMODEEX *pMode)
 {
-	BOOST_LOG_TRIVIAL(info) << "C9::EnumAdapterModesEx Adapter: " << Adapter;
+	Log(info) << "C9::EnumAdapterModesEx Adapter: " << Adapter << std::endl;
 
 	if (Adapter >= mMonitors.size())
 	{
@@ -547,7 +547,7 @@ HRESULT STDMETHODCALLTYPE C9::EnumAdapterModesEx(UINT Adapter, const D3DDISPLAYM
 
 HRESULT STDMETHODCALLTYPE C9::GetAdapterDisplayModeEx(UINT Adapter, D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation)
 {
-	BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterDisplayModeEx Adapter: " << Adapter;
+	Log(info) << "C9::GetAdapterDisplayModeEx Adapter: " << Adapter << std::endl;
 
 	Monitor& monitor = mMonitors[Adapter];
 
@@ -560,12 +560,12 @@ HRESULT STDMETHODCALLTYPE C9::GetAdapterDisplayModeEx(UINT Adapter, D3DDISPLAYMO
 
 	if (monitor.PixelBits != 32)
 	{
-		BOOST_LOG_TRIVIAL(info) << Adapter;
-		BOOST_LOG_TRIVIAL(info) << monitor.RefreshRate;
-		BOOST_LOG_TRIVIAL(info) << monitor.Height;
-		BOOST_LOG_TRIVIAL(info) << monitor.Width;
+		Log(info) << Adapter;
+		Log(info) << monitor.RefreshRate;
+		Log(info) << monitor.Height;
+		Log(info) << monitor.Width;
 
-		BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterDisplayModeEx Unknown pixel bit format : " << monitor.PixelBits; //Revisit
+		Log(info) << "C9::GetAdapterDisplayModeEx Unknown pixel bit format : " << monitor.PixelBits << std::endl; //Revisit
 	}
 
 	return S_OK;
@@ -573,7 +573,7 @@ HRESULT STDMETHODCALLTYPE C9::GetAdapterDisplayModeEx(UINT Adapter, D3DDISPLAYMO
 
 HRESULT STDMETHODCALLTYPE C9::CreateDeviceEx(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode, IDirect3DDevice9Ex **ppReturnedDeviceInterface)
 {
-	BOOST_LOG_TRIVIAL(info) << "C9::CreateDeviceEx Adapter: " << Adapter;
+	Log(info) << "C9::CreateDeviceEx Adapter: " << Adapter << std::endl;
 
 	HRESULT result = S_OK;
 
@@ -591,7 +591,7 @@ HRESULT STDMETHODCALLTYPE C9::CreateDeviceEx(UINT Adapter, D3DDEVTYPE DeviceType
 
 HRESULT STDMETHODCALLTYPE C9::GetAdapterLUID(UINT Adapter, LUID *pLUID)
 {
-	BOOST_LOG_TRIVIAL(info) << "C9::GetAdapterLUID Adapter: " << Adapter;
+	Log(info) << "C9::GetAdapterLUID Adapter: " << Adapter << std::endl;
 
 	(*pLUID) = mLUID;
 
@@ -621,21 +621,21 @@ BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMoni
 		monitors = (std::vector<Monitor>*)dwData;
 		monitors->push_back(monitor);
 
-		BOOST_LOG_TRIVIAL(info) << "MonitorEnumProc HMONITOR: " << monitor.hMonitor;
-		BOOST_LOG_TRIVIAL(info) << "MonitorEnumProc HDC: " << monitor.hdcMonitor;
+		Log(info) << "MonitorEnumProc HMONITOR: " << monitor.hMonitor << std::endl;
+		Log(info) << "MonitorEnumProc HDC: " << monitor.hdcMonitor << std::endl;
 
-		BOOST_LOG_TRIVIAL(info) << "MonitorEnumProc Height: " << monitor.Height;
-		BOOST_LOG_TRIVIAL(info) << "MonitorEnumProc Width: " << monitor.Width;
-		BOOST_LOG_TRIVIAL(info) << "MonitorEnumProc RefreshRate: " << monitor.RefreshRate;
+		Log(info) << "MonitorEnumProc Height: " << monitor.Height << std::endl;
+		Log(info) << "MonitorEnumProc Width: " << monitor.Width << std::endl;
+		Log(info) << "MonitorEnumProc RefreshRate: " << monitor.RefreshRate << std::endl;
 
-		BOOST_LOG_TRIVIAL(info) << "MonitorEnumProc PixelBits: " << monitor.PixelBits;
-		BOOST_LOG_TRIVIAL(info) << "MonitorEnumProc ColorPlanes: " << monitor.ColorPlanes;
+		Log(info) << "MonitorEnumProc PixelBits: " << monitor.PixelBits << std::endl;
+		Log(info) << "MonitorEnumProc ColorPlanes: " << monitor.ColorPlanes << std::endl;
 
 		return true;
 	}
 	else
 	{
-		BOOST_LOG_TRIVIAL(error) << "MonitorEnumProc: monitor vector is null.";
+		Log(error) << "MonitorEnumProc: monitor vector is null." << std::endl;
 		return false;
 	}	
 }

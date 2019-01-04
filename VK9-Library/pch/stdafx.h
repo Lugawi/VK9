@@ -65,24 +65,7 @@ misrepresented as being the original software.
 #include <Eigen/Dense>
 
 // Boost headers
-#include <boost/program_options.hpp>
-#include <boost/program_options/parsers.hpp>
-#include <boost/lockfree/queue.hpp>
-
-#include <boost/log/core.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/sinks/text_file_backend.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sources/record_ostream.hpp>
-
-// These cause internal GCC compiler error if precompiled
-#ifdef _MSC_VER
-#include <boost/log/utility/setup/file.hpp>
-#include <boost/log/utility/setup/console.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/format.hpp>
-#endif
+#include <boost/interprocess/sync/interprocess_semaphore.hpp>
 
 // Windows headers
 // --- must be included below boost in case of MinGW ---

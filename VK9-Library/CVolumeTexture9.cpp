@@ -47,7 +47,7 @@ CVolumeTexture9::CVolumeTexture9(CDevice9* device, UINT Width, UINT Height, UINT
 	mResult(VK_SUCCESS),
 	mId(0)
 {
-	BOOST_LOG_TRIVIAL(info) << "CVolumeTexture9::CVolumeTexture9";
+	Log(info) << "CVolumeTexture9::CVolumeTexture9" << std::endl;
 
 	if (Usage & D3DUSAGE_AUTOGENMIPMAP)
 	{
@@ -76,7 +76,7 @@ CVolumeTexture9::CVolumeTexture9(CDevice9* device, UINT Width, UINT Height, UINT
 
 CVolumeTexture9::~CVolumeTexture9()
 {
-	BOOST_LOG_TRIVIAL(info) << "CVolumeTexture9::~CVolumeTexture9";
+	Log(info) << "CVolumeTexture9::~CVolumeTexture9" << std::endl;
 
 	for (size_t i = 0; i < mVolumes.size(); i++)
 	{
@@ -155,7 +155,7 @@ HRESULT STDMETHODCALLTYPE CVolumeTexture9::FreePrivateData(REFGUID refguid)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVolumeTexture9::FreePrivateData is not implemented!";
+	Log(warning) << "CVolumeTexture9::FreePrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -164,7 +164,7 @@ DWORD STDMETHODCALLTYPE CVolumeTexture9::GetPriority()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVolumeTexture9::GetPriority is not implemented!";
+	Log(warning) << "CVolumeTexture9::GetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -173,7 +173,7 @@ HRESULT STDMETHODCALLTYPE CVolumeTexture9::GetPrivateData(REFGUID refguid, void*
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVolumeTexture9::GetPrivateData is not implemented!";
+	Log(warning) << "CVolumeTexture9::GetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -182,7 +182,7 @@ void STDMETHODCALLTYPE CVolumeTexture9::PreLoad()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVolumeTexture9::PreLoad is not implemented!";
+	Log(warning) << "CVolumeTexture9::PreLoad is not implemented!" << std::endl;
 
 	return; 
 }
@@ -191,7 +191,7 @@ DWORD STDMETHODCALLTYPE CVolumeTexture9::SetPriority(DWORD PriorityNew)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVolumeTexture9::SetPriority is not implemented!";
+	Log(warning) << "CVolumeTexture9::SetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -200,7 +200,7 @@ HRESULT STDMETHODCALLTYPE CVolumeTexture9::SetPrivateData(REFGUID refguid, const
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVolumeTexture9::SetPrivateData is not implemented!";
+	Log(warning) << "CVolumeTexture9::SetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -223,7 +223,7 @@ DWORD STDMETHODCALLTYPE CVolumeTexture9::GetLOD()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVolumeTexture9::GetLOD is not implemented!";
+	Log(warning) << "CVolumeTexture9::GetLOD is not implemented!" << std::endl;
 
 	return 0;
 }
@@ -232,7 +232,7 @@ DWORD STDMETHODCALLTYPE CVolumeTexture9::GetLevelCount()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVolumeTexture9::GetLevelCount is not implemented!";
+	Log(warning) << "CVolumeTexture9::GetLevelCount is not implemented!" << std::endl;
 
 	return 0;
 }
@@ -248,7 +248,7 @@ DWORD STDMETHODCALLTYPE CVolumeTexture9::SetLOD(DWORD LODNew)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVolumeTexture9::SetLOD is not implemented!";
+	Log(warning) << "CVolumeTexture9::SetLOD is not implemented!" << std::endl;
 
 	return 0;
 }
@@ -268,7 +268,7 @@ HRESULT STDMETHODCALLTYPE CVolumeTexture9::AddDirtyBox(const D3DBOX* pDirtyBox)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CVolumeTexture9::AddDirtyBox is not implemented!";
+	Log(warning) << "CVolumeTexture9::AddDirtyBox is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }

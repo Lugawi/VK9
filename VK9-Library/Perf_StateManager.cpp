@@ -43,16 +43,6 @@ misrepresented as being the original software.
 
 #include "Utilities.h"
 
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/sinks/text_file_backend.hpp>
-#include <boost/log/utility/setup/file.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sources/record_ostream.hpp>
-#include <boost/format.hpp>
-
 typedef std::unordered_map<UINT, StreamSource> map_type;
 
 VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object, size_t location, int32_t messageCode, const char* layerPrefix, const char* message, void* userData)
@@ -60,64 +50,64 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(VkDebugReportFlagsEXT flags, 
 	switch (flags)
 	{
 	case VK_DEBUG_REPORT_INFORMATION_BIT_EXT:
-		BOOST_LOG_TRIVIAL(info) << "------DebugReport(Info)------";
-		BOOST_LOG_TRIVIAL(info) << "ObjectType: " << objectType;
-		BOOST_LOG_TRIVIAL(info) << "Object: " << object;
-		BOOST_LOG_TRIVIAL(info) << "Location: " << location;
-		BOOST_LOG_TRIVIAL(info) << "MessageCode: " << messageCode;
-		BOOST_LOG_TRIVIAL(info) << "LayerPrefix: " << layerPrefix;
-		BOOST_LOG_TRIVIAL(info) << "Message: " << message;
-		BOOST_LOG_TRIVIAL(info) << "-----------------------------";
+		Log(info) << "------DebugReport(Info)------" << std::endl;
+		Log(info) << "ObjectType: " << objectType << std::endl;
+		Log(info) << "Object: " << object << std::endl;
+		Log(info) << "Location: " << location << std::endl;
+		Log(info) << "MessageCode: " << messageCode << std::endl;
+		Log(info) << "LayerPrefix: " << layerPrefix << std::endl;
+		Log(info) << "Message: " << message << std::endl;
+		Log(info) << "-----------------------------" << std::endl;
 		break;
 	case VK_DEBUG_REPORT_WARNING_BIT_EXT:
-		BOOST_LOG_TRIVIAL(warning) << "------DebugReport(Warn)------";
-		BOOST_LOG_TRIVIAL(warning) << "ObjectType: " << objectType;
-		BOOST_LOG_TRIVIAL(warning) << "Object: " << object;
-		BOOST_LOG_TRIVIAL(warning) << "Location: " << location;
-		BOOST_LOG_TRIVIAL(warning) << "MessageCode: " << messageCode;
-		BOOST_LOG_TRIVIAL(warning) << "LayerPrefix: " << layerPrefix;
-		BOOST_LOG_TRIVIAL(warning) << "Message: " << message;
-		BOOST_LOG_TRIVIAL(warning) << "-----------------------------";
+		Log(warning) << "------DebugReport(Warn)------" << std::endl;
+		Log(warning) << "ObjectType: " << objectType << std::endl;
+		Log(warning) << "Object: " << object << std::endl;
+		Log(warning) << "Location: " << location << std::endl;
+		Log(warning) << "MessageCode: " << messageCode << std::endl;
+		Log(warning) << "LayerPrefix: " << layerPrefix << std::endl;
+		Log(warning) << "Message: " << message << std::endl;
+		Log(warning) << "-----------------------------" << std::endl;
 		break;
 	case VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT:
-		BOOST_LOG_TRIVIAL(warning) << "------DebugReport(Perf)------";
-		BOOST_LOG_TRIVIAL(warning) << "ObjectType: " << objectType;
-		BOOST_LOG_TRIVIAL(warning) << "Object: " << object;
-		BOOST_LOG_TRIVIAL(warning) << "Location: " << location;
-		BOOST_LOG_TRIVIAL(warning) << "MessageCode: " << messageCode;
-		BOOST_LOG_TRIVIAL(warning) << "LayerPrefix: " << layerPrefix;
-		BOOST_LOG_TRIVIAL(warning) << "Message: " << message;
-		BOOST_LOG_TRIVIAL(warning) << "-----------------------------";
+		Log(warning) << "------DebugReport(Perf)------" << std::endl;
+		Log(warning) << "ObjectType: " << objectType << std::endl;
+		Log(warning) << "Object: " << object << std::endl;
+		Log(warning) << "Location: " << location << std::endl;
+		Log(warning) << "MessageCode: " << messageCode << std::endl;
+		Log(warning) << "LayerPrefix: " << layerPrefix << std::endl;
+		Log(warning) << "Message: " << message << std::endl;
+		Log(warning) << "-----------------------------" << std::endl;
 		break;
 	case VK_DEBUG_REPORT_ERROR_BIT_EXT:
-		BOOST_LOG_TRIVIAL(error) << "------DebugReport(Error)------";
-		BOOST_LOG_TRIVIAL(error) << "ObjectType: " << objectType;
-		BOOST_LOG_TRIVIAL(error) << "Object: " << object;
-		BOOST_LOG_TRIVIAL(error) << "Location: " << location;
-		BOOST_LOG_TRIVIAL(error) << "MessageCode: " << messageCode;
-		BOOST_LOG_TRIVIAL(error) << "LayerPrefix: " << layerPrefix;
-		BOOST_LOG_TRIVIAL(error) << "Message: " << message;
-		BOOST_LOG_TRIVIAL(error) << "------------------------------";
+		Log(error) << "------DebugReport(Error)------" << std::endl;
+		Log(error) << "ObjectType: " << objectType << std::endl;
+		Log(error) << "Object: " << object << std::endl;
+		Log(error) << "Location: " << location << std::endl;
+		Log(error) << "MessageCode: " << messageCode << std::endl;
+		Log(error) << "LayerPrefix: " << layerPrefix << std::endl;
+		Log(error) << "Message: " << message << std::endl;
+		Log(error) << "------------------------------" << std::endl;
 		break;
 	case VK_DEBUG_REPORT_DEBUG_BIT_EXT:
-		BOOST_LOG_TRIVIAL(warning) << "------DebugReport(Debug)------";
-		BOOST_LOG_TRIVIAL(warning) << "ObjectType: " << objectType;
-		BOOST_LOG_TRIVIAL(warning) << "Object: " << object;
-		BOOST_LOG_TRIVIAL(warning) << "Location: " << location;
-		BOOST_LOG_TRIVIAL(warning) << "MessageCode: " << messageCode;
-		BOOST_LOG_TRIVIAL(warning) << "LayerPrefix: " << layerPrefix;
-		BOOST_LOG_TRIVIAL(warning) << "Message: " << message;
-		BOOST_LOG_TRIVIAL(warning) << "------------------------------";
+		Log(warning) << "------DebugReport(Debug)------" << std::endl;
+		Log(warning) << "ObjectType: " << objectType << std::endl;
+		Log(warning) << "Object: " << object << std::endl;
+		Log(warning) << "Location: " << location << std::endl;
+		Log(warning) << "MessageCode: " << messageCode << std::endl;
+		Log(warning) << "LayerPrefix: " << layerPrefix << std::endl;
+		Log(warning) << "Message: " << message << std::endl;
+		Log(warning) << "------------------------------" << std::endl;
 		break;
 	default:
-		BOOST_LOG_TRIVIAL(error) << "------DebugReport(?)------";
-		BOOST_LOG_TRIVIAL(error) << "ObjectType: " << objectType;
-		BOOST_LOG_TRIVIAL(error) << "Object: " << object;
-		BOOST_LOG_TRIVIAL(error) << "Location: " << location;
-		BOOST_LOG_TRIVIAL(error) << "MessageCode: " << messageCode;
-		BOOST_LOG_TRIVIAL(error) << "LayerPrefix: " << layerPrefix;
-		BOOST_LOG_TRIVIAL(error) << "Message: " << message;
-		BOOST_LOG_TRIVIAL(error) << "--------------------------";
+		Log(error) << "------DebugReport(?)------" << std::endl;
+		Log(error) << "ObjectType: " << objectType << std::endl;
+		Log(error) << "Object: " << object << std::endl;
+		Log(error) << "Location: " << location << std::endl;
+		Log(error) << "MessageCode: " << messageCode << std::endl;
+		Log(error) << "LayerPrefix: " << layerPrefix << std::endl;
+		Log(error) << "Message: " << message << std::endl;
+		Log(error) << "--------------------------" << std::endl;
 		break;
 	}
 
@@ -302,11 +292,11 @@ void StateManager::CreateInstance()
 		vk::Result result = vulkanInstance.createDebugReportCallbackEXT(&callbackCreateInfo, nullptr, &ptr->mCallback);
 		if (result == vk::Result::eSuccess)
 		{
-			BOOST_LOG_TRIVIAL(info) << "StateManager::CreateInstance vkCreateDebugReportCallbackEXT succeeded.";
+			Log(info) << "StateManager::CreateInstance vkCreateDebugReportCallbackEXT succeeded." << std::endl;
 		}
 		else
 		{
-			BOOST_LOG_TRIVIAL(fatal) << "StateManager::CreateInstance vkCreateDebugReportCallbackEXT failed with return code of " << GetResultString((VkResult)result);
+			Log(fatal) << "StateManager::CreateInstance vkCreateDebugReportCallbackEXT failed with return code of " << GetResultString((VkResult)result) << std::endl;
 			return;
 		}
 	}
@@ -483,8 +473,8 @@ void StateManager::CreateQuery(size_t id, void* argument1)
 	CQuery9* query9 = bit_cast<CQuery9*>(argument1);
 	std::shared_ptr<RealQuery> ptr = std::make_shared<RealQuery>(device.get());
 
-	vk::QueryPoolCreateInfo info;
-	info.queryCount = 1;
+	vk::QueryPoolCreateInfo createInfo;
+	createInfo.queryCount = 1;
 
 	/*
 	case D3DQUERYTYPE_VCACHE:
@@ -526,28 +516,28 @@ void StateManager::CreateQuery(size_t id, void* argument1)
 	switch (query9->mType)
 	{
 	case D3DQUERYTYPE_OCCLUSION:
-		info.queryType = vk::QueryType::eOcclusion;
+		createInfo.queryType = vk::QueryType::eOcclusion;
 		break;
 	case D3DQUERYTYPE_TIMESTAMP:
-		info.queryType = vk::QueryType::eTimestamp;
+		createInfo.queryType = vk::QueryType::eTimestamp;
 		break;
 	case D3DQUERYTYPE_TIMESTAMPDISJOINT:
-		info.queryType = vk::QueryType::eTimestamp;
+		createInfo.queryType = vk::QueryType::eTimestamp;
 		break;
 	case D3DQUERYTYPE_TIMESTAMPFREQ:
-		info.queryType = vk::QueryType::eTimestamp;
+		createInfo.queryType = vk::QueryType::eTimestamp;
 		break;
 	default:
-		info.queryType = vk::QueryType::ePipelineStatistics;
-		info.pipelineStatistics = vk::QueryPipelineStatisticFlagBits::eVertexShaderInvocations;
-		BOOST_LOG_TRIVIAL(info) << "StateManager::CreateQuery Unsupported query type " << query9->mType;
+		createInfo.queryType = vk::QueryType::ePipelineStatistics;
+		createInfo.pipelineStatistics = vk::QueryPipelineStatisticFlagBits::eVertexShaderInvocations;
+		Log(info) << "StateManager::CreateQuery Unsupported query type " << query9->mType << std::endl;
 		break;
 	}
 
-	vk::ResultValue<vk::QueryPool> poolResult = device->mDevice.createQueryPool(info, nullptr); //&(ptr->mQueryPool)
+	vk::ResultValue<vk::QueryPool> poolResult = device->mDevice.createQueryPool(createInfo, nullptr); //&(ptr->mQueryPool)
 	if (poolResult.result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "StateManager::CreateQuery vkCreateQueryPool failed with return code of " << GetResultString((VkResult)poolResult.result);
+		Log(fatal) << "StateManager::CreateQuery vkCreateQueryPool failed with return code of " << GetResultString((VkResult)poolResult.result) << std::endl;
 		return;
 	}
 	ptr->mQueryPool = poolResult.value;

@@ -24,9 +24,9 @@ misrepresented as being the original software.
  
 #include "CQuery9.h"
 #include "CDevice9.h"
+#include "CTypes.h"
 
 #include "Utilities.h"
-#include "CTypes.h"
 
 CQuery9::CQuery9(CDevice9* device, D3DQUERYTYPE Type)
 	: mReferenceCount(1),

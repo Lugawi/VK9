@@ -24,18 +24,8 @@ misrepresented as being the original software.
 
 #include "Perf_CommandStreamManager.h"
 #include "Perf_ProcessQueue.h"
-#include "Utilities.h"
 
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/sinks/text_file_backend.hpp>
-#include <boost/log/utility/setup/file.hpp>
-#include <boost/log/utility/setup/console.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sources/record_ostream.hpp>
-#include <boost/format.hpp>
+#include "Utilities.h"
 
 #include <iostream>
 #include <fstream>
@@ -52,57 +42,18 @@ CommandStreamManager::CommandStreamManager()
 	LoadConfiguration("VK9.conf");
 
 	//Setup Logging.
-	boost::log::add_console_log(
-		std::cout, 
-		boost::log::keywords::format = "[%TimeStamp%]: %Message%",
-		boost::log::keywords::auto_flush = true
-	);
+	LogManager::Create(mConfiguration["LogFile"], (SeverityLevel)std::stoi(mConfiguration["LogLevel"]));
 
-	std::ofstream outfile(mConfiguration["LogFile"]);
-	if (!outfile)
-	{
-		MessageBox(nullptr,
-			TEXT("The application does not have permission to write to the log file location. If running on Windows try running as administrator."),
-			TEXT("No Write Permission!"),
-			IDOK | MB_ICONERROR);
-	}
-	outfile.close();
 
-	boost::log::add_file_log(
-		boost::log::keywords::file_name = mConfiguration["LogFile"],
-		boost::log::keywords::format = "[%TimeStamp%]: %Message%",
-		boost::log::keywords::auto_flush = true
-	);
-
-	/*
-	trace,
-	debug,
-	info,
-	warning,
-	error,
-	fatal
-	*/
-#ifndef _DEBUG
-	boost::log::trivial::severity_level logLevel = boost::log::trivial::trace;
-#else
-	boost::log::trivial::severity_level logLevel = boost::log::trivial::warning;
-#endif
-
-	if (!mConfiguration["LogLevel"].empty())
-	{
-		logLevel = (boost::log::trivial::severity_level)std::stoi(mConfiguration["LogLevel"]);
-	}
-
-	boost::log::core::get()->set_filter(boost::log::trivial::severity >= logLevel);
-
-	BOOST_LOG_TRIVIAL(info) << "CommandStreamManager::CommandStreamManager";
+	Log(info) << "CommandStreamManager::CommandStreamManager" << std::endl;
 }
 
 CommandStreamManager::~CommandStreamManager()
 {
 	IsRunning = 0;
 	mWorkerThread.join();
-	BOOST_LOG_TRIVIAL(info) << "CommandStreamManager::~CommandStreamManager";
+	Log(info) << "CommandStreamManager::~CommandStreamManager" << std::endl;
+	LogManager::Destroy();
 }
 
 size_t CommandStreamManager::RequestWork(WorkItem* workItem)

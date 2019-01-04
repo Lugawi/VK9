@@ -28,22 +28,10 @@ misrepresented as being the original software.
 //#include "resource.h"
 #include "CTypes.h"
 #include "d3d9.h" // Base class: IDirect3DDevice9
+#include "LogManager.h"
 
-#include <vulkan/vulkan.h>
 #include <vulkan/vk_sdk_platform.h>
 #include <vulkan/vulkan.hpp>
-
-#include <boost/program_options.hpp>
-#include <boost/program_options/parsers.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/sinks/text_file_backend.hpp>
-#include <boost/log/utility/setup/file.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sources/record_ostream.hpp>
-#include <boost/format.hpp>
 
 #include <Eigen/Dense>
 
@@ -185,7 +173,7 @@ vk::ShaderModule LoadShaderFromConst(vk::Device device, const T(&data)[arraySize
 	vk::Result result = device.createShaderModule(&moduleCreateInfo, nullptr, &module);
 	if (result != vk::Result::eSuccess)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "LoadShaderFromConst vkCreateShaderModule failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "LoadShaderFromConst vkCreateShaderModule failed with return code of " << GetResultString((VkResult)result) << std::endl;
 	}
 
 	return module;
@@ -1482,12 +1470,12 @@ inline void Print(std::unordered_map<D3DTRANSFORMSTATETYPE, D3DMATRIX>& transfor
 {
 	for (const auto& pair1 : transforms)
 	{
-		BOOST_LOG_TRIVIAL(info) << pair1.first;
-		BOOST_LOG_TRIVIAL(info) << "{" << pair1.second._11 << "," << pair1.second._12 << "," << pair1.second._13 << "," << pair1.second._14 << "}";
-		BOOST_LOG_TRIVIAL(info) << "{" << pair1.second._21 << "," << pair1.second._22 << "," << pair1.second._23 << "," << pair1.second._24 << "}";
-		BOOST_LOG_TRIVIAL(info) << "{" << pair1.second._31 << "," << pair1.second._32 << "," << pair1.second._33 << "," << pair1.second._34 << "}";
-		BOOST_LOG_TRIVIAL(info) << "{" << pair1.second._41 << "," << pair1.second._42 << "," << pair1.second._43 << "," << pair1.second._44 << "}";
-		BOOST_LOG_TRIVIAL(info) << "";
+		Log(info) << pair1.first << std::endl;
+		Log(info) << "{" << pair1.second._11 << "," << pair1.second._12 << "," << pair1.second._13 << "," << pair1.second._14 << "}" << std::endl;
+		Log(info) << "{" << pair1.second._21 << "," << pair1.second._22 << "," << pair1.second._23 << "," << pair1.second._24 << "}" << std::endl;
+		Log(info) << "{" << pair1.second._31 << "," << pair1.second._32 << "," << pair1.second._33 << "," << pair1.second._34 << "}" << std::endl;
+		Log(info) << "{" << pair1.second._41 << "," << pair1.second._42 << "," << pair1.second._43 << "," << pair1.second._44 << "}" << std::endl;
+		Log(info) << "" << std::endl;
 	}
 }
 

@@ -26,8 +26,9 @@ misrepresented as being the original software.
 #include "CDevice9.h"
 #include "CTexture9.h"
 #include "CCubeTexture9.h"
-#include "Utilities.h"
 #include "CTypes.h"
+
+#include "Utilities.h"
 
 CSurface9::CSurface9(CDevice9* Device, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DFORMAT Format)
 	: mDevice(Device)
@@ -171,7 +172,7 @@ CSurface9::CSurface9(CDevice9* Device, CCubeTexture9* Texture, UINT Width, UINT 
 
 void CSurface9::Init()
 {
-	BOOST_LOG_TRIVIAL(info) << "CSurface9::CSurface9";
+	Log(info) << "CSurface9::CSurface9" << std::endl;
 
 	//mDevice->AddRef();
 
@@ -210,7 +211,7 @@ void CSurface9::Init()
 
 CSurface9::~CSurface9()
 {
-	BOOST_LOG_TRIVIAL(info) << "CSurface9::~CSurface9";
+	Log(info) << "CSurface9::~CSurface9" << std::endl;
 
 	if (mId != -1)
 	{
@@ -280,7 +281,7 @@ HRESULT STDMETHODCALLTYPE CSurface9::FreePrivateData(REFGUID refguid)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CSurface9::FreePrivateData is not implemented!";
+	Log(warning) << "CSurface9::FreePrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -289,7 +290,7 @@ DWORD STDMETHODCALLTYPE CSurface9::GetPriority()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CSurface9::GetPriority is not implemented!";
+	Log(warning) << "CSurface9::GetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -298,7 +299,7 @@ HRESULT STDMETHODCALLTYPE CSurface9::GetPrivateData(REFGUID refguid, void* pData
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CSurface9::GetPrivateData is not implemented!";
+	Log(warning) << "CSurface9::GetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -312,7 +313,7 @@ void STDMETHODCALLTYPE CSurface9::PreLoad()
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CSurface9::PreLoad is not implemented!";
+	Log(warning) << "CSurface9::PreLoad is not implemented!" << std::endl;
 
 	return;
 }
@@ -321,7 +322,7 @@ DWORD STDMETHODCALLTYPE CSurface9::SetPriority(DWORD PriorityNew)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CSurface9::SetPriority is not implemented!";
+	Log(warning) << "CSurface9::SetPriority is not implemented!" << std::endl;
 
 	return 1;
 }
@@ -330,7 +331,7 @@ HRESULT STDMETHODCALLTYPE CSurface9::SetPrivateData(REFGUID refguid, const void*
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CSurface9::SetPrivateData is not implemented!";
+	Log(warning) << "CSurface9::SetPrivateData is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -341,7 +342,7 @@ HRESULT STDMETHODCALLTYPE CSurface9::GetContainer(REFIID riid, void** ppContaine
 
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CSurface9::GetContainer is not implemented!";
+	Log(warning) << "CSurface9::GetContainer is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -350,7 +351,7 @@ HRESULT STDMETHODCALLTYPE CSurface9::GetDC(HDC* phdc)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CSurface9::GetDC is not implemented!";
+	Log(warning) << "CSurface9::GetDC is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }
@@ -391,7 +392,7 @@ HRESULT STDMETHODCALLTYPE CSurface9::ReleaseDC(HDC hdc)
 {
 	//TODO: Implement.
 
-	BOOST_LOG_TRIVIAL(warning) << "CSurface9::ReleaseDC is not implemented!";
+	Log(warning) << "CSurface9::ReleaseDC is not implemented!" << std::endl;
 
 	return E_NOTIMPL;
 }

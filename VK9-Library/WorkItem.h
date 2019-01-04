@@ -19,8 +19,6 @@ misrepresented as being the original software.
 */
 
 #include <atomic>
-//#include <mutex>
-//#include <condition_variable>
 #include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include "WorkItemType.h"
 #include "d3d9.h"

@@ -21,12 +21,12 @@ misrepresented as being the original software.
 #include <atomic>
 #include <thread>
 
+#include "LogManager.h"
 #include "Perf_RenderManager.h"
 #include "WorkItemType.h"
 #include "WorkItem.h"
 #include "TinyQueue.h"
 
-#include <vulkan/vulkan.h>
 #include <vulkan/vk_sdk_platform.h>
 #include <vulkan/vulkan.hpp>
 

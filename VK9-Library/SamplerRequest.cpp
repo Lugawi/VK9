@@ -24,11 +24,13 @@ misrepresented as being the original software.
 
 #include "SamplerRequest.h"
 
+#include "Utilities.h"
+
 SamplerRequest::~SamplerRequest()
 {
 	if (mRealDevice != nullptr)
 	{
-		//BOOST_LOG_TRIVIAL(warning) << "SamplerRequest::~SamplerRequest";
+		//Log(warning) << "SamplerRequest::~SamplerRequest";
 		auto& device = mRealDevice->mDevice;
 		device.destroySampler(Sampler, nullptr);
 	}
