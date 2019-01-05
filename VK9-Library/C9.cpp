@@ -560,10 +560,10 @@ HRESULT STDMETHODCALLTYPE C9::GetAdapterDisplayModeEx(UINT Adapter, D3DDISPLAYMO
 
 	if (monitor.PixelBits != 32)
 	{
-		Log(info) << Adapter;
-		Log(info) << monitor.RefreshRate;
-		Log(info) << monitor.Height;
-		Log(info) << monitor.Width;
+		Log(info) << Adapter << std::endl;
+		Log(info) << monitor.RefreshRate << std::endl;
+		Log(info) << monitor.Height << std::endl;
+		Log(info) << monitor.Width << std::endl;
 
 		Log(info) << "C9::GetAdapterDisplayModeEx Unknown pixel bit format : " << monitor.PixelBits << std::endl; //Revisit
 	}

@@ -124,7 +124,7 @@ void RealVolume::Flush()
 	result = mRealDevice->mDevice.allocateCommandBuffers(&commandBufferInfo, &commandBuffer);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealVolume::Flush vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealVolume::Flush vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -143,7 +143,7 @@ void RealVolume::Flush()
 	result = commandBuffer.begin(&commandBufferBeginInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealVolume::Flush vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealVolume::Flush vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -182,7 +182,7 @@ void RealVolume::Flush()
 	result = mRealDevice->mQueue.submit(1, &submitInfo, nullFence);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealVolume::Flush vkQueueSubmit failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealVolume::Flush vkQueueSubmit failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 

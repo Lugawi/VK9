@@ -50,11 +50,11 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 				'\0'
 			};
 
-			Log(fatal) << "RealSurface::RealSurface (CSurface9*) unknown format: " << four;
+			Log(fatal) << "RealSurface::RealSurface (CSurface9*) unknown format: " << four << std::endl;
 		}
 		else
 		{
-			Log(fatal) << "RealSurface::RealSurface (CSurface9*) unknown format: " << surface9->mFormat;
+			Log(fatal) << "RealSurface::RealSurface (CSurface9*) unknown format: " << surface9->mFormat << std::endl;
 		}
 
 	}
@@ -145,12 +145,12 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 	result = (vk::Result)vmaCreateImage(mRealDevice->mAllocator, (VkImageCreateInfo*)&imageCreateInfo, &imageAllocInfo, (VkImage*)&mStagingImage, &mImageAllocation, &mImageAllocationInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealSurface::RealSurface (CSurface9*) vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealSurface::RealSurface (CSurface9*) vmaCreateImage failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		Log(fatal) << "RealSurface::RealSurface (CSurface9*)" <<
 			" format:" << (uint32_t)imageCreateInfo.format <<
 			" imageType:" << (uint32_t)imageCreateInfo.imageType <<
 			" tiling:" << (uint32_t)imageCreateInfo.tiling <<
-			" usage:" << (uint32_t)imageCreateInfo.usage;
+			" usage:" << (uint32_t)imageCreateInfo.usage << std::endl;
 		return;
 	}
 
@@ -228,7 +228,7 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 		result = realDevice->mDevice.createImageView(&imageViewCreateInfo, nullptr, &mStagingImageView);
 		if (result != vk::Result::eSuccess)
 		{
-			Log(fatal) << "RealSurface::RealSurface (CSurface9*) vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
+			Log(fatal) << "RealSurface::RealSurface (CSurface9*) vkCreateImageView failed with return code of " << GetResultString((VkResult)result) << std::endl;
 			return;
 		}
 	}
@@ -240,7 +240,7 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 		result = realDevice->mDevice.createImageView(&imageViewCreateInfo, nullptr, &mStagingImageView);
 		if (result != vk::Result::eSuccess)
 		{
-			Log(fatal) << "RealSurface::RealSurface (CSurface9*) vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
+			Log(fatal) << "RealSurface::RealSurface (CSurface9*) vkCreateImageView failed with return code of " << GetResultString((VkResult)result) << std::endl;
 			return;
 		}
 	}
@@ -289,7 +289,7 @@ void RealSurface::Lock(D3DLOCKED_RECT* pLockedRect, const RECT* pRect, DWORD Fla
 		result = (vk::Result)vmaMapMemory(mRealDevice->mAllocator, mImageAllocation, &mData);
 		if (result != vk::Result::eSuccess)
 		{
-			Log(fatal) << "RealSurface::Lock vkMapMemory failed with return code of " << GetResultString((VkResult)result);
+			Log(fatal) << "RealSurface::Lock vkMapMemory failed with return code of " << GetResultString((VkResult)result) << std::endl;
 			pLockedRect->pBits = nullptr;
 
 			return;
@@ -389,7 +389,7 @@ void RealSurface::Flush()
 	result = mRealDevice->mDevice.allocateCommandBuffers(&commandBufferInfo, &commandBuffer);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealSurface::Flush vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealSurface::Flush vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -408,7 +408,7 @@ void RealSurface::Flush()
 	result = commandBuffer.begin(&commandBufferBeginInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealSurface::Flush vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealSurface::Flush vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -473,7 +473,7 @@ void RealSurface::Flush()
 	result = mRealDevice->mQueue.submit(1, &submitInfo, nullFence);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealSurface::Flush vkQueueSubmit failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealSurface::Flush vkQueueSubmit failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 

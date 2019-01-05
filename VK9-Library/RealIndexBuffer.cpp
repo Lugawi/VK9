@@ -51,7 +51,7 @@ RealIndexBuffer::RealIndexBuffer(RealDevice* realDevice, size_t length, bool isD
 		break;
 	default:
 		mSize = 0;
-		Log(fatal) << "RealIndexBuffer::RealIndexBuffer invalid D3DFORMAT of " << format;
+		Log(fatal) << "RealIndexBuffer::RealIndexBuffer invalid D3DFORMAT of " << format << std::endl;
 		break;
 	}
 }

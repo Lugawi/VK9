@@ -154,7 +154,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	mInstance(instance),
 	mPhysicalDevice(physicalDevice)
 {
-	Log(info) << "RealDevice::RealDevice";
+	Log(info) << "RealDevice::RealDevice" << std::endl;
 
 	vk::Result result;
 
@@ -215,7 +215,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = physicalDevice.createDevice(&device_info, nullptr, &mDevice);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealDevice::RealDevice vkCreateDevice failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vkCreateDevice failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -261,7 +261,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = mDevice.createDescriptorPool(&descriptorPoolCreateInfo, nullptr, &mDescriptorPool);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealDevice::RealDevice vkCreateDescriptorPool failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vkCreateDescriptorPool failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -269,7 +269,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	{
 		mEstimatedMemory += mPhysicalDeviceMemoryProperties.memoryHeaps[i].size;
 	}
-	Log(info) << "RealDevice::RealDevice The total size of all heaps is " << mEstimatedMemory;
+	Log(info) << "RealDevice::RealDevice The total size of all heaps is " << mEstimatedMemory << std::endl;
 
 	vk::Bool32 doesSupportGraphics = false;
 	uint32_t graphicsQueueIndex = 0;
@@ -294,7 +294,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = mDevice.createCommandPool(&commandPoolInfo, nullptr, &mCommandPool);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealDevice::RealDevice vkCreateCommandPool failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vkCreateCommandPool failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -309,7 +309,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = mDevice.allocateCommandBuffers(&commandBufferInfo, mCommandBuffers);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealDevice::RealDevice vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -492,7 +492,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = mDevice.createDescriptorSetLayout(&mDescriptorSetLayoutCreateInfo, nullptr, &mDescriptorSetLayout);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealDevice::RealDevice vkCreateDescriptorSetLayout failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vkCreateDescriptorSetLayout failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -532,7 +532,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = mDevice.createPipelineCache(&mPipelineCacheCreateInfo, nullptr, &mPipelineCache);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealDevice::RealDevice vkCreatePipelineCache failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vkCreatePipelineCache failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -556,7 +556,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = mDevice.createSampler(&samplerCreateInfo, nullptr, &mSampler);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealDevice::RealDevice vkCreateSampler failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vkCreateSampler failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -589,7 +589,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = (vk::Result)vmaCreateImage(mAllocator, (VkImageCreateInfo*)&imageCreateInfo2, &imageAllocInfo2, (VkImage*)&mImage, &mImageAllocation, &mImageAllocationInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealDevice::RealDevice vmaCreateImage failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vmaCreateImage failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -603,20 +603,20 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	int32_t x = 0;
 	int32_t y = 0;
 
-	//Log(info) << "RealDevice::RealDevice using format " << (VkFormat)textureFormat;
+	//Log(info) << "RealDevice::RealDevice using format " << (VkFormat)textureFormat << std::endl;
 	mDevice.getImageSubresourceLayout(mImage, &imageSubresource, &subresourceLayout);
 
 	//data = mDevice.mapMemory((vk::DeviceMemory)mImageAllocationInfo.deviceMemory, 0, (vk::DeviceSize)mImageAllocationInfo.size, vk::MemoryMapFlags()).value;
 	//if (data == nullptr)
 	//{
-	//	Log(fatal) << "RealDevice::RealDevice vkMapMemory failed.";
+	//	Log(fatal) << "RealDevice::RealDevice vkMapMemory failed." << std::endl;
 	//	return;
 	//}
 
 	result = (vk::Result)vmaMapMemory(mAllocator, mImageAllocation, &data);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealDevice::RealDevice vmaMapMemory failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vmaMapMemory failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -650,7 +650,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	result = mDevice.createImageView(&imageViewCreateInfo2, nullptr, &mImageView);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealDevice::RealDevice vkCreateImageView failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::RealDevice vkCreateImageView failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -801,7 +801,7 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 
 RealDevice::~RealDevice()
 {
-	Log(info) << "RealDevice::~RealDevice";
+	Log(info) << "RealDevice::~RealDevice" << std::endl;
 	delete[] mQueueFamilyProperties;
 	if (mDevice == vk::Device())
 	{
@@ -914,7 +914,7 @@ void RealDevice::SetImageLayout(vk::Image image, vk::ImageAspectFlags aspectMask
 	result = mDevice.allocateCommandBuffers(&commandBufferInfo, &commandBuffer);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealDevice::SetImageLayout vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::SetImageLayout vkAllocateCommandBuffers failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -928,7 +928,7 @@ void RealDevice::SetImageLayout(vk::Image image, vk::ImageAspectFlags aspectMask
 	result = commandBuffer.begin(&commandBufferBeginInfo);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealDevice::SetImageLayout vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::SetImageLayout vkBeginCommandBuffer failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -947,7 +947,7 @@ void RealDevice::SetImageLayout(vk::Image image, vk::ImageAspectFlags aspectMask
 	result = mQueue.submit(1, &submitInfo, nullFence);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealDevice::SetImageLayout vkQueueSubmit failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::SetImageLayout vkQueueSubmit failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -967,7 +967,7 @@ void RealDevice::CreateBuffer(vk::DeviceSize size, const vk::BufferUsageFlags& u
 	result = mDevice.createBuffer(&bufferInfo, nullptr, &buffer);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealDevice::CreateBuffer vkCreateBuffer failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::CreateBuffer vkCreateBuffer failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -980,14 +980,14 @@ void RealDevice::CreateBuffer(vk::DeviceSize size, const vk::BufferUsageFlags& u
 
 	if (!GetMemoryTypeFromProperties(mPhysicalDeviceMemoryProperties, memoryRequirements.memoryTypeBits, properties, &allocInfo.memoryTypeIndex))
 	{
-		Log(fatal) << "Memory type index not found!";
+		Log(fatal) << "Memory type index not found!" << std::endl;
 		return;
 	}
 
 	result = mDevice.allocateMemory(&allocInfo, nullptr, &deviceMemory);
 	if (result != vk::Result::eSuccess)
 	{
-		Log(fatal) << "RealDevice::CreateBuffer vkCreateBuffer failed with return code of " << GetResultString((VkResult)result);
+		Log(fatal) << "RealDevice::CreateBuffer vkCreateBuffer failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
 	}
 
@@ -1102,7 +1102,7 @@ void RealDevice::SetRenderTarget(CDevice9* device9, DWORD renderTargetIndex, CSu
 		}
 		else if (renderTarget->mCubeTexture != nullptr)
 		{
-			Log(fatal) << "Cube texture not supported for render target!";
+			Log(fatal) << "Cube texture not supported for render target!" << std::endl;
 		}
 		else
 		{
@@ -1196,7 +1196,7 @@ void RealDevice::Clear(DWORD Count, const D3DRECT *pRects, DWORD Flags, D3DCOLOR
 
 	if (Count > 0 && pRects != nullptr)
 	{
-		Log(warning) << "RenderManager::Clear is not fully implemented!";
+		Log(warning) << "RenderManager::Clear is not fully implemented!" << std::endl;
 		return;
 	}
 

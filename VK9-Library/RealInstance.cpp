@@ -28,7 +28,7 @@ misrepresented as being the original software.
 
 RealInstance::RealInstance(bool enableDebugLayers)
 {
-	Log(info) << "RealInstance::RealInstance";
+	Log(info) << "RealInstance::RealInstance" << std::endl;
 
 	std::vector<char*> extensionNames;
 	std::vector<char*> layerNames;
@@ -54,7 +54,7 @@ RealInstance::RealInstance(bool enableDebugLayers)
 			int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void **)&mRenderDocApi);
 			if (ret != 1)
 			{
-				Log(warning) << "RealInstance::RealInstance unable to find RENDERDOC_API_Version_1_1_ !";
+				Log(warning) << "RealInstance::RealInstance unable to find RENDERDOC_API_Version_1_1_ !" << std::endl;
 			}
 			else
 			{
@@ -63,13 +63,13 @@ RealInstance::RealInstance(bool enableDebugLayers)
 		}
 		else
 		{
-			Log(warning) << "RealInstance::RealInstance unable to find RENDERDOC_GetAPI !";
+			Log(warning) << "RealInstance::RealInstance unable to find RENDERDOC_GetAPI !" << std::endl;
 		}
 
 	}
 	else
 	{
-		Log(warning) << "RealInstance::RealInstance unable to find renderdoc.dll !";
+		Log(warning) << "RealInstance::RealInstance unable to find renderdoc.dll !" << std::endl;
 	}
 
 	vk::Result result;
@@ -88,18 +88,18 @@ RealInstance::RealInstance(bool enableDebugLayers)
 		}
 		else
 		{
-			Log(fatal) << "StateManager::CreateInstance No physical devices were found.";
+			Log(fatal) << "StateManager::CreateInstance No physical devices were found." << std::endl;
 		}
 	}
 	else
 	{
-		Log(fatal) << "StateManager::CreateInstance failed to create vulkan instance.";
+		Log(fatal) << "StateManager::CreateInstance failed to create vulkan instance." << std::endl;
 	}
 }
 
 RealInstance::~RealInstance()
 {
-	Log(info) << "RealInstance::~RealInstance";
+	Log(info) << "RealInstance::~RealInstance" << std::endl;
 
 	if (mRenderDocDll != nullptr)
 	{

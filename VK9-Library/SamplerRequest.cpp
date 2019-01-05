@@ -30,7 +30,7 @@ SamplerRequest::~SamplerRequest()
 {
 	if (mRealDevice != nullptr)
 	{
-		//Log(warning) << "SamplerRequest::~SamplerRequest";
+		//Log(warning) << "SamplerRequest::~SamplerRequest" << std::endl;
 		auto& device = mRealDevice->mDevice;
 		device.destroySampler(Sampler, nullptr);
 	}

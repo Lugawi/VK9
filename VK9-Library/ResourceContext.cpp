@@ -30,7 +30,7 @@ ResourceContext::~ResourceContext()
 {
 	if (mRealDevice != nullptr)
 	{
-		//Log(warning) << "ResourceContext::~ResourceContext";
+		//Log(warning) << "ResourceContext::~ResourceContext" << std::endl;
 		auto& device = mRealDevice->mDevice;
 		device.freeDescriptorSets(mRealDevice->mDescriptorPool, 1, &DescriptorSet);
 	}

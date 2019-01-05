@@ -30,12 +30,12 @@ RealQuery::RealQuery(RealDevice* realDevice)
 	: mRealDevice(realDevice),
 	mSize(0)
 {
-	Log(info) << "RealQuery::RealQuery";
+	Log(info) << "RealQuery::RealQuery" << std::endl;
 }
 
 RealQuery::~RealQuery()
 {
-	Log(info) << "RealQuery::~RealQuery";
+	Log(info) << "RealQuery::~RealQuery" << std::endl;
 	if (mRealDevice != nullptr)
 	{
 		auto& device = mRealDevice->mDevice;

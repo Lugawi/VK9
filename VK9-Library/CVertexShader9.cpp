@@ -32,12 +32,12 @@ CVertexShader9::CVertexShader9(CDevice9* device, const DWORD* pFunction)
 	mFunction((DWORD*)pFunction),
 	mId(0)
 {
-	Log(info) << "CVertexShader9::CVertexShader9";
+	Log(info) << "CVertexShader9::CVertexShader9" << std::endl;
 }
 
 CVertexShader9::~CVertexShader9()
 {
-	Log(info) << "CVertexShader9::~CVertexShader9";
+	Log(info) << "CVertexShader9::~CVertexShader9" << std::endl;
 
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(nullptr);
 	workItem->WorkItemType = WorkItemType::Shader_Destroy;

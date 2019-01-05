@@ -803,23 +803,23 @@ vk::ShaderModule LoadShaderFromFile(vk::Device device, const char *filename)
 			result = device.createShaderModule(&moduleCreateInfo, nullptr, &module);
 			if (result != vk::Result::eSuccess)
 			{
-				Log(fatal) << "LoadShaderFromFile vkCreateShaderModule failed with return code of " << GetResultString((VkResult)result);
+				Log(fatal) << "LoadShaderFromFile vkCreateShaderModule failed with return code of " << GetResultString((VkResult)result) << std::endl;
 			}
 			else
 			{
-				Log(info) << "LoadShaderFromFile vkCreateShaderModule succeeded. " << filename;
+				Log(info) << "LoadShaderFromFile vkCreateShaderModule succeeded. " << filename << std::endl;
 			}
 		}
 		else
 		{
-			Log(fatal) << "LoadShaderFromFile unable to read file. " << filename;
+			Log(fatal) << "LoadShaderFromFile unable to read file. " << filename << std::endl;
 		}
 		free(data);
 		fclose(fp);
 	}
 	else
 	{
-		Log(fatal) << "LoadShaderFromFile unable to open file. " << filename;
+		Log(fatal) << "LoadShaderFromFile unable to open file. " << filename << std::endl;
 	}
 
 	return module;
@@ -837,7 +837,7 @@ vk::ShaderModule LoadShaderFromResource(vk::Device device, WORD resource)
 
 	if (res == FALSE)
 	{
-		Log(fatal) << "LoadShaderFromResource dllModule is null.";
+		Log(fatal) << "LoadShaderFromResource dllModule is null." << std::endl;
 	}
 	else
 	{
@@ -856,21 +856,21 @@ vk::ShaderModule LoadShaderFromResource(vk::Device device, WORD resource)
 				result = device.createShaderModule(&moduleCreateInfo, nullptr, &module);
 				if (result != vk::Result::eSuccess)
 				{
-					Log(fatal) << "LoadShaderFromResource vkCreateShaderModule failed with return code of " << GetResultString((VkResult)result);
+					Log(fatal) << "LoadShaderFromResource vkCreateShaderModule failed with return code of " << GetResultString((VkResult)result) << std::endl;
 				}
 				else
 				{
-					Log(info) << "LoadShaderFromResource vkCreateShaderModule succeeded.";
+					Log(info) << "LoadShaderFromResource vkCreateShaderModule succeeded." << std::endl;
 				}
 			}
 			else
 			{
-				Log(fatal) << "LoadShaderFromResource resource data is null.";
+				Log(fatal) << "LoadShaderFromResource resource data is null." << std::endl;
 			}
 		}
 		else
 		{
-			Log(fatal) << "LoadShaderFromResource resource not found.";
+			Log(fatal) << "LoadShaderFromResource resource not found." << std::endl;
 		}
 
 		FreeLibrary(dllModule);

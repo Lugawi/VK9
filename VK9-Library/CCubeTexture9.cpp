@@ -304,7 +304,7 @@ HRESULT CCubeTexture9::LockRect(D3DCUBEMAP_FACES FaceType, UINT Level, D3DLOCKED
 {
 	//if (Level == 0)
 	//{
-	//	Log(info) << "CTexture9::LockRect Level:" << Level << " Handle: " << this;
+	//	Log(info) << "CTexture9::LockRect Level:" << Level << " Handle: " << this << std::endl;
 	//}
 	HRESULT result = mSurfaces[FaceType][Level]->LockRect(pLockedRect, pRect, Flags);	
 	return result;
@@ -314,7 +314,7 @@ HRESULT CCubeTexture9::UnlockRect(D3DCUBEMAP_FACES FaceType, UINT Level)
 {
 	//if (Level == 0)
 	//{
-	//	Log(info) << "CTexture9::UnlockRect Level:" << Level << " Handle: " << this;
+	//	Log(info) << "CTexture9::UnlockRect Level:" << Level << " Handle: " << this << std::endl;
 	//}
 	HRESULT result = mSurfaces[FaceType][Level]->UnlockRect();
 	return result;
