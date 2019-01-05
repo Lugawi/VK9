@@ -64,11 +64,7 @@ misrepresented as being the original software.
 // Eigen headers
 #include <Eigen/Dense>
 
-// Boost headers
-#include <boost/interprocess/sync/interprocess_semaphore.hpp>
-
 // Windows headers
-// --- must be included below boost in case of MinGW ---
 //#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <winuser.h>

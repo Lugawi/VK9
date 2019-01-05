@@ -40,6 +40,9 @@ misrepresented as being the original software.
 #include <fstream>
 #include <algorithm>
 #include <limits>
+#include <iostream>
+#include <string>
+#include <locale> 
 
 #ifndef _MSC_VER
 // Used D3D9Ex constants, missing in MinGW
@@ -1568,7 +1571,8 @@ static inline void LTrim(std::string &s)
 {
 	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) 
 	{
-		return !std::isspace(ch);
+		std::locale loc;
+		return !std::isspace(ch,loc);
 	}));
 }
 
@@ -1576,7 +1580,8 @@ static inline void RTrim(std::string &s)
 {
 	s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) 
 	{
-		return !std::isspace(ch);
+		std::locale loc;
+		return !std::isspace(ch, loc);
 	}).base(), s.end());
 }
 

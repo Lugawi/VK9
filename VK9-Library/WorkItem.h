@@ -19,7 +19,6 @@ misrepresented as being the original software.
 */
 
 #include <atomic>
-#include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include "WorkItemType.h"
 #include "d3d9.h"
 
@@ -40,12 +39,21 @@ struct WorkItem
 	IUnknown* Caller = nullptr;
 
 	bool WillWait = false;
-	boost::interprocess::interprocess_semaphore WaitHandle;
+	HANDLE WaitHandle;
 
 	WorkItem()
-		: WaitHandle(0)
 	{
+		WaitHandle = CreateEvent(
+			NULL,               // default security attributes
+			TRUE,               // manual-reset event
+			FALSE,              // initial state is nonsignaled
+			TEXT("WorkCompleteEvent")  // object name
+		);
+	}
 
+	~WorkItem()
+	{
+		CloseHandle(WaitHandle);
 	}
 };
 

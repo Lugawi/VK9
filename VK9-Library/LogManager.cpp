@@ -60,7 +60,7 @@ void LogManager::Destroy()
 
 LockedStream Log(SeverityLevel severityLevel)
 {
-	if (severityLevel > LogManager::mInstance->mSeverityLevel)
+	if (severityLevel >= LogManager::mInstance->mSeverityLevel)
 	{
 		return LockedStream(LogManager::mInstance->mFileStream, LogManager::mInstance->mMutex);
 	}

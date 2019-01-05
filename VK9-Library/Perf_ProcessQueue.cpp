@@ -2963,7 +2963,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 
 			if (workItem->WillWait)
 			{
-				workItem->WaitHandle.post();
+				SetEvent(workItem->WaitHandle);
 			}
 
 			if (workItem->Caller != nullptr)

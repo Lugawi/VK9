@@ -115,7 +115,11 @@ size_t CommandStreamManager::RequestWorkAndWait(WorkItem* workItem)
 	workItem->WillWait = true;
 
 	size_t result = this->RequestWork(workItem);	
-	workItem->WaitHandle.wait();
+	
+	if (WaitForSingleObject(workItem->WaitHandle, INFINITE) == WAIT_TIMEOUT)
+	{
+		Log(warning) << "CommandStreamManager::RequestWorkAndWait semaphore timeout!" << std::endl;
+	}
 
 	return result;
 }
@@ -131,6 +135,7 @@ WorkItem* CommandStreamManager::GetWorkItem(IUnknown* caller)
 	}
 	else
 	{
+		ResetEvent(returnValue->WaitHandle);
 		returnValue->WillWait = false;
 	}
 
