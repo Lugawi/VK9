@@ -37,7 +37,11 @@ struct RealVolume
 
 	void* mPersistentData = nullptr;
 	void* mData = nullptr;
-	size_t mAttributeSize;
+	
+	vk::Format mRealFormat;
+	size_t mPixelSize = 0;
+	size_t mRowSize = 0;
+	size_t mLayerSize = 0;
 	size_t mLength;
 
 	vk::Image* mParentImage = nullptr;
@@ -45,7 +49,7 @@ struct RealVolume
 	BOOL mIsFlushed = true;
 
 	RealDevice* mRealDevice = nullptr; //null if not owner.
-	RealVolume(RealDevice* realDevice, CVolume9* volume9, vk::Image* parentImage);
+	RealVolume(RealDevice* realDevice, CVolume9* volume9, vk::Image* parentImage, vk::Format realFormat);
 	~RealVolume();
 
 	void* Lock(size_t offset);

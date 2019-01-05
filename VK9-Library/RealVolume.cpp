@@ -27,13 +27,21 @@ misrepresented as being the original software.
 
 #include "Utilities.h"
 
-RealVolume::RealVolume(RealDevice* realDevice, CVolume9* volume9, vk::Image* parentImage)
+RealVolume::RealVolume(RealDevice* realDevice, CVolume9* volume9, vk::Image* parentImage, vk::Format realFormat)
 	: mRealDevice(realDevice),
 	mVolume9(volume9),
-	mParentImage(parentImage)
+	mParentImage(parentImage),
+	mRealFormat(realFormat)
 {
-	mAttributeSize = 1; //TODO: figure out format
-	mLength = mAttributeSize * volume9->mWidth * volume9->mHeight * volume9->mDepth;
+	mPixelSize = SizeOf(mRealFormat);
+	mRowSize = mPixelSize * volume9->mWidth;
+	mLayerSize = mRowSize * volume9->mHeight;
+	mLength = mLayerSize * volume9->mDepth;
+
+	Log(info) << "RealVolume::RealVolume mPixelSize: " << mPixelSize << std::endl;
+	Log(info) << "RealVolume::RealVolume mRowSize: " << mRowSize << std::endl;
+	Log(info) << "RealVolume::RealVolume mLayerSize: " << mLayerSize << std::endl;
+	Log(info) << "RealVolume::RealVolume mLength: " << mLength << std::endl;
 
 	vk::BufferCreateInfo bufferCreateInfo;
 	bufferCreateInfo.size = mLength;
@@ -73,11 +81,11 @@ void* RealVolume::LockBox(D3DLOCKED_BOX * pLockedVolume, CONST D3DBOX* pBox, DWO
 {
 	size_t offset = 0;
 
-	offset = mAttributeSize * pBox->Top * pBox->Left * pBox->Front;
+	offset =  (pBox->Top * mRowSize) + (pBox->Left * mPixelSize) + (pBox->Front * mLayerSize);
 
 	pLockedVolume->pBits = Lock(offset);
-	pLockedVolume->RowPitch = mAttributeSize;
-	pLockedVolume->SlicePitch = mAttributeSize;
+	pLockedVolume->RowPitch = mRowSize;
+	pLockedVolume->SlicePitch = mLayerSize;
 
 	if ((Flags & D3DLOCK_READONLY) == D3DLOCK_READONLY)
 	{

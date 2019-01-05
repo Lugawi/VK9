@@ -421,13 +421,10 @@ void StateManager::CreateVolume(size_t id, void* argument1)
 	auto device = mDevices[id];
 	CVolume9* volume9 = bit_cast<CVolume9*>(argument1);
 	vk::Image* parentImage = nullptr;
+	
+	auto& texture = mTextures[volume9->mTexture->mId];
 
-	if (volume9->mTexture != nullptr)
-	{
-		parentImage = &mTextures[volume9->mTexture->mId]->mImage;
-	}
-
-	std::shared_ptr<RealVolume> ptr = std::make_shared<RealVolume>(device.get(), volume9, parentImage);
+	std::shared_ptr<RealVolume> ptr = std::make_shared<RealVolume>(device.get(), volume9, &texture->mImage, texture->mRealFormat);
 
 	mVolumes.push_back(ptr);
 }

@@ -2556,6 +2556,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				pCaps->MaxStreams = std::max((uint32_t)1,std::min(properties.limits.maxVertexInputBindings, (uint32_t)16));
 				pCaps->MaxStreamStride = std::min(properties.limits.maxVertexInputBindingStride, (uint32_t)65536);
 				pCaps->VertexShaderVersion = D3DVS_VERSION(3, 0);
+				pCaps->PixelShaderVersion = D3DPS_VERSION(3, 0);
 				pCaps->MaxVertexShaderConst = 256;
 				pCaps->PixelShader1xMaxValue = 65504.f;
 

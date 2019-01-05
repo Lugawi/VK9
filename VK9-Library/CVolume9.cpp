@@ -58,8 +58,6 @@ CVolume9::~CVolume9()
 
 void CVolume9::Init()
 {
-	Log(info) << "CVolume9::Init" << std::endl;
-
 	//mDevice->AddRef();
 
 	/*
@@ -209,6 +207,8 @@ HRESULT STDMETHODCALLTYPE CVolume9::LockBox(D3DLOCKED_BOX* pLockedVolume, CONST 
 	workItem->Argument3 = (void*)Flags;
 	mCommandStreamManager->RequestWorkAndWait(workItem);
 
+	Log(info) << "CVolume9::LockBox" << std::endl;
+
 	return S_OK;
 }
 
@@ -221,6 +221,8 @@ HRESULT STDMETHODCALLTYPE CVolume9::UnlockBox()
 	mCommandStreamManager->RequestWorkAndWait(workItem);
 
 	this->Flush();
+
+	Log(info) << "CVolume9::UnlockBox" << std::endl;
 
 	return S_OK;
 }
