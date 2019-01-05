@@ -114,6 +114,8 @@ size_t CommandStreamManager::RequestWorkAndWait(WorkItem* workItem)
 {
 	workItem->WillWait = true;
 
+	ResetEvent(workItem->WaitHandle);
+
 	size_t result = this->RequestWork(workItem);	
 	
 	if (WaitForSingleObject(workItem->WaitHandle, INFINITE) == WAIT_TIMEOUT)
@@ -134,8 +136,7 @@ WorkItem* CommandStreamManager::GetWorkItem(IUnknown* caller)
 		returnValue = new WorkItem();
 	}
 	else
-	{
-		ResetEvent(returnValue->WaitHandle);
+	{	
 		returnValue->WillWait = false;
 	}
 

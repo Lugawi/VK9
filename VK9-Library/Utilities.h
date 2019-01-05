@@ -63,6 +63,17 @@ misrepresented as being the original software.
 #define D3DCOLOR_G(dw) (((float)(((dw) >> 8) & 0xFF)) / 255.0f)
 #define D3DCOLOR_B(dw) (((float)(((dw) >> 0) & 0xFF)) / 255.0f)
 
+#define D3DFMT_INTZ ((D3DFORMAT)(MAKEFOURCC('I','N','T','Z')))
+#define D3DFMT_RAWZ ((D3DFORMAT)(MAKEFOURCC('R','A','W','Z')))
+#define D3DFMT_DF24 ((D3DFORMAT)(MAKEFOURCC('D','F','2','4')))
+#define D3DFMT_DF16 ((D3DFORMAT)(MAKEFOURCC('D','F','1','6')))
+#define D3DFMT_INST ((D3DFORMAT)(MAKEFOURCC('I','N','S','T')))
+#define D3DFMT_NULL ((D3DFORMAT)(MAKEFOURCC('N','U','L','L')))
+
+#define SPIR_V_MAX_ID 4194303
+#define ESTIMATED_SPIR_V_PER_DXBC_OP 5
+#define MAX_DXBC_PHASES 2
+
 void MergeState(const DeviceState& sourceState, DeviceState& targetState, D3DSTATEBLOCKTYPE type = D3DSBT_ALL, BOOL onlyIfExists = false);
 
 HMODULE GetModule(HMODULE module = 0);

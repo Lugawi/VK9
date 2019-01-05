@@ -2268,8 +2268,8 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				pIdentifier->DriverVersion.QuadPart = properties.driverVersion;
 
 				//little endian assumption.
-				CustomGUID guid = { 0xD7B71EE2 , 0x249F , 0x11CF , 0x3275 , 0x17B57BC2D835};
-				pIdentifier->DeviceIdentifier = bit_cast<GUID>(guid);				
+				CustomGUID guid = { 0xD7B71EE2 , 0x249F , 0x11CF , 0x3275 , 0x17B57BC2D835 };
+				pIdentifier->DeviceIdentifier = bit_cast<GUID>(guid);
 
 			}
 			break;
@@ -2296,88 +2296,330 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 
 				(*pCaps) = {};
 
-				//Translate the vulkan properties & features into D3D9 capabilities.
+				//Re-worked Caps based off of SwiftGL, ToGL, Nine, Wine, MS Docs, and local implementation.
 				pCaps->DeviceType = DeviceType;
+
 				pCaps->AdapterOrdinal = 0;
-				pCaps->Caps = 0;
-				pCaps->Caps2 = D3DCAPS2_CANMANAGERESOURCE | D3DCAPS2_DYNAMICTEXTURES | D3DCAPS2_FULLSCREENGAMMA | D3DCAPS2_CANAUTOGENMIPMAP;
-				pCaps->Caps3 = D3DCAPS3_ALPHA_FULLSCREEN_FLIP_OR_DISCARD | D3DCAPS3_COPY_TO_VIDMEM | D3DCAPS3_COPY_TO_SYSTEMMEM | D3DCAPS3_LINEAR_TO_SRGB_PRESENTATION;
-				pCaps->PresentationIntervals = D3DPRESENT_INTERVAL_DEFAULT | D3DPRESENT_INTERVAL_ONE | D3DPRESENT_INTERVAL_TWO | D3DPRESENT_INTERVAL_THREE | D3DPRESENT_INTERVAL_FOUR | D3DPRESENT_INTERVAL_IMMEDIATE;
+
+				pCaps->Caps = D3DCAPS_READ_SCANLINE; //Based on ToGL & Swift this is DX7 stuff.
+
+				pCaps->Caps2 = D3DCAPS2_CANMANAGERESOURCE |
+					/* D3DCAPS2_CANSHARERESOURCE | */
+					/* D3DCAPS2_CANCALIBRATEGAMMA | */
+					D3DCAPS2_DYNAMICTEXTURES |
+					D3DCAPS2_FULLSCREENGAMMA |
+					D3DCAPS2_CANAUTOGENMIPMAP;
+
+				pCaps->Caps3 = D3DCAPS3_ALPHA_FULLSCREEN_FLIP_OR_DISCARD |
+					D3DCAPS3_COPY_TO_VIDMEM |
+					D3DCAPS3_COPY_TO_SYSTEMMEM |
+					D3DCAPS3_LINEAR_TO_SRGB_PRESENTATION;
+
+				pCaps->Caps3 = D3DCAPS3_ALPHA_FULLSCREEN_FLIP_OR_DISCARD |
+					D3DCAPS3_COPY_TO_VIDMEM |
+					D3DCAPS3_COPY_TO_SYSTEMMEM |
+					D3DCAPS3_LINEAR_TO_SRGB_PRESENTATION;
+
+				pCaps->PresentationIntervals = D3DPRESENT_INTERVAL_DEFAULT |
+					D3DPRESENT_INTERVAL_ONE |
+					D3DPRESENT_INTERVAL_TWO |
+					D3DPRESENT_INTERVAL_THREE |
+					D3DPRESENT_INTERVAL_FOUR |
+					D3DPRESENT_INTERVAL_IMMEDIATE;
+
 				pCaps->CursorCaps = D3DCURSORCAPS_COLOR | D3DCURSORCAPS_LOWRES;
-				pCaps->DevCaps = D3DDEVCAPS_CANBLTSYSTONONLOCAL | D3DDEVCAPS_CANRENDERAFTERFLIP | D3DDEVCAPS_DRAWPRIMITIVES2 | D3DDEVCAPS_DRAWPRIMITIVES2EX | D3DDEVCAPS_DRAWPRIMTLVERTEX | D3DDEVCAPS_EXECUTESYSTEMMEMORY | D3DDEVCAPS_EXECUTEVIDEOMEMORY | D3DDEVCAPS_HWRASTERIZATION | D3DDEVCAPS_HWTRANSFORMANDLIGHT | D3DDEVCAPS_PUREDEVICE | D3DDEVCAPS_TEXTURENONLOCALVIDMEM | D3DDEVCAPS_TEXTUREVIDEOMEMORY | D3DDEVCAPS_TLVERTEXSYSTEMMEMORY | D3DDEVCAPS_TLVERTEXVIDEOMEMORY;
-				pCaps->PrimitiveMiscCaps = D3DPMISCCAPS_MASKZ | D3DPMISCCAPS_CULLNONE | D3DPMISCCAPS_CULLCW | D3DPMISCCAPS_CULLCCW | D3DPMISCCAPS_COLORWRITEENABLE | D3DPMISCCAPS_CLIPPLANESCALEDPOINTS | D3DPMISCCAPS_TSSARGTEMP | D3DPMISCCAPS_BLENDOP | D3DPMISCCAPS_INDEPENDENTWRITEMASKS | D3DPMISCCAPS_FOGANDSPECULARALPHA | D3DPMISCCAPS_SEPARATEALPHABLEND | D3DPMISCCAPS_MRTINDEPENDENTBITDEPTHS | D3DPMISCCAPS_MRTPOSTPIXELSHADERBLENDING | D3DPMISCCAPS_FOGVERTEXCLAMPED;
-				pCaps->RasterCaps = D3DPRASTERCAPS_ANISOTROPY | D3DPRASTERCAPS_COLORPERSPECTIVE | D3DPRASTERCAPS_DITHER | D3DPRASTERCAPS_DEPTHBIAS | D3DPRASTERCAPS_FOGRANGE | D3DPRASTERCAPS_FOGTABLE | D3DPRASTERCAPS_FOGVERTEX | D3DPRASTERCAPS_MIPMAPLODBIAS | D3DPRASTERCAPS_MULTISAMPLE_TOGGLE | D3DPRASTERCAPS_SCISSORTEST | D3DPRASTERCAPS_SLOPESCALEDEPTHBIAS | D3DPRASTERCAPS_WFOG | D3DPRASTERCAPS_ZFOG | D3DPRASTERCAPS_ZTEST;
-				pCaps->ZCmpCaps = D3DPCMPCAPS_NEVER | D3DPCMPCAPS_LESS | D3DPCMPCAPS_EQUAL | D3DPCMPCAPS_LESSEQUAL | D3DPCMPCAPS_GREATER | D3DPCMPCAPS_NOTEQUAL | D3DPCMPCAPS_GREATEREQUAL | D3DPCMPCAPS_ALWAYS;
-				pCaps->SrcBlendCaps = D3DPBLENDCAPS_ZERO | D3DPBLENDCAPS_ONE | D3DPBLENDCAPS_SRCCOLOR | D3DPBLENDCAPS_INVSRCCOLOR | D3DPBLENDCAPS_SRCALPHA | D3DPBLENDCAPS_INVSRCALPHA | D3DPBLENDCAPS_DESTALPHA | D3DPBLENDCAPS_INVDESTALPHA | D3DPBLENDCAPS_DESTCOLOR | D3DPBLENDCAPS_INVDESTCOLOR | D3DPBLENDCAPS_SRCALPHASAT | D3DPBLENDCAPS_BOTHSRCALPHA | D3DPBLENDCAPS_BOTHINVSRCALPHA | D3DPBLENDCAPS_BLENDFACTOR | D3DPBLENDCAPS_INVSRCCOLOR2 | D3DPBLENDCAPS_SRCCOLOR2;
+
+				pCaps->DevCaps = D3DDEVCAPS_CANBLTSYSTONONLOCAL |
+					D3DDEVCAPS_CANRENDERAFTERFLIP |
+					D3DDEVCAPS_DRAWPRIMITIVES2 |
+					D3DDEVCAPS_DRAWPRIMITIVES2EX |
+					D3DDEVCAPS_DRAWPRIMTLVERTEX |
+					D3DDEVCAPS_EXECUTESYSTEMMEMORY |
+					D3DDEVCAPS_EXECUTEVIDEOMEMORY |
+					D3DDEVCAPS_HWRASTERIZATION |
+					D3DDEVCAPS_HWTRANSFORMANDLIGHT |
+					/*D3DDEVCAPS_NPATCHES |*/
+					D3DDEVCAPS_PUREDEVICE |
+					/*D3DDEVCAPS_QUINTICRTPATCHES |*/
+					/*D3DDEVCAPS_RTPATCHES |*/
+					/*D3DDEVCAPS_RTPATCHHANDLEZERO |*/
+					/*D3DDEVCAPS_SEPARATETEXTUREMEMORIES |*/
+					D3DDEVCAPS_TEXTURENONLOCALVIDMEM |
+					/* D3DDEVCAPS_TEXTURESYSTEMMEMORY |*/
+					D3DDEVCAPS_TEXTUREVIDEOMEMORY |
+					D3DDEVCAPS_TLVERTEXSYSTEMMEMORY |
+					D3DDEVCAPS_TLVERTEXVIDEOMEMORY;
+
+				pCaps->PrimitiveMiscCaps = D3DPMISCCAPS_MASKZ |	// Device can enable and disable modification of the depth buffer on pixel operations.
+					D3DPMISCCAPS_CULLNONE |						// The driver does not perform triangle culling. This corresponds to the D3DCULL_NONE member of the D3DCULL enumerated type.
+					D3DPMISCCAPS_CULLCW |						// The driver supports clockwise triangle culling through the D3DRS_CULLMODE state. (This applies only to triangle primitives.) This flag corresponds to the D3DCULL_CW member of the D3DCULL enumerated type.
+					D3DPMISCCAPS_CULLCCW |						// The driver supports counterclockwise culling through the D3DRS_CULLMODE state. (This applies only to triangle primitives.) This flag corresponds to the D3DCULL_CCW member of the D3DCULL enumerated type.
+					D3DPMISCCAPS_COLORWRITEENABLE |				// Device supports per-channel writes for the render-target color buffer through the D3DRS_COLORWRITEENABLE state.
+					D3DPMISCCAPS_CLIPPLANESCALEDPOINTS |		// Device correctly clips scaled points of size greater than 1.0 to user-defined clipping planes.
+					D3DPMISCCAPS_CLIPTLVERTS |					// Device clips post-transformed vertex primitives. Specify D3DUSAGE_DONOTCLIP when the pipeline should not do any clipping. For this case, additional software clipping may need to be performed at draw time, requiring the vertex buffer to be in system memory.
+					D3DPMISCCAPS_TSSARGTEMP |					// Device supports D3DTA for temporary register.
+					D3DPMISCCAPS_BLENDOP |						// Device supports alpha-blending operations other than D3DBLENDOP_ADD.
+				//	D3DPMISCCAPS_NULLREFERENCE |				// A reference device that does not render.
+					D3DPMISCCAPS_INDEPENDENTWRITEMASKS |		// Device supports independent write masks for multiple element textures or multiple render targets.
+					D3DPMISCCAPS_PERSTAGECONSTANT |				// Device supports per-stage constants. See D3DTSS_CONSTANT in D3DTEXTURESTAGESTATETYPE.
+					D3DPMISCCAPS_FOGANDSPECULARALPHA |			// Device supports separate fog and specular alpha. Many devices use the specular alpha channel to store the fog factor.
+					D3DPMISCCAPS_SEPARATEALPHABLEND |			// Device supports separate blend settings for the alpha channel.
+					D3DPMISCCAPS_MRTINDEPENDENTBITDEPTHS |		// Device supports different bit depths for multiple render targets.
+					D3DPMISCCAPS_MRTPOSTPIXELSHADERBLENDING |	// Device supports post-pixel shader operations for multiple render targets.
+					D3DPMISCCAPS_FOGVERTEXCLAMPED;				// Device clamps fog blend factor per vertex.
+
+				pCaps->RasterCaps = D3DPRASTERCAPS_ANISOTROPY |	// Device supports anisotropic filtering.
+					D3DPRASTERCAPS_COLORPERSPECTIVE |			// Device iterates colors perspective correctly.
+				//	D3DPRASTERCAPS_DITHER |						// Device can dither to improve color resolution.
+					D3DPRASTERCAPS_DEPTHBIAS |					// Device supports legacy depth bias. For true depth bias, see D3DPRASTERCAPS_SLOPESCALEDEPTHBIAS.
+					D3DPRASTERCAPS_FOGRANGE |					// Device supports range-based fog. In range-based fog, the distance of an object from the viewer is used to compute fog effects, not the depth of the object (that is, the z-coordinate) in the scene.
+					D3DPRASTERCAPS_FOGTABLE |					// Device calculates the fog value by referring to a lookup table containing fog values that are indexed to the depth of a given pixel.
+					D3DPRASTERCAPS_FOGVERTEX |					// Device calculates the fog value during the lighting operation and interpolates the fog value during rasterization.
+					D3DPRASTERCAPS_MIPMAPLODBIAS |				// Device supports level of detail (LOD) bias adjustments. These bias adjustments enable an application to make a mipmap appear crisper or less sharp than it normally would. For more information about LOD bias in mipmaps, see D3DSAMP_MIPMAPLODBIAS.
+				//	D3DPRASTERCAPS_MULTISAMPLE_TOGGLE |			// Device supports toggling multisampling on and off between IDirect3DDevice9::BeginScene and IDirect3DDevice9::EndScene (using D3DRS_MULTISAMPLEANTIALIAS).
+					D3DPRASTERCAPS_SCISSORTEST |				// Device supports scissor test. See Scissor Test.
+					D3DPRASTERCAPS_SLOPESCALEDEPTHBIAS |		// Device performs true slope-scale based depth bias. This is in contrast to the legacy style D3DPRASTERCAPS_DEPTHBIAS.
+				//	D3DPRASTERCAPS_WBUFFER |					// Device supports depth buffering using w.
+					D3DPRASTERCAPS_WFOG |						// Device supports w-based fog. W-based fog is used when a perspective projection matrix is specified, but affine projections still use z-based fog. The system considers a projection matrix that contains a nonzero value in the [3][4] element to be a perspective projection matrix.
+				//	D3DPRASTERCAPS_ZBUFFERLESSHSR |				// Device can perform hidden-surface removal (HSR) without requiring the application to sort polygons and without requiring the allocation of a depth-buffer. This leaves more video memory for textures. The method used to perform HSR is hardware-dependent and is transparent to the application. Z-bufferless HSR is performed if no depth-buffer surface is associated with the rendering-target surface and the depth-buffer comparison test is enabled (that is, when the state value associated with the D3DRS_ZENABLE enumeration constant is set to TRUE).
+					D3DPRASTERCAPS_ZFOG |						// Device supports z-based fog.
+					D3DPRASTERCAPS_ZTEST;						// Device can perform z-test operations. This effectively renders a primitive and indicates whether any z pixels have been rendered.
+
+				pCaps->ZCmpCaps = D3DPCMPCAPS_NEVER |
+					D3DPCMPCAPS_LESS |
+					D3DPCMPCAPS_EQUAL |
+					D3DPCMPCAPS_LESSEQUAL |
+					D3DPCMPCAPS_GREATER |
+					D3DPCMPCAPS_NOTEQUAL |
+					D3DPCMPCAPS_GREATEREQUAL |
+					D3DPCMPCAPS_ALWAYS;
+
+				pCaps->SrcBlendCaps = D3DPBLENDCAPS_BLENDFACTOR |		// The driver supports both D3DBLEND_BLENDFACTOR and D3DBLEND_INVBLENDFACTOR. See D3DBLEND.
+					D3DPBLENDCAPS_BOTHINVSRCALPHA |	// Source blend factor is (1-As,1-As,1-As,1-As) and destination blend factor is (As,As,As,As); the destination blend selection is overridden.
+					D3DPBLENDCAPS_BOTHSRCALPHA |	// The driver supports the D3DBLEND_BOTHSRCALPHA blend mode. (This blend mode is obsolete. For more information, see D3DBLEND.)
+					D3DPBLENDCAPS_DESTALPHA |		// Blend factor is (Ad, Ad, Ad, Ad).
+					D3DPBLENDCAPS_DESTCOLOR |		// Blend factor is (Rd, Gd, Bd, Ad).
+					D3DPBLENDCAPS_INVDESTALPHA |	// Blend factor is (1-Ad, 1-Ad, 1-Ad, 1-Ad).
+					D3DPBLENDCAPS_INVDESTCOLOR |	// Blend factor is (1-Rd, 1-Gd, 1-Bd, 1-Ad).
+					D3DPBLENDCAPS_INVSRCALPHA |		// Blend factor is (1-As, 1-As, 1-As, 1-As).
+					D3DPBLENDCAPS_INVSRCCOLOR |		// Blend factor is (1-Rs, 1-Gs, 1-Bs, 1-As).
+					D3DPBLENDCAPS_ONE |				// Blend factor is (1, 1, 1, 1).
+					D3DPBLENDCAPS_SRCALPHA |		// Blend factor is (As, As, As, As).
+					D3DPBLENDCAPS_SRCALPHASAT |		// Blend factor is (f, f, f, 1); f = min(As, 1-Ad).
+					D3DPBLENDCAPS_SRCCOLOR |		// Blend factor is (Rs, Gs, Bs, As).
+					D3DPBLENDCAPS_ZERO;				// Blend factor is (0, 0, 0, 0).
+
 				pCaps->DestBlendCaps = pCaps->SrcBlendCaps;
-				pCaps->AlphaCmpCaps = D3DPCMPCAPS_NEVER | D3DPCMPCAPS_LESS | D3DPCMPCAPS_EQUAL | D3DPCMPCAPS_LESSEQUAL | D3DPCMPCAPS_GREATER | D3DPCMPCAPS_NOTEQUAL | D3DPCMPCAPS_GREATEREQUAL | D3DPCMPCAPS_ALWAYS;
-				pCaps->ShadeCaps = D3DPSHADECAPS_COLORGOURAUDRGB | D3DPSHADECAPS_SPECULARGOURAUDRGB | D3DPSHADECAPS_ALPHAGOURAUDBLEND | D3DPSHADECAPS_FOGGOURAUD;
-				pCaps->TextureCaps = D3DPTEXTURECAPS_ALPHA | D3DPTEXTURECAPS_ALPHAPALETTE | D3DPTEXTURECAPS_PERSPECTIVE | D3DPTEXTURECAPS_PROJECTED | D3DPTEXTURECAPS_CUBEMAP | D3DPTEXTURECAPS_VOLUMEMAP | D3DPTEXTURECAPS_POW2 | D3DPTEXTURECAPS_NONPOW2CONDITIONAL | D3DPTEXTURECAPS_CUBEMAP_POW2 | D3DPTEXTURECAPS_VOLUMEMAP_POW2 | D3DPTEXTURECAPS_MIPMAP | D3DPTEXTURECAPS_MIPVOLUMEMAP | D3DPTEXTURECAPS_MIPCUBEMAP;
-				pCaps->TextureFilterCaps = D3DPTFILTERCAPS_MINFPOINT | D3DPTFILTERCAPS_MINFLINEAR | D3DPTFILTERCAPS_MINFANISOTROPIC | D3DPTFILTERCAPS_MIPFPOINT | D3DPTFILTERCAPS_MIPFLINEAR | D3DPTFILTERCAPS_MAGFPOINT | D3DPTFILTERCAPS_MAGFLINEAR | D3DPTFILTERCAPS_MAGFANISOTROPIC;
+
+				pCaps->AlphaCmpCaps = D3DPCMPCAPS_NEVER |
+					D3DPCMPCAPS_LESS |
+					D3DPCMPCAPS_EQUAL |
+					D3DPCMPCAPS_LESSEQUAL |
+					D3DPCMPCAPS_GREATER |
+					D3DPCMPCAPS_NOTEQUAL |
+					D3DPCMPCAPS_GREATEREQUAL |
+					D3DPCMPCAPS_ALWAYS;
+
+				pCaps->ShadeCaps = D3DPSHADECAPS_COLORGOURAUDRGB |
+					D3DPSHADECAPS_SPECULARGOURAUDRGB |
+					D3DPSHADECAPS_ALPHAGOURAUDBLEND |
+					D3DPSHADECAPS_FOGGOURAUD;
+
+				pCaps->TextureCaps = D3DPTEXTURECAPS_ALPHA |	// Alpha in texture pixels is supported.
+					D3DPTEXTURECAPS_ALPHAPALETTE |				// Device can draw alpha from texture palettes.
+					D3DPTEXTURECAPS_CUBEMAP |					// Supports cube textures.
+				//	D3DPTEXTURECAPS_CUBEMAP_POW2 |				// Device requires that cube texture maps have dimensions specified as powers of two.
+					D3DPTEXTURECAPS_MIPCUBEMAP |				// Device supports mipmapped cube textures.
+					D3DPTEXTURECAPS_MIPMAP |					// Device supports mipmapped textures.
+					D3DPTEXTURECAPS_MIPVOLUMEMAP |				// Device supports mipmapped volume textures.
+				//	D3DPTEXTURECAPS_NONPOW2CONDITIONAL |		// Conditionally supports the use of 2-D textures with dimensions that are not powers of two. A device that exposes this capability can use such a texture if all of the following requirements are met...
+				//	D3DPTEXTURECAPS_NOPROJECTEDBUMPENV |		// Device does not support a projected bump-environment loopkup operation in programmable and fixed function shaders.
+					D3DPTEXTURECAPS_PERSPECTIVE |				// Perspective correction texturing is supported.
+				//	D3DPTEXTURECAPS_POW2 |						// All textures must have widths and heights specified as powers of two. This requirement does not apply to either cube textures or volume textures.
+					D3DPTEXTURECAPS_PROJECTED |					// Supports the D3DTTFF_PROJECTED texture transformation flag. When applied, the device divides transformed texture coordinates by the last texture coordinate. If this capability is present, then the projective divide occurs per pixel. If this capability is not present, but the projective divide needs to occur anyway, then it is performed on a per-vertex basis by the Direct3D runtime.
+				//	D3DPTEXTURECAPS_SQUAREONLY |				// All textures must be square.
+					D3DPTEXTURECAPS_TEXREPEATNOTSCALEDBYSIZE |	// Texture indices are not scaled by the texture size prior to interpolation.
+					D3DPTEXTURECAPS_VOLUMEMAP;					// Device supports volume textures.
+				//	D3DPTEXTURECAPS_VOLUMEMAP_POW2;				// Device requires that volume texture maps have dimensions specified as powers of two.
+
+				pCaps->TextureFilterCaps = D3DPTFILTERCAPS_MAGFPOINT |	// Device supports per-stage point-sample filtering for magnifying textures. The point-sample magnification filter is represented by the D3DTEXF_POINT member of the D3DTEXTUREFILTERTYPE enumerated type.
+					D3DPTFILTERCAPS_MAGFLINEAR |						// Device supports per-stage bilinear interpolation filtering for magnifying mipmaps. The bilinear interpolation mipmapping filter is represented by the D3DTEXF_LINEAR member of the D3DTEXTUREFILTERTYPE enumerated type.
+				//	D3DPTFILTERCAPS_MAGFANISOTROPIC |					// Device supports per-stage anisotropic filtering for magnifying textures. The anisotropic magnification filter is represented by the D3DTEXF_ANISOTROPIC member of the D3DTEXTUREFILTERTYPE enumerated type.
+				//	D3DPTFILTERCAPS_MAGFPYRAMIDALQUAD |					// Device supports per-stage pyramidal sample filtering for magnifying textures. The pyramidal magnifying filter is represented by the D3DTEXF_PYRAMIDALQUAD member of the D3DTEXTUREFILTERTYPE enumerated type.
+				//	D3DPTFILTERCAPS_MAGFGAUSSIANQUAD |					// Device supports per-stage Gaussian quad filtering for magnifying textures.
+					D3DPTFILTERCAPS_MINFPOINT |							// Device supports per-stage point-sample filtering for minifying textures. The point-sample minification filter is represented by the D3DTEXF_POINT member of the D3DTEXTUREFILTERTYPE enumerated type.
+					D3DPTFILTERCAPS_MINFLINEAR |						// Device supports per-stage linear filtering for minifying textures. The linear minification filter is represented by the D3DTEXF_LINEAR member of the D3DTEXTUREFILTERTYPE enumerated type.
+					D3DPTFILTERCAPS_MINFANISOTROPIC |					// Device supports per-stage anisotropic filtering for minifying textures. The anisotropic minification filter is represented by the D3DTEXF_ANISOTROPIC member of the D3DTEXTUREFILTERTYPE enumerated type.
+				//	D3DPTFILTERCAPS_MINFPYRAMIDALQUAD |					// Device supports per-stage pyramidal sample filtering for minifying textures.
+				//	D3DPTFILTERCAPS_MINFGAUSSIANQUAD |					// Device supports per-stage Gaussian quad filtering for minifying textures.
+					D3DPTFILTERCAPS_MIPFPOINT |							// Device supports per-stage point-sample filtering for mipmaps. The point-sample mipmapping filter is represented by the D3DTEXF_POINT member of the D3DTEXTUREFILTERTYPE enumerated type.
+					D3DPTFILTERCAPS_MIPFLINEAR;							// Device supports per-stage bilinear interpolation filtering for mipmaps. The bilinear interpolation mipmapping filter is represented by the D3DTEXF_LINEAR member of the D3DTEXTUREFILTERTYPE enumerated type.
+
 				pCaps->CubeTextureFilterCaps = pCaps->TextureFilterCaps;
+
 				pCaps->VolumeTextureFilterCaps = pCaps->TextureFilterCaps;
-				pCaps->TextureAddressCaps = D3DPTADDRESSCAPS_BORDER | D3DPTADDRESSCAPS_INDEPENDENTUV | D3DPTADDRESSCAPS_WRAP | D3DPTADDRESSCAPS_MIRROR | D3DPTADDRESSCAPS_CLAMP | D3DPTADDRESSCAPS_MIRRORONCE;
+
+				pCaps->TextureAddressCaps = D3DPTADDRESSCAPS_BORDER |	// Device supports setting coordinates outside the range [0.0, 1.0] to the border color, as specified by the D3DSAMP_BORDERCOLOR texture-stage state.
+					D3DPTADDRESSCAPS_CLAMP |							// Device can clamp textures to addresses.
+					D3DPTADDRESSCAPS_INDEPENDENTUV |					// Device can separate the texture-addressing modes of the u and v coordinates of the texture. This ability corresponds to the D3DSAMP_ADDRESSU and D3DSAMP_ADDRESSV render-state values.
+					D3DPTADDRESSCAPS_MIRROR |							// Device can mirror textures to addresses.
+					D3DPTADDRESSCAPS_MIRRORONCE |						// Device can take the absolute value of the texture coordinate (thus, mirroring around 0) and then clamp to the maximum value.
+					D3DPTADDRESSCAPS_WRAP;								// Device can wrap textures to addresses.
+
 				pCaps->VolumeTextureAddressCaps = pCaps->TextureAddressCaps;
-				pCaps->LineCaps = D3DLINECAPS_ALPHACMP | D3DLINECAPS_BLEND | D3DLINECAPS_TEXTURE | D3DLINECAPS_ZTEST | D3DLINECAPS_FOG;
-				pCaps->MaxTextureWidth = properties.limits.maxImageDimension2D; //Revisit
-				pCaps->MaxTextureHeight = properties.limits.maxImageDimension2D; //Revisit
-				pCaps->MaxVolumeExtent = properties.limits.maxImageDimensionCube; //Revisit
-				pCaps->MaxTextureRepeat = 32768; //revisit
-				pCaps->MaxTextureAspectRatio = pCaps->MaxTextureWidth;
+
+				pCaps->LineCaps =
+					D3DLINECAPS_ALPHACMP |
+					D3DLINECAPS_BLEND |
+					D3DLINECAPS_TEXTURE |
+					D3DLINECAPS_ZTEST |
+					D3DLINECAPS_FOG |
+					D3DLINECAPS_ANTIALIAS;
+
+				pCaps->MaxTextureWidth = properties.limits.maxImageDimension2D;
+				pCaps->MaxTextureHeight = pCaps->MaxTextureWidth;
+				pCaps->MaxVolumeExtent = properties.limits.maxImageDimension3D;
+				pCaps->MaxTextureRepeat = 32768;
+				pCaps->MaxTextureAspectRatio = 0; //pCaps->MaxTextureWidth;
 				pCaps->MaxAnisotropy = features.samplerAnisotropy;
-				pCaps->MaxVertexW = 1e10f; //revisit
-				pCaps->GuardBandLeft = -1e9f; //revisit
-				pCaps->GuardBandTop = -1e9f; //revisit
-				pCaps->GuardBandRight = 1e9f; //revisit
-				pCaps->GuardBandBottom = 1e9f; //revisit
-				pCaps->ExtentsAdjust = 0.0f; //revisit
-				pCaps->StencilCaps = D3DSTENCILCAPS_KEEP | D3DSTENCILCAPS_ZERO | D3DSTENCILCAPS_REPLACE | D3DSTENCILCAPS_INCRSAT | D3DSTENCILCAPS_DECRSAT | D3DSTENCILCAPS_INVERT | D3DSTENCILCAPS_INCR | D3DSTENCILCAPS_DECR | D3DSTENCILCAPS_TWOSIDED;
-				pCaps->FVFCaps = D3DFVFCAPS_PSIZE;
-				pCaps->TextureOpCaps = D3DTEXOPCAPS_DISABLE | D3DTEXOPCAPS_SELECTARG1 | D3DTEXOPCAPS_SELECTARG2 | D3DTEXOPCAPS_MODULATE | D3DTEXOPCAPS_MODULATE2X | D3DTEXOPCAPS_MODULATE4X | D3DTEXOPCAPS_ADD | D3DTEXOPCAPS_ADDSIGNED | D3DTEXOPCAPS_ADDSIGNED2X | D3DTEXOPCAPS_SUBTRACT | D3DTEXOPCAPS_ADDSMOOTH | D3DTEXOPCAPS_BLENDDIFFUSEALPHA | D3DTEXOPCAPS_BLENDTEXTUREALPHA | D3DTEXOPCAPS_BLENDFACTORALPHA | D3DTEXOPCAPS_BLENDTEXTUREALPHAPM | D3DTEXOPCAPS_BLENDCURRENTALPHA | D3DTEXOPCAPS_PREMODULATE | D3DTEXOPCAPS_MODULATEALPHA_ADDCOLOR | D3DTEXOPCAPS_MODULATECOLOR_ADDALPHA | D3DTEXOPCAPS_MODULATEINVALPHA_ADDCOLOR | D3DTEXOPCAPS_MODULATEINVCOLOR_ADDALPHA | D3DTEXOPCAPS_BUMPENVMAP | D3DTEXOPCAPS_BUMPENVMAPLUMINANCE | D3DTEXOPCAPS_DOTPRODUCT3 | D3DTEXOPCAPS_MULTIPLYADD | D3DTEXOPCAPS_LERP;
-				pCaps->MaxTextureBlendStages = properties.limits.maxDescriptorSetSamplers; //revisit
 
-				/*
-				I'm setting this to 16 so I can make my array 16 and be safe ish
-				*/
-				pCaps->MaxSimultaneousTextures = 16; // properties.limits.maxDescriptorSetSampledImages; //revisit
+				//TODO: revisit guard values.
+				pCaps->MaxVertexW = 1e10f;
+				pCaps->GuardBandLeft = -1e9f;
+				pCaps->GuardBandTop = -1e9f;
+				pCaps->GuardBandRight = 1e9f;
+				pCaps->GuardBandBottom = 1e9f;
+				pCaps->ExtentsAdjust = 0.0f;
 
-				pCaps->VertexProcessingCaps = D3DVTXPCAPS_TEXGEN | D3DVTXPCAPS_MATERIALSOURCE7 | D3DVTXPCAPS_DIRECTIONALLIGHTS | D3DVTXPCAPS_POSITIONALLIGHTS | D3DVTXPCAPS_LOCALVIEWER | D3DVTXPCAPS_TWEENING;
-				pCaps->MaxActiveLights = 8;  //Revsit should be infinite but games may not read it that way.
-				pCaps->MaxUserClipPlanes = 8; //revisit
-				pCaps->MaxVertexBlendMatrices = 4; //revisit
-				pCaps->MaxVertexBlendMatrixIndex = 7; //revisit
-				pCaps->MaxPointSize = properties.limits.pointSizeRange[1]; //revisit
-				pCaps->MaxPrimitiveCount = 0xFFFFFFFF; //revisit
-				pCaps->MaxVertexIndex = 0xFFFFFFFF; //revisit
-				pCaps->MaxStreams = properties.limits.maxVertexInputBindings; //revisit
-				pCaps->MaxStreamStride = properties.limits.maxVertexInputBindingStride; //revisit
+				pCaps->StencilCaps =
+					D3DSTENCILCAPS_KEEP |
+					D3DSTENCILCAPS_ZERO |
+					D3DSTENCILCAPS_REPLACE |
+					D3DSTENCILCAPS_INCRSAT |
+					D3DSTENCILCAPS_DECRSAT |
+					D3DSTENCILCAPS_INVERT |
+					D3DSTENCILCAPS_INCR |
+					D3DSTENCILCAPS_DECR |
+					D3DSTENCILCAPS_TWOSIDED;
+
+				pCaps->FVFCaps =
+					8 | /* 8 textures max */
+					/*D3DFVFCAPS_DONOTSTRIPELEMENTS |*/
+					D3DFVFCAPS_PSIZE;
+
+				pCaps->TextureOpCaps = D3DTEXOPCAPS_DISABLE |
+					D3DTEXOPCAPS_SELECTARG1 |
+					D3DTEXOPCAPS_SELECTARG2 |
+					D3DTEXOPCAPS_MODULATE |
+					D3DTEXOPCAPS_MODULATE2X |
+					D3DTEXOPCAPS_MODULATE4X |
+					D3DTEXOPCAPS_ADD |
+					D3DTEXOPCAPS_ADDSIGNED |
+					D3DTEXOPCAPS_ADDSIGNED2X |
+					D3DTEXOPCAPS_SUBTRACT |
+					D3DTEXOPCAPS_ADDSMOOTH |
+					D3DTEXOPCAPS_BLENDDIFFUSEALPHA |
+					D3DTEXOPCAPS_BLENDTEXTUREALPHA |
+					D3DTEXOPCAPS_BLENDFACTORALPHA |
+					D3DTEXOPCAPS_BLENDTEXTUREALPHAPM |
+					D3DTEXOPCAPS_BLENDCURRENTALPHA |
+					D3DTEXOPCAPS_PREMODULATE |
+					D3DTEXOPCAPS_MODULATEALPHA_ADDCOLOR |
+					D3DTEXOPCAPS_MODULATECOLOR_ADDALPHA |
+					D3DTEXOPCAPS_MODULATEINVALPHA_ADDCOLOR |
+					D3DTEXOPCAPS_MODULATEINVCOLOR_ADDALPHA |
+					D3DTEXOPCAPS_BUMPENVMAP |
+					D3DTEXOPCAPS_BUMPENVMAPLUMINANCE |
+					D3DTEXOPCAPS_DOTPRODUCT3 |
+					D3DTEXOPCAPS_MULTIPLYADD |
+					D3DTEXOPCAPS_LERP;
+
+				pCaps->MaxTextureBlendStages = 8;
+				pCaps->MaxSimultaneousTextures = 8;
+
+				pCaps->VertexProcessingCaps = D3DVTXPCAPS_TEXGEN |
+					D3DVTXPCAPS_TEXGEN_SPHEREMAP |
+					D3DVTXPCAPS_MATERIALSOURCE7 |
+					D3DVTXPCAPS_DIRECTIONALLIGHTS |
+					D3DVTXPCAPS_POSITIONALLIGHTS |
+					D3DVTXPCAPS_LOCALVIEWER |
+					D3DVTXPCAPS_TWEENING;
+				/*D3DVTXPCAPS_NO_TEXGEN_NONLOCALVIEWER*/
+
+				pCaps->MaxActiveLights = 8;
+				pCaps->MaxUserClipPlanes = 6; //TODO: I need to look into this one.
+				pCaps->MaxVertexBlendMatrices = 3; //Nine & Swift uses 4 but I only have 3 slots with my binding mapping.
+				pCaps->MaxVertexBlendMatrixIndex = 8;
+				pCaps->MaxPointSize = properties.limits.pointSizeRange[1]; //[0] min [1] max
+				pCaps->MaxPrimitiveCount = 0x555555;
+				pCaps->MaxVertexIndex = 0xFFFFFF;
+				pCaps->MaxStreams = std::max((uint32_t)1,std::min(properties.limits.maxVertexInputBindings, (uint32_t)16));
+				pCaps->MaxStreamStride = std::min(properties.limits.maxVertexInputBindingStride, (uint32_t)65536);
 				pCaps->VertexShaderVersion = D3DVS_VERSION(3, 0);
-				pCaps->MaxVertexShaderConst = 256; //revisit
-				pCaps->PixelShaderVersion = D3DPS_VERSION(3, 0);
+				pCaps->MaxVertexShaderConst = 256;
 				pCaps->PixelShader1xMaxValue = 65504.f;
-				pCaps->DevCaps2 = D3DDEVCAPS2_STREAMOFFSET | D3DDEVCAPS2_VERTEXELEMENTSCANSHARESTREAMOFFSET | D3DDEVCAPS2_CAN_STRETCHRECT_FROM_TEXTURES;
+
+				pCaps->DevCaps2 = D3DDEVCAPS2_STREAMOFFSET |
+					D3DDEVCAPS2_VERTEXELEMENTSCANSHARESTREAMOFFSET |
+					D3DDEVCAPS2_CAN_STRETCHRECT_FROM_TEXTURES;
+				/*D3DDEVCAPS2_DMAPNPATCH |*/
+				/*D3DDEVCAPS2_ADAPTIVETESSRTPATCH |*/
+				/*D3DDEVCAPS2_ADAPTIVETESSNPATCH |*/
+				/*D3DDEVCAPS2_PRESAMPLEDDMAPNPATCH*/
+
 				pCaps->MasterAdapterOrdinal = 0;
 				pCaps->AdapterOrdinalInGroup = 0;
-				pCaps->NumberOfAdaptersInGroup = 1;
-				pCaps->DeclTypes = D3DDTCAPS_UBYTE4 | D3DDTCAPS_UBYTE4N | D3DDTCAPS_SHORT2N | D3DDTCAPS_SHORT4N | D3DDTCAPS_USHORT2N | D3DDTCAPS_USHORT4N | D3DDTCAPS_UDEC3 | D3DDTCAPS_DEC3N | D3DDTCAPS_FLOAT16_2 | D3DDTCAPS_FLOAT16_4;
-				pCaps->NumSimultaneousRTs = 4; //revisit
-				pCaps->StretchRectFilterCaps = D3DPTFILTERCAPS_MINFPOINT | D3DPTFILTERCAPS_MINFLINEAR | D3DPTFILTERCAPS_MAGFPOINT | D3DPTFILTERCAPS_MAGFLINEAR;
-				pCaps->VS20Caps.Caps = D3DVS20CAPS_PREDICATION;
-				pCaps->VS20Caps.DynamicFlowControlDepth = 24; //revsit
-				pCaps->VS20Caps.StaticFlowControlDepth = 4; //revsit
-				pCaps->VS20Caps.NumTemps = 32; //revsit
-				pCaps->PS20Caps.Caps = D3DPS20CAPS_ARBITRARYSWIZZLE | D3DPS20CAPS_GRADIENTINSTRUCTIONS | D3DPS20CAPS_PREDICATION;
-				pCaps->PS20Caps.DynamicFlowControlDepth = 24; //revsit
-				pCaps->PS20Caps.StaticFlowControlDepth = 4; //revsit
-				pCaps->PS20Caps.NumTemps = 32; //revsit
-				pCaps->VertexTextureFilterCaps = pCaps->TextureFilterCaps; //revisit
-				pCaps->MaxVertexShader30InstructionSlots = 32768; //revisit
-				pCaps->MaxPixelShader30InstructionSlots = 32768; //revisit
-				pCaps->MaxVShaderInstructionsExecuted = 65535;
-				pCaps->MaxPShaderInstructionsExecuted = 65535;
+				pCaps->NumberOfAdaptersInGroup = 1; //TODO: need to look into groups.
 
+				//TODO: need to look at these in a few more implementations.
 				pCaps->MaxNpatchTessellationLevel = 0.0f;
 				pCaps->Reserved5 = 0;
+
+				pCaps->DeclTypes = D3DDTCAPS_UBYTE4 |
+					D3DDTCAPS_UBYTE4N |
+					D3DDTCAPS_SHORT2N |
+					D3DDTCAPS_SHORT4N |
+					D3DDTCAPS_USHORT2N |
+					D3DDTCAPS_USHORT4N |
+					D3DDTCAPS_UDEC3 |
+					D3DDTCAPS_DEC3N |
+					D3DDTCAPS_FLOAT16_2 |
+					D3DDTCAPS_FLOAT16_4;
+
+				//TODO: Look into real target limits. All of my cases use one or two targets.
+				pCaps->NumSimultaneousRTs = std::max((uint32_t)1,properties.limits.maxColorAttachments);
+
+				pCaps->StretchRectFilterCaps = D3DPTFILTERCAPS_MINFPOINT |
+					D3DPTFILTERCAPS_MINFLINEAR |
+					D3DPTFILTERCAPS_MAGFPOINT |
+					D3DPTFILTERCAPS_MAGFLINEAR;
+
+				pCaps->VS20Caps.Caps = D3DVS20CAPS_PREDICATION;
+				pCaps->VS20Caps.DynamicFlowControlDepth = D3DVS20_MAX_DYNAMICFLOWCONTROLDEPTH;
+				pCaps->VS20Caps.NumTemps = D3DVS20_MAX_NUMTEMPS;
+				pCaps->VS20Caps.StaticFlowControlDepth = D3DVS20_MAX_STATICFLOWCONTROLDEPTH;
+
+				pCaps->PS20Caps.Caps = D3DPS20CAPS_ARBITRARYSWIZZLE |
+					D3DPS20CAPS_GRADIENTINSTRUCTIONS |
+					D3DPS20CAPS_PREDICATION |
+					D3DPS20CAPS_NOTEXINSTRUCTIONLIMIT |
+					D3DPS20CAPS_NODEPENDENTREADLIMIT;
+				pCaps->PS20Caps.DynamicFlowControlDepth = D3DPS20_MAX_DYNAMICFLOWCONTROLDEPTH;
+				pCaps->PS20Caps.NumTemps = D3DPS20_MAX_NUMTEMPS;
+				pCaps->PS20Caps.StaticFlowControlDepth = D3DPS20_MAX_STATICFLOWCONTROLDEPTH;
+				pCaps->PS20Caps.NumInstructionSlots = D3DPS20_MAX_NUMINSTRUCTIONSLOTS;
+
+				pCaps->VertexTextureFilterCaps = pCaps->TextureFilterCaps &
+					~(D3DPTFILTERCAPS_MIPFPOINT |
+						D3DPTFILTERCAPS_MIPFPOINT);
+
+				//I divide by MAX_DXBC_PHASES because for 1.x they can use PHASE to upgrade to 2.0 and both phases have their own limit.
+				DWORD estimatedMaxInstructions = (SPIR_V_MAX_ID / ESTIMATED_SPIR_V_PER_DXBC_OP / MAX_DXBC_PHASES);
+				pCaps->MaxVertexShader30InstructionSlots = std::max((DWORD)D3DMIN30SHADERINSTRUCTIONS, std::min((DWORD)D3DMAX30SHADERINSTRUCTIONS, estimatedMaxInstructions));
+				pCaps->MaxPixelShader30InstructionSlots = std::max((DWORD)D3DMIN30SHADERINSTRUCTIONS, std::min((DWORD)D3DMAX30SHADERINSTRUCTIONS, estimatedMaxInstructions));
+
+				pCaps->MaxVShaderInstructionsExecuted = std::max((DWORD)65535, pCaps->MaxVertexShader30InstructionSlots * 32);
+				pCaps->MaxPShaderInstructionsExecuted = std::max((DWORD)65535, pCaps->MaxPixelShader30InstructionSlots * 32);
 			}
 			break;
 			case VertexBuffer_Lock:

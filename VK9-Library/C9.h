@@ -34,6 +34,9 @@ struct Monitor
 	uint32_t RefreshRate = 0;
 	uint32_t PixelBits = 0;
 	uint32_t ColorPlanes = 0;
+
+	std::vector<D3DDISPLAYMODE> Modes;
+	std::vector<D3DDISPLAYMODEEX> ExModes;
 };
 
 class C9 : public IDirect3D9Ex
