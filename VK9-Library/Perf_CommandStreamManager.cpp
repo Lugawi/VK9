@@ -36,7 +36,15 @@ CommandStreamManager::CommandStreamManager()
 	: mWorkerThread(ProcessQueue, this), mRenderManager(mConfiguration)
 {
 	//Setup Defaults;
+#ifdef _DEBUG
 	mConfiguration["LogFile"] = "VK9.log";
+	mConfiguration["LogLevel"] = "0";
+	mConfiguration["EnableDebugLayers"] = "1";
+#else
+	mConfiguration["LogFile"] = "VK9.log";
+	mConfiguration["LogLevel"] = "3";
+	mConfiguration["EnableDebugLayers"] = "0";
+#endif
 
 	//Load Configuration
 	LoadConfiguration("VK9.conf");

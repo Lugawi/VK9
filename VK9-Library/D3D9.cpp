@@ -33,7 +33,7 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
 
 	WorkItem* workItem = instance->mCommandStreamManager->GetWorkItem(nullptr);
 	workItem->WorkItemType = WorkItemType::Instance_Create;
-	instance->mId = instance->mCommandStreamManager->RequestWork(workItem);
+	instance->mId = instance->mCommandStreamManager->RequestWorkAndWait(workItem);
 
 	//WINAPI to get monitor info
 	EnumDisplayMonitors(GetDC(NULL), NULL, MonitorEnumProc, (LPARAM)&(instance->mMonitors));
@@ -47,7 +47,7 @@ HRESULT WINAPI Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** out)
 
 	WorkItem* workItem = instance->mCommandStreamManager->GetWorkItem(nullptr);
 	workItem->WorkItemType = WorkItemType::Instance_Create;
-	instance->mId = instance->mCommandStreamManager->RequestWork(workItem);
+	instance->mId = instance->mCommandStreamManager->RequestWorkAndWait(workItem);
 
 	//WINAPI to get monitor info
 	EnumDisplayMonitors(GetDC(NULL), NULL, MonitorEnumProc, (LPARAM)&(instance->mMonitors));
