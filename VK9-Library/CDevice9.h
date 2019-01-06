@@ -90,6 +90,12 @@ public:
 	PAINTSTRUCT* mPaintInformation = {};
 
 	CSurface9* mDepthStencilSurface = nullptr;
+	CIndexBuffer9* mIndexBuffer = nullptr;
+	CPixelShader9* mPixelShader = nullptr;
+	CVertexShader9* mVertexShader = nullptr;
+	CVertexBuffer9* mVertexBuffer = nullptr;
+	IDirect3DBaseTexture9* mTextures[16] = {};
+	CVertexDeclaration9* mVertexDeclaration = nullptr;
 
 	UINT mAvailableTextureMemory = 0;
 	UINT mMaxLatency = 0;

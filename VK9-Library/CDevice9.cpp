@@ -67,7 +67,7 @@ CDevice9::CDevice9(C9* Instance, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocu
 		}
 		memcpy(&mPresentationParameters, pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS));
 	}
-	
+
 	if (pFullscreenDisplayMode != nullptr)
 	{
 		memcpy(&mFullscreenDisplayMode, pFullscreenDisplayMode, sizeof(D3DDISPLAYMODEEX));
@@ -366,7 +366,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreatePixelShader(const DWORD *pFunction, ID
 
 	//The application is allowed to dispose of the shader data it passes in after this call returns but can request it later so we need to make a copy.
 	obj->mFunction = (DWORD*)malloc(obj->mSize);
-	if (obj->mFunction!=nullptr)
+	if (obj->mFunction != nullptr)
 	{
 		memcpy(obj->mFunction, pFunction, obj->mSize);
 	}
@@ -730,7 +730,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveTy
 		NumVertices = (PrimitiveCount + 2);
 		vertexLength = NumVertices * VertexStreamZeroStride;
 		break;
-	default :
+	default:
 		//NumVertices = PrimitiveCount;
 		//vertexLength = NumVertices * VertexStreamZeroStride;
 		break;
@@ -1423,11 +1423,11 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetDepthStencilSurface(IDirect3DSurface9* pN
 		return S_OK;
 	}
 
-	pNewZStencil->AddRef();
+	((CSurface9*)pNewZStencil)->PrivateAddRef();
 
 	if (mDepthStencilSurface != nullptr)
 	{
-		mDepthStencilSurface->Release();
+		mDepthStencilSurface->PrivateRelease();
 	}
 
 	mDepthStencilSurface = (CSurface9*)pNewZStencil;
@@ -1477,16 +1477,21 @@ void STDMETHODCALLTYPE CDevice9::SetGammaRamp(UINT  iSwapChain, DWORD Flags, con
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetIndices(IDirect3DIndexBuffer9* pIndexData)
 {
-	if (pIndexData != nullptr)
-	{
-		pIndexData->AddRef();
-	}
-
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
 	workItem->WorkItemType = WorkItemType::Device_SetIndices;
 	workItem->Id = mId;
 	workItem->Argument1 = bit_cast<void*>(pIndexData);
 	mCommandStreamManager->RequestWork(workItem);
+
+	if (pIndexData != nullptr)
+	{
+		((CIndexBuffer9*)pIndexData)->PrivateAddRef();
+	}
+	if (mIndexBuffer != nullptr)
+	{
+		mIndexBuffer->PrivateRelease();
+	}
+	mIndexBuffer = (CIndexBuffer9*)pIndexData;
 
 	return S_OK;
 }
@@ -1541,6 +1546,16 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShader(IDirect3DPixelShader9* pShade
 	workItem->Id = mId;
 	workItem->Argument1 = bit_cast<void*>(pShader);
 	mCommandStreamManager->RequestWorkAndWait(workItem);
+
+	if (pShader != nullptr)
+	{
+		((CPixelShader9*)pShader)->PrivateAddRef();
+	}
+	if (mPixelShader != nullptr)
+	{
+		mPixelShader->PrivateRelease();
+	}
+	mPixelShader = (CPixelShader9*)pShader;
 
 	return S_OK;
 }
@@ -1598,7 +1613,15 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetRenderState(D3DRENDERSTATETYPE State, DWO
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetRenderTarget(DWORD RenderTargetIndex, IDirect3DSurface9* pRenderTarget)
 {
+	if (mRenderTargets[RenderTargetIndex] != nullptr)
+	{
+		mRenderTargets[RenderTargetIndex]->PrivateRelease();
+	}
 	mRenderTargets[RenderTargetIndex] = (CSurface9*)pRenderTarget;
+	if (mRenderTargets[RenderTargetIndex] != nullptr)
+	{
+		mRenderTargets[RenderTargetIndex]->PrivateAddRef();
+	}
 
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
 	workItem->WorkItemType = WorkItemType::Device_SetRenderTarget;
@@ -1645,11 +1668,6 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetSoftwareVertexProcessing(BOOL bSoftware)
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetStreamSource(UINT StreamNumber, IDirect3DVertexBuffer9* pStreamData, UINT OffsetInBytes, UINT Stride)
 {
-	if (pStreamData != nullptr)
-	{
-		pStreamData->AddRef();
-	}
-
 	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
 	workItem->WorkItemType = WorkItemType::Device_SetStreamSource;
 	workItem->Id = mId;
@@ -1658,6 +1676,16 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetStreamSource(UINT StreamNumber, IDirect3D
 	workItem->Argument3 = bit_cast<void*>(OffsetInBytes);
 	workItem->Argument4 = bit_cast<void*>(Stride);
 	mCommandStreamManager->RequestWorkAndWait(workItem);
+
+	if (pStreamData != nullptr)
+	{
+		((CVertexBuffer9*)pStreamData)->PrivateAddRef();
+	}
+	if (mVertexBuffer != nullptr)
+	{
+		mVertexBuffer->PrivateRelease();
+	}
+	mVertexBuffer = (CVertexBuffer9*)pStreamData;
 
 	return S_OK;
 }
@@ -1679,6 +1707,42 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTexture(DWORD Sampler, IDirect3DBaseTextu
 	workItem->Argument1 = bit_cast<void*>(Sampler);
 	workItem->Argument2 = bit_cast<void*>(pTexture);
 	mCommandStreamManager->RequestWorkAndWait(workItem);
+
+	if (pTexture != nullptr)
+	{
+		switch (pTexture->GetType())
+		{
+		case D3DRTYPE_VOLUMETEXTURE:
+			((CVolumeTexture9*)pTexture)->PrivateAddRef();
+			break;
+		case D3DRTYPE_CUBETEXTURE:
+			((CCubeTexture9*)pTexture)->PrivateAddRef();
+			break;
+		case D3DRTYPE_TEXTURE:
+			((CTexture9*)pTexture)->PrivateAddRef();
+			break;
+		default:
+			break;
+		}	
+	}
+	if (mTextures[Sampler] != nullptr)
+	{
+		switch (mTextures[Sampler]->GetType())
+		{
+		case D3DRTYPE_VOLUMETEXTURE:
+			((CVolumeTexture9*)mTextures[Sampler])->PrivateRelease();
+			break;
+		case D3DRTYPE_CUBETEXTURE:
+			((CCubeTexture9*)mTextures[Sampler])->PrivateRelease();
+			break;
+		case D3DRTYPE_TEXTURE:
+			((CTexture9*)mTextures[Sampler])->PrivateRelease();
+			break;
+		default:
+			break;
+		}
+	}
+	mTextures[Sampler] = pTexture;
 
 	return S_OK;
 }
@@ -1716,6 +1780,16 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexDeclaration(IDirect3DVertexDeclarat
 	workItem->Argument1 = bit_cast<void*>(pDecl);
 	mCommandStreamManager->RequestWorkAndWait(workItem);
 
+	if (pDecl != nullptr)
+	{
+		((CVertexDeclaration9*)pDecl)->PrivateAddRef();
+	}
+	if (mVertexDeclaration != nullptr)
+	{
+		mVertexDeclaration->PrivateRelease();
+	}
+	mVertexDeclaration = (CVertexDeclaration9*)pDecl;
+
 	return S_OK;
 }
 
@@ -1726,6 +1800,16 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShader(IDirect3DVertexShader9* pSha
 	workItem->Id = mId;
 	workItem->Argument1 = bit_cast<void*>(pShader);
 	mCommandStreamManager->RequestWorkAndWait(workItem);
+
+	if (pShader != nullptr)
+	{
+		((CVertexShader9*)pShader)->PrivateAddRef();
+	}
+	if (mVertexShader != nullptr)
+	{
+		mVertexShader->PrivateRelease();
+	}
+	mVertexShader = (CVertexShader9*)pShader;
 
 	return S_OK;
 }
@@ -2017,7 +2101,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetDisplayModeEx(UINT iSwapChain, D3DDISPLAY
 	workItem->Argument1 = bit_cast<void*>(iSwapChain);
 	workItem->Argument2 = bit_cast<void*>(pMode);
 	mCommandStreamManager->RequestWorkAndWait(workItem);
-	
+
 	(*pRotation) = D3DDISPLAYROTATION_IDENTITY;
 
 	return S_OK;
