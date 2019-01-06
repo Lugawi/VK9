@@ -46,7 +46,26 @@ public:
 	D3DPOOL mPool;
 	HANDLE* mSharedHandle;
 
-	ULONG mReferenceCount;
+	ULONG mReferenceCount=1;
+
+	ULONG mPrivateReferenceCount=0;
+	ULONG PrivateAddRef(void)
+	{
+		return InterlockedIncrement(&mPrivateReferenceCount);
+	}
+
+	ULONG PrivateRelease(void)
+	{
+		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
+
+		if (ref == 0 && mReferenceCount==0)
+		{
+			delete this;
+		}
+
+		return ref;
+	}
+
 	VkResult mResult;
 	D3DTEXTUREFILTERTYPE mMipFilter = D3DTEXF_NONE;
 	D3DTEXTUREFILTERTYPE mMinFilter = D3DTEXF_NONE;

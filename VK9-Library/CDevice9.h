@@ -62,6 +62,25 @@ public:
 
 	//Misc
 	ULONG mReferenceCount = 1;
+	ULONG mPrivateReferenceCount = 0;
+
+	ULONG PrivateAddRef(void)
+	{
+		return InterlockedIncrement(&mPrivateReferenceCount);
+	}
+
+	ULONG PrivateRelease(void)
+	{
+		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
+
+		if (ref == 0 && mReferenceCount == 0)
+		{
+			delete this;
+		}
+
+		return ref;
+	}
+
 	uint32_t mDisplayCount = 0;	
 	std::vector<CSwapChain9*> mSwapChains;
 	CSurface9* mRenderTargets[4] = {};

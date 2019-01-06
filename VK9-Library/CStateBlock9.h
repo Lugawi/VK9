@@ -39,6 +39,24 @@ public:
 	size_t mId;
 	std::shared_ptr<CommandStreamManager> mCommandStreamManager;
 	ULONG mReferenceCount = 1;
+	ULONG mPrivateReferenceCount = 0;
+
+	ULONG PrivateAddRef(void)
+	{
+		return InterlockedIncrement(&mPrivateReferenceCount);
+	}
+
+	ULONG PrivateRelease(void)
+	{
+		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
+
+		if (ref == 0 && mReferenceCount == 0)
+		{
+			delete this;
+		}
+
+		return ref;
+	}
 
 	//Device State
 	D3DSTATEBLOCKTYPE mType = D3DSBT_FORCE_DWORD;

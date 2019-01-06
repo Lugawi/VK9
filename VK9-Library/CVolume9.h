@@ -51,6 +51,24 @@ public:
 	BOOL mLockable = 0;
 
 	ULONG mReferenceCount = 1;
+	ULONG mPrivateReferenceCount = 0;
+	ULONG PrivateAddRef(void)
+	{
+		return InterlockedIncrement(&mPrivateReferenceCount);
+	}
+
+	ULONG PrivateRelease(void)
+	{
+		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
+
+		if (ref == 0 && mReferenceCount == 0)
+		{
+			delete this;
+		}
+
+		return ref;
+	}
+
 	uint32_t mMipIndex = 0;
 	uint32_t counter = 0;
 	DWORD mFlags = 0;

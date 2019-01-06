@@ -41,6 +41,24 @@ public:
 	UINT mHeight = 0;
 	D3DFORMAT mFormat = D3DFMT_UNKNOWN;
 	ULONG mReferenceCount = 1;
+	ULONG mPrivateReferenceCount = 0;
+
+	ULONG PrivateAddRef(void)
+	{
+		return InterlockedIncrement(&mPrivateReferenceCount);
+	}
+
+	ULONG PrivateRelease(void)
+	{
+		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
+
+		if (ref == 0 && mReferenceCount == 0)
+		{
+			delete this;
+		}
+
+		return ref;
+	}
 
 public:
 

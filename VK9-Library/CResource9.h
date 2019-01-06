@@ -29,7 +29,26 @@ class CResource9 : public IDirect3DResource9
 {
 private:
 	CDevice9* mDevice = nullptr;
-	ULONG mReferenceCount = 0;
+	ULONG mReferenceCount = 1;
+	ULONG mPrivateReferenceCount = 0;
+
+	ULONG PrivateAddRef(void)
+	{
+		return InterlockedIncrement(&mPrivateReferenceCount);
+	}
+
+	ULONG PrivateRelease(void)
+	{
+		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
+
+		if (ref == 0 && mReferenceCount == 0)
+		{
+			delete this;
+		}
+
+		return ref;
+	}
+
 public:
 	CResource9();
 	~CResource9();

@@ -41,8 +41,27 @@ struct Monitor
 
 class C9 : public IDirect3D9Ex
 {
-private:
+public:
 	ULONG mReferenceCount = 1;
+	ULONG mPrivateReferenceCount = 0;
+
+	ULONG PrivateAddRef(void)
+	{
+		return InterlockedIncrement(&mPrivateReferenceCount);
+	}
+
+	ULONG PrivateRelease(void)
+	{
+		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
+
+		if (ref == 0 && mReferenceCount == 0)
+		{
+			delete this;
+		}
+
+		return ref;
+	}
+
 public:
 	C9();
 	~C9();

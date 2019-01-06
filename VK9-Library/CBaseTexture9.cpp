@@ -72,7 +72,7 @@ ULONG STDMETHODCALLTYPE CBaseTexture9::Release(void)
 {
 	ULONG ref = InterlockedDecrement(&mReferenceCount);
 
-	if (ref == 0)
+	if (ref == 0 && mPrivateReferenceCount == 0)
 	{
 		delete this;
 	}

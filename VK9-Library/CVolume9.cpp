@@ -44,6 +44,10 @@ CVolume9::CVolume9(CDevice9* device, CVolumeTexture9* texture, UINT Width, UINT 
 	mTextureId(0)
 {
 	Log(info) << "CVolume9::CVolume9" << std::endl;
+	if (mTexture!=nullptr)
+	{
+		mTexture->AddRef();
+	}
 }
 
 CVolume9::~CVolume9()
@@ -54,6 +58,11 @@ CVolume9::~CVolume9()
 	workItem->WorkItemType = WorkItemType::Volume_Destroy;
 	workItem->Id = mId;
 	mCommandStreamManager->RequestWorkAndWait(workItem);
+
+	if (mTexture != nullptr)
+	{
+		mTexture->Release();
+	}
 }
 
 void CVolume9::Init()
@@ -129,7 +138,7 @@ ULONG STDMETHODCALLTYPE CVolume9::Release(void)
 {
 	ULONG ref = InterlockedDecrement(&mReferenceCount);
 
-	if (ref == 0)
+	if (ref == 0 && mPrivateReferenceCount == 0)
 	{
 		delete this;
 	}

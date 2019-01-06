@@ -194,10 +194,12 @@ void CSurface9::Init()
 	if (mCubeTexture != nullptr)
 	{
 		mTextureId = mCubeTexture->mId;
+		mCubeTexture->AddRef();
 	}
 	else if (mTexture!=nullptr)
 	{
 		mTextureId = mTexture->mId;
+		mTexture->AddRef();
 	}
 	mLastTextureId = mTextureId;
 
@@ -219,6 +221,15 @@ CSurface9::~CSurface9()
 		workItem->WorkItemType = WorkItemType::Surface_Destroy;
 		workItem->Id = mId;
 		mCommandStreamManager->RequestWorkAndWait(workItem);
+	}
+
+	if (mCubeTexture != nullptr)
+	{
+		mCubeTexture->Release();
+	}
+	else if (mTexture != nullptr)
+	{
+		mTexture->Release();
 	}
 }
 
@@ -262,7 +273,7 @@ ULONG STDMETHODCALLTYPE CSurface9::Release(void)
 {
 	ULONG ref = InterlockedDecrement(&mReferenceCount);
 
-	if (ref == 0)
+	if (ref == 0 && mPrivateReferenceCount == 0)
 	{
 		delete this;
 	}

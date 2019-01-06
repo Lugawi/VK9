@@ -48,6 +48,25 @@ public:
 	HANDLE* mSharedHandle = nullptr;
 
 	ULONG mReferenceCount = 1;
+	ULONG mPrivateReferenceCount = 0;
+
+	ULONG PrivateAddRef(void)
+	{
+		return InterlockedIncrement(&mPrivateReferenceCount);
+	}
+
+	ULONG PrivateRelease(void)
+	{
+		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
+
+		if (ref == 0 && mReferenceCount == 0)
+		{
+			delete this;
+		}
+
+		return ref;
+	}
+
 	D3DTEXTUREFILTERTYPE mMipFilter = D3DTEXF_NONE;
 	D3DTEXTUREFILTERTYPE mMinFilter = D3DTEXF_NONE;
 	D3DTEXTUREFILTERTYPE mMagFilter = D3DTEXF_NONE;
