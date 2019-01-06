@@ -662,7 +662,7 @@ HRESULT STDMETHODCALLTYPE C9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, 
 {
 	Log(info) << "C9::CreateDevice Adapter: " << Adapter << std::endl;
 
-	if (Adapter >= mMonitors.size())
+	if (Adapter >= GetAdapterCount())
 	{
 		(*ppReturnedDeviceInterface) = {};
 		return D3DERR_INVALIDCALL;
@@ -686,7 +686,7 @@ HRESULT STDMETHODCALLTYPE C9::EnumAdapterModes(UINT Adapter, D3DFORMAT Format, U
 {
 	Log(info) << "C9::EnumAdapterModes Adapter: " << Adapter << std::endl;
 
-	if (Adapter >= mMonitors.size())
+	if (Adapter >= GetAdapterCount())
 	{
 		return D3DERR_INVALIDCALL;
 	}
@@ -714,7 +714,8 @@ UINT STDMETHODCALLTYPE C9::GetAdapterCount()
 
 	Log(info) << "C9::GetAdapterCount MonitorCount: " << monitorCount << std::endl;
 
-	return monitorCount;
+	//return monitorCount;
+	return 1;
 }
 
 HRESULT STDMETHODCALLTYPE C9::GetAdapterDisplayMode(UINT Adapter, D3DDISPLAYMODE *pMode)
@@ -765,7 +766,7 @@ UINT STDMETHODCALLTYPE C9::GetAdapterModeCount(UINT Adapter, D3DFORMAT Format)
 {
 	Log(info) << "C9::GetAdapterModeCount Adapter: " << Adapter << std::endl;
 
-	if (Adapter >= mMonitors.size())
+	if (Adapter >= GetAdapterCount())
 	{
 		return 0;
 	}
@@ -810,7 +811,7 @@ HRESULT STDMETHODCALLTYPE C9::GetDeviceCaps(UINT Adapter, D3DDEVTYPE DeviceType,
 		return D3DERR_INVALIDCALL;
 	}
 
-	if (Adapter >= mMonitors.size())
+	if (Adapter >= GetAdapterCount())
 	{
 		return D3DERR_INVALIDCALL;
 	}
@@ -839,7 +840,7 @@ UINT STDMETHODCALLTYPE C9::GetAdapterModeCountEx(UINT Adapter, const D3DDISPLAYM
 {
 	Log(info) << "C9::GetAdapterModeCountEx Adapter: " << Adapter << std::endl;
 
-	if (Adapter >= mMonitors.size())
+	if (Adapter >= GetAdapterCount())
 	{
 		return 0;
 	}
@@ -858,7 +859,7 @@ HRESULT STDMETHODCALLTYPE C9::EnumAdapterModesEx(UINT Adapter, const D3DDISPLAYM
 {
 	Log(info) << "C9::EnumAdapterModesEx Adapter: " << Adapter << std::endl;
 
-	if (Adapter >= mMonitors.size())
+	if (Adapter >= GetAdapterCount())
 	{
 		return D3DERR_INVALIDCALL;
 	}

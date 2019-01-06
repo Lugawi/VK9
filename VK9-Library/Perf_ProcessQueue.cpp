@@ -2279,7 +2279,7 @@ void ProcessQueue(CommandStreamManager* commandStreamManager)
 				D3DDEVTYPE DeviceType = bit_cast<D3DDEVTYPE>(workItem->Argument2);
 				D3DCAPS9* pCaps = bit_cast<D3DCAPS9*>(workItem->Argument3);
 				auto instance = commandStreamManager->mRenderManager.mStateManager.mInstances[workItem->Id];
-				auto device = instance->mPhysicalDevices[Adapter];
+				auto device = instance->mPhysicalDevices[0];
 
 				vk::PhysicalDeviceProperties properties;
 				vk::PhysicalDeviceFeatures features;
