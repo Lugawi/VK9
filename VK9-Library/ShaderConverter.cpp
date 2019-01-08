@@ -2634,11 +2634,23 @@ void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t input
 
 			if (usage == D3DDECLUSAGE_POSITION)
 			{
-				//Handled by generate position.
-				//mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-				//mDecorateInstructions.push_back(inputId); //target (Id)
-				//mDecorateInstructions.push_back(spv::DecorationBuiltIn); //Decoration Type (Id)
-				//mDecorateInstructions.push_back(spv::BuiltInPosition); //Location offset
+				//generate builtin for oPos
+				mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
+				mDecorateInstructions.push_back(inputId); //target (Id)
+				mDecorateInstructions.push_back(spv::DecorationBuiltIn); //Decoration Type (Id)
+				mDecorateInstructions.push_back(spv::BuiltInPosition); //Location offset
+
+				TypeDescription floatPointerType;
+				floatPointerType.PrimaryType = spv::OpTypePointer;
+				floatPointerType.SecondaryType = spv::OpTypeFloat;
+				uint32_t floatPointerTypeId = GetSpirVTypeId(floatPointerType);
+
+				mPositionId = inputId;
+
+				//Add an access chain for later flipping.
+				mPositionYId = GetNextId();
+				mIdTypePairs[mPositionYId] = floatPointerType;
+				PushAccessChain(floatPointerTypeId, mPositionYId, mPositionId, mConstantIntegerIds[1]);
 			}
 			else
 			{
@@ -7720,10 +7732,10 @@ ConvertedShader ShaderConverter::Convert(uint32_t* shader)
 	Push(spv::OpLabel, GetNextId());
 
 
-	if (mIsVertexShader)
-	{
-		GeneratePostition();
-	}
+	//if (mIsVertexShader)
+	//{
+	//	GeneratePostition();
+	//}
 
 	Generate255Constants();
 
