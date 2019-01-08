@@ -4429,8 +4429,8 @@ void ShaderConverter::Process_DEFB()
 
 void ShaderConverter::Process_IFC(uint32_t extraInfo)
 {
-	Token resultToken = GetNextToken();
-	_D3DSHADER_PARAM_REGISTER_TYPE resultRegisterType = GetRegisterType(resultToken.i);
+	//Token resultToken = GetNextToken();
+	//_D3DSHADER_PARAM_REGISTER_TYPE resultRegisterType = GetRegisterType(resultToken.i);
 	uint32_t resultId = GetNextId();
 
 	Token argumentToken1 = GetNextToken();
