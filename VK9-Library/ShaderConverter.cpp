@@ -952,7 +952,19 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 		description.SecondaryType = spv::OpTypeVector;
 		description.TernaryType = spv::OpTypeFloat; //TODO: find a way to tell if this is an integer or float.
 		description.ComponentCount = 4;
-		description.StorageClass = spv::StorageClassOutput;
+		if (this->mIsVertexShader && registerType != D3DSPR_TEMP)
+		{
+			description.StorageClass = spv::StorageClassOutput; //Storage Class
+		}
+		else if (!this->mIsVertexShader && registerType == D3DSPR_TEMP && registerNumber == 0) //r0 is used for pixel shader color output because reasons.
+		{
+			description.StorageClass = spv::StorageClassOutput; //Storage Class
+		}
+		else
+		{
+			description.StorageClass = spv::StorageClassPrivate; //Storage Class
+		}
+
 		typeId = GetSpirVTypeId(description);
 
 		mIdsByRegister[registerType][registerNumber] = id;
@@ -967,7 +979,7 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 		{
 			mTypeInstructions.push_back(spv::StorageClassOutput); //Storage Class
 		}
-		else if (!this->mIsVertexShader && registerType == D3DSPR_TEMP) //r0 is used for pixel shader color output because reasons.
+		else if (!this->mIsVertexShader && registerType == D3DSPR_TEMP && registerNumber == 0) //r0 is used for pixel shader color output because reasons.
 		{
 			mTypeInstructions.push_back(spv::StorageClassOutput); //Storage Class
 		}
@@ -987,60 +999,63 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 			break;
 		case D3DSPR_ATTROUT:
 		case D3DSPR_COLOROUT:
-			if (mColor1Id)
+			if (mIsVertexShader)
 			{
-				mColor2Id = id;
+				if (mColor1Id)
+				{
+					mColor2Id = id;
 
-				TypeDescription pointerFloatType;
-				pointerFloatType.PrimaryType = spv::OpTypePointer;
-				pointerFloatType.SecondaryType = spv::OpTypeFloat;
-				pointerFloatType.StorageClass = spv::StorageClassOutput;
-				uint32_t floatTypeId = GetSpirVTypeId(pointerFloatType);
+					TypeDescription pointerFloatType;
+					pointerFloatType.PrimaryType = spv::OpTypePointer;
+					pointerFloatType.SecondaryType = spv::OpTypeFloat;
+					pointerFloatType.StorageClass = spv::StorageClassOutput;
+					uint32_t floatTypeId = GetSpirVTypeId(pointerFloatType);
 
-				mColor2XId = GetNextId();
-				mIdTypePairs[mColor2XId] = pointerFloatType;
-				PushAccessChain(floatTypeId, mColor2XId, mColor2Id, mConstantIntegerIds[0]);
+					mColor2XId = GetNextId();
+					mIdTypePairs[mColor2XId] = pointerFloatType;
+					PushAccessChain(floatTypeId, mColor2XId, mColor2Id, mConstantIntegerIds[0]);
 
-				mColor2YId = GetNextId();
-				mIdTypePairs[mColor2YId] = pointerFloatType;
-				PushAccessChain(floatTypeId, mColor2YId, mColor2Id, mConstantIntegerIds[1]);
+					mColor2YId = GetNextId();
+					mIdTypePairs[mColor2YId] = pointerFloatType;
+					PushAccessChain(floatTypeId, mColor2YId, mColor2Id, mConstantIntegerIds[1]);
 
-				mColor2ZId = GetNextId();
-				mIdTypePairs[mColor2ZId] = pointerFloatType;
-				PushAccessChain(floatTypeId, mColor2ZId, mColor2Id, mConstantIntegerIds[2]);
+					mColor2ZId = GetNextId();
+					mIdTypePairs[mColor2ZId] = pointerFloatType;
+					PushAccessChain(floatTypeId, mColor2ZId, mColor2Id, mConstantIntegerIds[2]);
 
-				mColor2WId = GetNextId();
-				mIdTypePairs[mColor2WId] = pointerFloatType;
-				PushAccessChain(floatTypeId, mColor2WId, mColor2Id, mConstantIntegerIds[3]);
+					mColor2WId = GetNextId();
+					mIdTypePairs[mColor2WId] = pointerFloatType;
+					PushAccessChain(floatTypeId, mColor2WId, mColor2Id, mConstantIntegerIds[3]);
+				}
+				else
+				{
+					mColor1Id = id;
+
+					TypeDescription pointerFloatType;
+					pointerFloatType.PrimaryType = spv::OpTypePointer;
+					pointerFloatType.SecondaryType = spv::OpTypeFloat;
+					pointerFloatType.StorageClass = spv::StorageClassOutput;
+					uint32_t floatTypeId = GetSpirVTypeId(pointerFloatType);
+
+					mColor1XId = GetNextId();
+					mIdTypePairs[mColor1XId] = pointerFloatType;
+					PushAccessChain(floatTypeId, mColor1XId, mColor1Id, mConstantIntegerIds[0]);
+
+					mColor1YId = GetNextId();
+					mIdTypePairs[mColor1YId] = pointerFloatType;
+					PushAccessChain(floatTypeId, mColor1YId, mColor1Id, mConstantIntegerIds[1]);
+
+					mColor1ZId = GetNextId();
+					mIdTypePairs[mColor1ZId] = pointerFloatType;
+					PushAccessChain(floatTypeId, mColor1ZId, mColor1Id, mConstantIntegerIds[2]);
+
+					mColor1WId = GetNextId();
+					mIdTypePairs[mColor1WId] = pointerFloatType;
+					PushAccessChain(floatTypeId, mColor1WId, mColor1Id, mConstantIntegerIds[3]);
+				}
+
+				usage = D3DDECLUSAGE_COLOR;
 			}
-			else
-			{
-				mColor1Id = id;
-
-				TypeDescription pointerFloatType;
-				pointerFloatType.PrimaryType = spv::OpTypePointer;
-				pointerFloatType.SecondaryType = spv::OpTypeFloat;
-				pointerFloatType.StorageClass = spv::StorageClassOutput;
-				uint32_t floatTypeId = GetSpirVTypeId(pointerFloatType);
-
-				mColor1XId = GetNextId();
-				mIdTypePairs[mColor1XId] = pointerFloatType;
-				PushAccessChain(floatTypeId, mColor1XId, mColor1Id, mConstantIntegerIds[0]);
-
-				mColor1YId = GetNextId();
-				mIdTypePairs[mColor1YId] = pointerFloatType;
-				PushAccessChain(floatTypeId, mColor1YId, mColor1Id, mConstantIntegerIds[1]);
-
-				mColor1ZId = GetNextId();
-				mIdTypePairs[mColor1ZId] = pointerFloatType;
-				PushAccessChain(floatTypeId, mColor1ZId, mColor1Id, mConstantIntegerIds[2]);
-
-				mColor1WId = GetNextId();
-				mIdTypePairs[mColor1WId] = pointerFloatType;
-				PushAccessChain(floatTypeId, mColor1WId, mColor1Id, mConstantIntegerIds[3]);
-			}
-
-			usage = D3DDECLUSAGE_COLOR;
 			break;
 		case D3DSPR_TEXCRDOUT:
 			usage = D3DDECLUSAGE_TEXCOORD;
@@ -1061,14 +1076,11 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 
 			GenerateDecoration(registerNumber, id, usage, usageIndex,false);
 		}
-		else if (!this->mIsVertexShader && registerType == D3DSPR_TEMP) //r0 is used for pixel shader color output because reasons.
+		else if (!this->mIsVertexShader && registerType == D3DSPR_TEMP && registerNumber == 0) //r0 is used for pixel shader color output because reasons.
 		{
 			mOutputRegisters.push_back(id);
 
-			mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-			mDecorateInstructions.push_back(id); //target (Id)
-			mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-			mDecorateInstructions.push_back(0); //Location offset
+			GenerateDecoration(registerNumber, id, usage, usageIndex, false);
 		}
 
 		break;
@@ -1621,14 +1633,14 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 
 	std::string registerName;
 
-	TypeDescription vectorType;
-	vectorType.PrimaryType = spv::OpTypeVector;
-	vectorType.SecondaryType = spv::OpTypeFloat;
-	vectorType.ComponentCount = 4;
-	vectorType.StorageClass = spv::StorageClassInput;
-	uint32_t vectorTypeId = GetSpirVTypeId(vectorType);
+	//TypeDescription vectorType;
+	//vectorType.PrimaryType = spv::OpTypeVector;
+	//vectorType.SecondaryType = spv::OpTypeFloat;
+	//vectorType.ComponentCount = 4;
+	//vectorType.StorageClass = spv::StorageClassInput;
+	//uint32_t vectorTypeId = GetSpirVTypeId(vectorType);
 
-	mIdTypePairs[outputId] = vectorType;
+	mIdTypePairs[outputId] = loadedType;
 
 	registerName = mNameIdPairs[loadedId];
 	if (registerName.size())
@@ -1706,19 +1718,33 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 		break;
 	}
 
+	if (xSource == yIndex && xSource == zIndex && xSource == wIndex)
+	{
+		outputComponentCount = 1;
+	}
+
 	switch (outputComponentCount)
 	{
 	case 1:
-		Push(spv::OpVectorShuffle, vectorTypeId, outputId, loadedId, loadedId, xIndex, xIndex, xIndex, xIndex);
+	{
+		TypeDescription scalarType;
+		scalarType.PrimaryType = loadedType.SecondaryType;
+		uint32_t scalarTypeId = GetSpirVTypeId(scalarType);
+
+		mIdTypePairs[outputId] = scalarType;
+
+		PushCompositeExtract(scalarTypeId, outputId, loadedId, xIndex);
+		//Push(spv::OpVectorShuffle, scalarTypeId, outputId, loadedId, loadedId, xIndex, xIndex, xIndex, xIndex);
+	}
 		break;
 	case 2:
-		Push(spv::OpVectorShuffle, vectorTypeId, outputId, loadedId, loadedId, xIndex, yIndex, yIndex, yIndex);
+		Push(spv::OpVectorShuffle, loadedTypeId, outputId, loadedId, loadedId, xIndex, yIndex, yIndex, yIndex);
 		break;
 	case 3:
-		Push(spv::OpVectorShuffle, vectorTypeId, outputId, loadedId, loadedId, xIndex, yIndex, zIndex, zIndex);
+		Push(spv::OpVectorShuffle, loadedTypeId, outputId, loadedId, loadedId, xIndex, yIndex, zIndex, zIndex);
 		break;
 	case 4:
-		Push(spv::OpVectorShuffle, vectorTypeId, outputId, loadedId, loadedId, xIndex, yIndex, zIndex, wIndex);
+		Push(spv::OpVectorShuffle, loadedTypeId, outputId, loadedId, loadedId, xIndex, yIndex, zIndex, wIndex);
 		break;
 	default:
 		Log(warning) << "GetSwizzledId - Unsupported component count  " << outputComponentCount << std::endl;
@@ -1808,129 +1834,6 @@ uint32_t ShaderConverter::SwizzlePointer(const Token& token)
 	}
 
 	mIdTypePairs[outputId] = outputType;
-
-	return outputId;
-}
-
-/*
-Take a vector and shuffle or extract it to get the right data type.
-To figure out what the right type is we use the write mask on the result token.
-*/
-uint32_t ShaderConverter::SwizzleValue(const Token& token, uint32_t inputId)
-{
-	auto inputType = mIdTypePairs[inputId];
-
-	if (inputType.PrimaryType != spv::OpTypeVector)
-	{
-		return inputId;
-	}
-
-	TypeDescription outputType;
-	uint32_t outputTypeId = 0;
-	uint32_t outputId = 0;
-	uint32_t outputComponentCount = 0;
-	uint32_t index[4] = {};
-	size_t indexIndex = 0;
-
-	if (token.i & D3DSP_WRITEMASK_0)
-	{
-		index[indexIndex] = 0;
-		indexIndex++;
-
-		outputComponentCount++;
-	}
-
-	if (token.i & D3DSP_WRITEMASK_1)
-	{
-		index[indexIndex] = 1;
-		indexIndex++;
-
-		outputComponentCount++;
-	}
-
-	if (token.i & D3DSP_WRITEMASK_2)
-	{
-		index[indexIndex] = 2;
-		indexIndex++;
-
-		outputComponentCount++;
-	}
-
-	if (token.i & D3DSP_WRITEMASK_3)
-	{
-		index[indexIndex] = 3;
-		indexIndex++;
-
-		outputComponentCount++;
-	}
-
-	outputId = GetNextId();
-
-	if (outputComponentCount > 1)
-	{
-		outputType = inputType;
-		outputType.ComponentCount = outputComponentCount;
-		outputTypeId = GetSpirVTypeId(outputType);
-
-		mIdTypePairs[outputId] = outputType;
-
-		std::string registerName = mNameIdPairs[inputId];
-		if (registerName.size())
-		{
-			//registerName += ".r";
-			PushName(outputId, registerName);
-		}
-
-		switch (outputComponentCount)
-		{ //1 should be covered by the other branch.
-		case 2:
-			Push(spv::OpVectorShuffle, outputTypeId, outputId, inputId, inputId, index[0], index[1]);
-			break;
-		case 3:
-			Push(spv::OpVectorShuffle, outputTypeId, outputId, inputId, inputId, index[0], index[1], index[2]);
-			break;
-		case 4:
-			Push(spv::OpVectorShuffle, outputTypeId, outputId, inputId, inputId, index[0], index[1], index[2], index[3]);
-			break;
-		default:
-			Log(warning) << "GetSwizzledId - Unsupported component count  " << outputComponentCount << std::endl;
-			break;
-		}
-	}
-	else
-	{
-		outputType.PrimaryType = inputType.SecondaryType;
-		outputTypeId = GetSpirVTypeId(outputType);
-
-		std::string registerName = mNameIdPairs[inputId];
-		if (registerName.size())
-		{
-			//registerName += ".r";
-			PushName(outputId, registerName);
-		}
-
-		mIdTypePairs[outputId] = outputType;
-
-		if (token.i & D3DSP_WRITEMASK_0)
-		{
-			PushCompositeExtract(outputTypeId, outputId, inputId, 0);
-		}
-
-		if (token.i & D3DSP_WRITEMASK_1)
-		{
-			PushCompositeExtract(outputTypeId, outputId, inputId, 1);
-		}
-
-		if (token.i & D3DSP_WRITEMASK_2)
-		{
-			PushCompositeExtract(outputTypeId, outputId, inputId, 2);
-		}
-
-		if (token.i & D3DSP_WRITEMASK_3)
-		{
-			PushCompositeExtract(outputTypeId, outputId, inputId, 3);
-		}
-	}
 
 	return outputId;
 }
@@ -2265,7 +2168,7 @@ uint32_t ShaderConverter::ApplyWriteMask(const Token& token, uint32_t modifiedId
 	else if (originalType.PrimaryType == spv::OpTypePointer)
 	{
 		outputId = SwizzlePointer(token);
-		if ((originalId == mColor1Id || originalId == mColor2Id))
+		if ((originalId == mColor1Id || originalId == mColor2Id) && mIsVertexShader)
 		{
 			HandleColor(token, inputId, outputId, originalId);
 		}
@@ -2503,89 +2406,6 @@ void ShaderConverter::GenerateConstantIndices()
 	}
 }
 
-void ShaderConverter::GeneratePostition()
-{
-	if (!this->mIsVertexShader)
-	{
-		return;
-	}
-
-	TypeDescription positionType;
-	positionType.PrimaryType = spv::OpTypeVector;
-	positionType.SecondaryType = spv::OpTypeFloat;
-	positionType.ComponentCount = 4;
-
-	TypeDescription positionPointerType;
-	positionPointerType.PrimaryType = spv::OpTypePointer;
-	positionPointerType.SecondaryType = spv::OpTypeVector;
-	positionPointerType.TernaryType = spv::OpTypeFloat;
-	positionPointerType.ComponentCount = 4;
-	positionPointerType.StorageClass = spv::StorageClassOutput;
-
-	TypeDescription floatPointerType;
-	floatPointerType.PrimaryType = spv::OpTypePointer;
-	floatPointerType.SecondaryType = spv::OpTypeFloat;
-	uint32_t floatPointerTypeId = GetSpirVTypeId(floatPointerType);
-
-	uint32_t floatTypeId = GetSpirVTypeId(spv::OpTypeFloat);
-
-	uint32_t positionTypeId = GetSpirVTypeId(positionType);
-	uint32_t positionPointerTypeId = GetSpirVTypeId(positionPointerType);
-	uint32_t positionStructureTypeId = GetNextId();
-	uint32_t positionStructurePointerTypeId = GetNextId();
-	uint32_t positionStructurePointerId = GetNextId();
-	uint32_t positionPointerId = GetNextId();
-	std::string registerName;
-	uint32_t stringWordSize = 0;
-
-	mTypeInstructions.push_back(Pack(2 + 1, spv::OpTypeStruct)); //size,Type
-	mTypeInstructions.push_back(positionStructureTypeId); //Result (Id)
-	mTypeInstructions.push_back(positionTypeId); //Member 0 type (Id)
-
-	mTypeInstructions.push_back(Pack(4, spv::OpTypePointer)); //size,Type
-	mTypeInstructions.push_back(positionStructurePointerTypeId); //Result (Id)
-	mTypeInstructions.push_back(spv::StorageClassOutput); //Storage Class
-	mTypeInstructions.push_back(positionStructureTypeId); //type (Id)
-
-	mDecorateInstructions.push_back(Pack(3, spv::OpDecorate)); //size,Type
-	mDecorateInstructions.push_back(positionStructureTypeId); //target (Id)
-	mDecorateInstructions.push_back(spv::DecorationBlock); //Decoration Type (Id)
-
-	mDecorateInstructions.push_back(Pack(4 + 1, spv::OpMemberDecorate)); //size,Type
-	mDecorateInstructions.push_back(positionStructureTypeId); //target (Id)
-	mDecorateInstructions.push_back(0); //Member (Literal)
-	mDecorateInstructions.push_back(spv::DecorationBuiltIn); //Decoration Type (Id)
-	mDecorateInstructions.push_back(spv::BuiltInPosition);
-
-	mTypeInstructions.push_back(Pack(4, spv::OpVariable)); //size,Type
-	mTypeInstructions.push_back(positionStructurePointerTypeId); //ResultType (Id) Must be OpTypePointer with the pointer's type being what you care about.
-	mTypeInstructions.push_back(positionStructurePointerId); //Result (Id)
-	mTypeInstructions.push_back(spv::StorageClassOutput); //Storage Class
-
-	registerName = "gl_PerVertex";
-	PushName(positionStructurePointerId, registerName);
-
-	mIdTypePairs[positionPointerId] = positionPointerType;
-	PushAccessChain(positionPointerTypeId, positionPointerId, positionStructurePointerId, mConstantIntegerIds[0]);
-
-	//Updated tracking structures
-	mPositionId = positionPointerId;
-	mIdsByRegister[D3DSPR_RASTOUT][0] = positionPointerId;
-	mRegistersById[D3DSPR_RASTOUT][positionPointerId] = 0;
-	mIdTypePairs[positionPointerId] = positionPointerType;
-
-	mOutputRegisters.push_back(positionStructurePointerId);
-	mOutputRegisterUsages[D3DDECLUSAGE_POSITION] = positionPointerId;
-
-	registerName = "gl_Position";
-	PushName(positionPointerId, registerName);
-
-	//Add an access chain for later flipping.
-	mPositionYId = GetNextId();
-	mIdTypePairs[mPositionYId] = floatPointerType;
-	PushAccessChain(floatPointerTypeId, mPositionYId, positionPointerId, mConstantIntegerIds[1]);
-}
-
 void ShaderConverter::GenerateStore(const Token& token, uint32_t inputId)
 {
 	_D3DSHADER_PARAM_REGISTER_TYPE resultRegisterType = GetRegisterType(token.i);
@@ -2610,7 +2430,7 @@ void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t input
 {
 	std::string registerName;
 	uint32_t location;
-	location = UsageOffsets[usage] + usageIndex;
+	
 	
 	//TypeDescription inputType = mIdTypePairs[inputId];
 
@@ -2618,6 +2438,8 @@ void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t input
 	{
 		if (isInput)
 		{
+			location = UsageOffsets[usage] + usageIndex;
+
 			mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
 			mDecorateInstructions.push_back(inputId); //target (Id)
 			mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
@@ -2627,10 +2449,7 @@ void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t input
 		}
 		else
 		{
-			if (mMajorVersion < 3)
-			{
-				location = UsageOffsets[usage] + registerNumber;
-			}
+			location = registerNumber;
 
 			if (usage == D3DDECLUSAGE_POSITION)
 			{
@@ -2685,13 +2504,10 @@ void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t input
 	}
 	else //Pixel Shader
 	{
+		location = registerNumber;
+
 		if (isInput)
 		{
-			if (mMajorVersion < 3)
-			{
-				location = UsageOffsets[usage] + registerNumber;
-			}
-
 			mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
 			mDecorateInstructions.push_back(inputId); //target (Id)
 			mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
@@ -2712,21 +2528,20 @@ void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t input
 		}
 		else
 		{
-			if (usage == D3DDECLUSAGE_COLOR)
-			{
-				mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
-				mDecorateInstructions.push_back(inputId); //target (Id)
-				mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
-				mDecorateInstructions.push_back(usageIndex); //Location offset
-			}
-			else
-			{
-				//This is probably Depth which isn't currently handled.
+			//if (usage == D3DDECLUSAGE_COLOR)
+			//{
+			//	mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
+			//	mDecorateInstructions.push_back(inputId); //target (Id)
+			//	mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
+			//	mDecorateInstructions.push_back(usageIndex); //Location offset
+			//}
+			//else
+			//{
 				mDecorateInstructions.push_back(Pack(3 + 1, spv::OpDecorate)); //size,Type
 				mDecorateInstructions.push_back(inputId); //target (Id)
 				mDecorateInstructions.push_back(spv::DecorationLocation); //Decoration Type (Id)
 				mDecorateInstructions.push_back(location); //Location offset
-			}
+			//}
 
 			switch (usage)
 			{
@@ -2745,9 +2560,7 @@ void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t input
 	}
 	PushName(inputId, registerName);
 
-#ifdef _EXTRA_SHADER_DEBUG_INFO
-	Log(info) << "ShaderConverter::GenerateDecoration created " << registerName << " @ " << location << std::endl;
-#endif
+	Log(info) << "ShaderConverter::GenerateDecoration created " << registerName <<" for " << usage << " @ " << location << std::endl;
 }
 
 void ShaderConverter::Generate255Constants()
@@ -3200,6 +3013,10 @@ void ShaderConverter::CreateSpirVModule()
 	{
 		Log(fatal) << "ShaderConverter::CreateSpirVModule vkCreateShaderModule failed with return code of " << GetResultString((VkResult)result) << std::endl;
 		return;
+	}
+	else
+	{
+		Log(info) << "ShaderConverter::CreateSpirVModule vkCreateShaderModule created " << std::hex << (VkShaderModule)mConvertedShader.ShaderModule << std::dec << std::endl;
 	}
 }
 
@@ -4070,19 +3887,16 @@ void ShaderConverter::Process_DCL_Pixel()
 		typeDescription.StorageClass = spv::StorageClassUniformConstant;
 		resultTypeId = GetSpirVTypeId(typeDescription);
 
-		mIdsByRegister[registerType][registerNumber] = tokenId;
-		mRegistersById[registerType][tokenId] = registerNumber;
-		mIdTypePairs[tokenId] = typeDescription;
-
 		Push(spv::OpAccessChain, resultTypeId, tokenId, mTexturesId, mConstantIntegerIds[registerNumber]);
 		break;
 	case D3DSPR_TEMP:
-		if (registerNumber) //r0 is used for pixel shader color output because reasons.
+		if (registerNumber!=0) //r0 is used for pixel shader color output because reasons.
 		{
 			typeDescription.StorageClass = spv::StorageClassPrivate; //Storage Class
 		}
 		else
 		{
+			GenerateDecoration(registerNumber, tokenId, (_D3DDECLUSAGE)usage, usageIndex, true);
 			typeDescription.StorageClass = spv::StorageClassOutput; //Storage Class
 		}
 
@@ -4092,15 +3906,6 @@ void ShaderConverter::Process_DCL_Pixel()
 		mTypeInstructions.push_back(resultTypeId); //ResultType (Id) Must be OpTypePointer with the pointer's type being what you care about.
 		mTypeInstructions.push_back(tokenId); //Result (Id)
 
-		if (registerNumber) //r0 is used for pixel shader color output because reasons.
-		{
-			mTypeInstructions.push_back(spv::StorageClassPrivate); //Storage Class
-		}
-		else
-		{
-			mTypeInstructions.push_back(spv::StorageClassOutput); //Storage Class
-		}
-
 		break;
 	case D3DSPR_MISCTYPE:
 		Log(fatal) << "ShaderConverter::Process_DCL_Pixel unsupported register type D3DSPR_MISCTYPE" << std::endl;
@@ -4108,6 +3913,10 @@ void ShaderConverter::Process_DCL_Pixel()
 		Log(fatal) << "ShaderConverter::Process_DCL_Pixel unsupported register type " << registerType << std::endl;
 		break;
 	}
+
+	mIdsByRegister[registerType][registerNumber] = tokenId;
+	mRegistersById[registerType][tokenId] = registerNumber;
+	mIdTypePairs[tokenId] = typeDescription;
 
 	Log(info) << "DCL " << GetUsageName((_D3DDECLUSAGE)usage) << "(" << usageIndex << ") - " << GetRegisterTypeName(registerType) << "(" << registerNumber << ") = " << typeDescription << std::endl;
 }
@@ -4190,10 +3999,6 @@ void ShaderConverter::Process_DCL_Vertex()
 		break;
 	}
 
-	mIdsByRegister[registerType][registerNumber] = tokenId;
-	mRegistersById[registerType][tokenId] = registerNumber;
-	mIdTypePairs[tokenId] = typeDescription;
-
 	switch (registerType)
 	{
 	case D3DSPR_TEXTURE:
@@ -4267,57 +4072,60 @@ void ShaderConverter::Process_DCL_Vertex()
 			mPositionId = tokenId;
 			break;
 		case D3DDECLUSAGE_COLOR:
-			if (mColor1Id)
+			if (mIsVertexShader)
 			{
-				mColor2Id = tokenId;
+				if (mColor1Id)
+				{
+					mColor2Id = tokenId;
 
-				TypeDescription pointerFloatType;
-				pointerFloatType.PrimaryType = spv::OpTypePointer;
-				pointerFloatType.SecondaryType = spv::OpTypeFloat;
-				pointerFloatType.StorageClass = spv::StorageClassOutput;
-				uint32_t floatTypeId = GetSpirVTypeId(pointerFloatType);
+					TypeDescription pointerFloatType;
+					pointerFloatType.PrimaryType = spv::OpTypePointer;
+					pointerFloatType.SecondaryType = spv::OpTypeFloat;
+					pointerFloatType.StorageClass = spv::StorageClassOutput;
+					uint32_t floatTypeId = GetSpirVTypeId(pointerFloatType);
 
-				mColor2XId = GetNextId();
-				mIdTypePairs[mColor2XId] = pointerFloatType;
-				PushAccessChain(floatTypeId, mColor2XId, mColor2Id, mConstantIntegerIds[0]);
+					mColor2XId = GetNextId();
+					mIdTypePairs[mColor2XId] = pointerFloatType;
+					PushAccessChain(floatTypeId, mColor2XId, mColor2Id, mConstantIntegerIds[0]);
 
-				mColor2YId = GetNextId();
-				mIdTypePairs[mColor2YId] = pointerFloatType;
-				PushAccessChain(floatTypeId, mColor2YId, mColor2Id, mConstantIntegerIds[1]);
+					mColor2YId = GetNextId();
+					mIdTypePairs[mColor2YId] = pointerFloatType;
+					PushAccessChain(floatTypeId, mColor2YId, mColor2Id, mConstantIntegerIds[1]);
 
-				mColor2ZId = GetNextId();
-				mIdTypePairs[mColor2ZId] = pointerFloatType;
-				PushAccessChain(floatTypeId, mColor2ZId, mColor2Id, mConstantIntegerIds[2]);
+					mColor2ZId = GetNextId();
+					mIdTypePairs[mColor2ZId] = pointerFloatType;
+					PushAccessChain(floatTypeId, mColor2ZId, mColor2Id, mConstantIntegerIds[2]);
 
-				mColor2WId = GetNextId();
-				mIdTypePairs[mColor2WId] = pointerFloatType;
-				PushAccessChain(floatTypeId, mColor2WId, mColor2Id, mConstantIntegerIds[3]);
-			}
-			else
-			{
-				mColor1Id = tokenId;
+					mColor2WId = GetNextId();
+					mIdTypePairs[mColor2WId] = pointerFloatType;
+					PushAccessChain(floatTypeId, mColor2WId, mColor2Id, mConstantIntegerIds[3]);
+				}
+				else
+				{
+					mColor1Id = tokenId;
 
-				TypeDescription pointerFloatType;
-				pointerFloatType.PrimaryType = spv::OpTypePointer;
-				pointerFloatType.SecondaryType = spv::OpTypeFloat;
-				pointerFloatType.StorageClass = spv::StorageClassOutput;
-				uint32_t floatTypeId = GetSpirVTypeId(pointerFloatType);
+					TypeDescription pointerFloatType;
+					pointerFloatType.PrimaryType = spv::OpTypePointer;
+					pointerFloatType.SecondaryType = spv::OpTypeFloat;
+					pointerFloatType.StorageClass = spv::StorageClassOutput;
+					uint32_t floatTypeId = GetSpirVTypeId(pointerFloatType);
 
-				mColor1XId = GetNextId();
-				mIdTypePairs[mColor1XId] = pointerFloatType;
-				PushAccessChain(floatTypeId, mColor1XId, mColor1Id, mConstantIntegerIds[0]);
+					mColor1XId = GetNextId();
+					mIdTypePairs[mColor1XId] = pointerFloatType;
+					PushAccessChain(floatTypeId, mColor1XId, mColor1Id, mConstantIntegerIds[0]);
 
-				mColor1YId = GetNextId();
-				mIdTypePairs[mColor1YId] = pointerFloatType;
-				PushAccessChain(floatTypeId, mColor1YId, mColor1Id, mConstantIntegerIds[1]);
+					mColor1YId = GetNextId();
+					mIdTypePairs[mColor1YId] = pointerFloatType;
+					PushAccessChain(floatTypeId, mColor1YId, mColor1Id, mConstantIntegerIds[1]);
 
-				mColor1ZId = GetNextId();
-				mIdTypePairs[mColor1ZId] = pointerFloatType;
-				PushAccessChain(floatTypeId, mColor1ZId, mColor1Id, mConstantIntegerIds[2]);
+					mColor1ZId = GetNextId();
+					mIdTypePairs[mColor1ZId] = pointerFloatType;
+					PushAccessChain(floatTypeId, mColor1ZId, mColor1Id, mConstantIntegerIds[2]);
 
-				mColor1WId = GetNextId();
-				mIdTypePairs[mColor1WId] = pointerFloatType;
-				PushAccessChain(floatTypeId, mColor1WId, mColor1Id, mConstantIntegerIds[3]);
+					mColor1WId = GetNextId();
+					mIdTypePairs[mColor1WId] = pointerFloatType;
+					PushAccessChain(floatTypeId, mColor1WId, mColor1Id, mConstantIntegerIds[3]);
+				}
 			}
 			break;
 		default:
@@ -4342,6 +4150,10 @@ void ShaderConverter::Process_DCL_Vertex()
 		Log(fatal) << "ShaderConverter::Process_DCL_Vertex unsupported register type " << registerType << std::endl;
 		break;
 	}
+
+	mIdsByRegister[registerType][registerNumber] = tokenId;
+	mRegistersById[registerType][tokenId] = registerNumber;
+	mIdTypePairs[tokenId] = typeDescription;
 
 	Log(info) << "DCL " << GetUsageName((_D3DDECLUSAGE)usage) << "(" << usageIndex << ") - " << GetRegisterTypeName(registerType) << "(" << registerNumber << ") = " << typeDescription << std::endl;
 }
