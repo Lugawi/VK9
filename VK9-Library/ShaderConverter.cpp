@@ -1325,7 +1325,14 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 	}
 	else if (lookingFor == GIVE_ME_VECTOR_2)
 	{
-		originalId = GetIdByRegister(token, D3DSPR_TEXTURE, D3DDECLUSAGE_TEXCOORD);
+		if (mMajorVersion >= 3)
+		{
+			originalId = GetIdByRegister(token, D3DSPR_INPUT, D3DDECLUSAGE_TEXCOORD);
+		}
+		else
+		{
+			originalId = GetIdByRegister(token, D3DSPR_TEXTURE, D3DDECLUSAGE_TEXCOORD);
+		}
 		outputComponentCount = 2;
 	}
 	else if (lookingFor == GIVE_ME_MATRIX_4X4)
@@ -1718,33 +1725,73 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 		break;
 	}
 
-	if (xSource == yIndex && xSource == zIndex && xSource == wIndex)
-	{
-		outputComponentCount = 1;
-	}
-
 	switch (outputComponentCount)
 	{
 	case 1:
 	{
-		TypeDescription scalarType;
-		scalarType.PrimaryType = loadedType.SecondaryType;
-		uint32_t scalarTypeId = GetSpirVTypeId(scalarType);
+		if (xSource == yIndex && xSource == zIndex && xSource == wIndex)
+		{
+			TypeDescription scalarType;
+			scalarType.PrimaryType = loadedType.SecondaryType;
+			uint32_t scalarTypeId = GetSpirVTypeId(scalarType);
 
-		mIdTypePairs[outputId] = scalarType;
+			mIdTypePairs[outputId] = scalarType;
 
-		PushCompositeExtract(scalarTypeId, outputId, loadedId, xIndex);
-		//Push(spv::OpVectorShuffle, scalarTypeId, outputId, loadedId, loadedId, xIndex, xIndex, xIndex, xIndex);
+			PushCompositeExtract(scalarTypeId, outputId, loadedId, xIndex);
+		}
+		else
+		{
+			Push(spv::OpVectorShuffle, loadedTypeId, outputId, loadedId, loadedId, xIndex, xIndex, xIndex, xIndex);
+		}
 	}
 		break;
 	case 2:
-		Push(spv::OpVectorShuffle, loadedTypeId, outputId, loadedId, loadedId, xIndex, yIndex, yIndex, yIndex);
+		if (xSource == yIndex && xSource == zIndex && xSource == wIndex)
+		{
+			TypeDescription scalarType;
+			scalarType.PrimaryType = loadedType.SecondaryType;
+			uint32_t scalarTypeId = GetSpirVTypeId(scalarType);
+
+			mIdTypePairs[outputId] = scalarType;
+
+			PushCompositeExtract(scalarTypeId, outputId, loadedId, xIndex);
+		}
+		else
+		{
+			Push(spv::OpVectorShuffle, loadedTypeId, outputId, loadedId, loadedId, xIndex, yIndex, yIndex, yIndex);
+		}	
 		break;
 	case 3:
-		Push(spv::OpVectorShuffle, loadedTypeId, outputId, loadedId, loadedId, xIndex, yIndex, zIndex, zIndex);
+		if (xSource == yIndex && xSource == zIndex && xSource == wIndex)
+		{
+			TypeDescription scalarType;
+			scalarType.PrimaryType = loadedType.SecondaryType;
+			uint32_t scalarTypeId = GetSpirVTypeId(scalarType);
+
+			mIdTypePairs[outputId] = scalarType;
+
+			PushCompositeExtract(scalarTypeId, outputId, loadedId, xIndex);
+		}
+		else
+		{
+			Push(spv::OpVectorShuffle, loadedTypeId, outputId, loadedId, loadedId, xIndex, yIndex, zIndex, zIndex);
+		}	
 		break;
 	case 4:
-		Push(spv::OpVectorShuffle, loadedTypeId, outputId, loadedId, loadedId, xIndex, yIndex, zIndex, wIndex);
+		if (xSource == yIndex && xSource == zIndex && xSource == wIndex)
+		{
+			TypeDescription scalarType;
+			scalarType.PrimaryType = loadedType.SecondaryType;
+			uint32_t scalarTypeId = GetSpirVTypeId(scalarType);
+
+			mIdTypePairs[outputId] = scalarType;
+
+			PushCompositeExtract(scalarTypeId, outputId, loadedId, xIndex);
+		}
+		else
+		{
+			Push(spv::OpVectorShuffle, loadedTypeId, outputId, loadedId, loadedId, xIndex, yIndex, zIndex, wIndex);
+		}
 		break;
 	default:
 		Log(warning) << "GetSwizzledId - Unsupported component count  " << outputComponentCount << std::endl;
@@ -2989,19 +3036,6 @@ void ShaderConverter::CombineSpirVOpCodes()
 
 void ShaderConverter::CreateSpirVModule()
 {
-#ifdef _EXTRA_SHADER_DEBUG_INFO
-	if (!mIsVertexShader)
-	{
-		std::ofstream outFile("fragment_" + std::to_string((uint32_t)mInstructions.data()) + ".spv", std::ios::out | std::ios::binary);
-		outFile.write((char*)mInstructions.data(), mInstructions.size() * sizeof(uint32_t));
-	}
-	else
-	{
-		std::ofstream outFile("vertex_" + std::to_string((uint32_t)mInstructions.data()) + ".spv", std::ios::out | std::ios::binary);
-		outFile.write((char*)mInstructions.data(), mInstructions.size() * sizeof(uint32_t));
-	}
-#endif
-
 	vk::Result result;
 	vk::ShaderModuleCreateInfo moduleCreateInfo;
 	moduleCreateInfo.codeSize = mInstructions.size() * sizeof(uint32_t);
@@ -3018,6 +3052,21 @@ void ShaderConverter::CreateSpirVModule()
 	{
 		Log(info) << "ShaderConverter::CreateSpirVModule vkCreateShaderModule created " << std::hex << (VkShaderModule)mConvertedShader.ShaderModule << std::dec << std::endl;
 	}
+
+#ifdef _EXTRA_SHADER_DEBUG_INFO
+	std::stringstream stream;
+	if (!mIsVertexShader)
+	{
+		stream << "fragment_"  << std::hex << (VkShaderModule)mConvertedShader.ShaderModule << ".spv";
+	}
+	else
+	{
+		stream << "vertex_" << std::hex << (VkShaderModule)mConvertedShader.ShaderModule << ".spv";
+	}
+
+	std::ofstream outFile(stream.str(), std::ios::out | std::ios::binary);
+	outFile.write((char*)mInstructions.data(), mInstructions.size() * sizeof(uint32_t));
+#endif
 }
 
 /*
