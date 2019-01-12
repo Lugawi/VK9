@@ -686,6 +686,7 @@ private:
 	void Process_TEXBEM();
 
 	//Binary Operators (mixed unary in here by mistake will sort out some day ... maybe)
+	void Process_GenericBinaryOperation(const char* tokenName, spv::Op floatOp, spv::Op integerOp);
 	void Process_DST();
 	void Process_CRS();
 	void Process_POW();
