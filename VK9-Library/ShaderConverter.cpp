@@ -1005,53 +1005,19 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 				{
 					mColor2Id = id;
 
-					TypeDescription pointerFloatType;
-					pointerFloatType.PrimaryType = spv::OpTypePointer;
-					pointerFloatType.SecondaryType = spv::OpTypeFloat;
-					pointerFloatType.StorageClass = spv::StorageClassOutput;
-					uint32_t floatTypeId = GetSpirVTypeId(pointerFloatType);
-
-					mColor2XId = GetNextId();
-					mIdTypePairs[mColor2XId] = pointerFloatType;
-					PushAccessChain(floatTypeId, mColor2XId, mColor2Id, mConstantIntegerIds[0]);
-
-					mColor2YId = GetNextId();
-					mIdTypePairs[mColor2YId] = pointerFloatType;
-					PushAccessChain(floatTypeId, mColor2YId, mColor2Id, mConstantIntegerIds[1]);
-
-					mColor2ZId = GetNextId();
-					mIdTypePairs[mColor2ZId] = pointerFloatType;
-					PushAccessChain(floatTypeId, mColor2ZId, mColor2Id, mConstantIntegerIds[2]);
-
-					mColor2WId = GetNextId();
-					mIdTypePairs[mColor2WId] = pointerFloatType;
-					PushAccessChain(floatTypeId, mColor2WId, mColor2Id, mConstantIntegerIds[3]);
+					mColor2XId = PushAccessChain(mColor2Id, 0);
+					mColor2YId = PushAccessChain(mColor2Id, 1);
+					mColor2ZId = PushAccessChain(mColor2Id, 2);
+					mColor2WId = PushAccessChain(mColor2Id, 3);
 				}
 				else
 				{
 					mColor1Id = id;
 
-					TypeDescription pointerFloatType;
-					pointerFloatType.PrimaryType = spv::OpTypePointer;
-					pointerFloatType.SecondaryType = spv::OpTypeFloat;
-					pointerFloatType.StorageClass = spv::StorageClassOutput;
-					uint32_t floatTypeId = GetSpirVTypeId(pointerFloatType);
-
-					mColor1XId = GetNextId();
-					mIdTypePairs[mColor1XId] = pointerFloatType;
-					PushAccessChain(floatTypeId, mColor1XId, mColor1Id, mConstantIntegerIds[0]);
-
-					mColor1YId = GetNextId();
-					mIdTypePairs[mColor1YId] = pointerFloatType;
-					PushAccessChain(floatTypeId, mColor1YId, mColor1Id, mConstantIntegerIds[1]);
-
-					mColor1ZId = GetNextId();
-					mIdTypePairs[mColor1ZId] = pointerFloatType;
-					PushAccessChain(floatTypeId, mColor1ZId, mColor1Id, mConstantIntegerIds[2]);
-
-					mColor1WId = GetNextId();
-					mIdTypePairs[mColor1WId] = pointerFloatType;
-					PushAccessChain(floatTypeId, mColor1WId, mColor1Id, mConstantIntegerIds[3]);
+					mColor1XId = PushAccessChain(mColor1Id, 0);
+					mColor1YId = PushAccessChain(mColor1Id, 1);
+					mColor1ZId = PushAccessChain(mColor1Id, 2);
+					mColor1WId = PushAccessChain(mColor1Id, 3);
 				}
 
 				usage = D3DDECLUSAGE_COLOR;
@@ -1229,7 +1195,7 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 		mRegistersById[registerType][id] = registerNumber;
 		mIdTypePairs[id] = description;
 
-		Push(spv::OpAccessChain, typeId, id, mTexturesId, mConstantIntegerIds[registerNumber]);
+		PushAccessChain(typeId, id, mTexturesId, mConstantIntegerIds[registerNumber]);
 
 		registerName = "s" + std::to_string(registerNumber);
 		PushName(id, registerName);
@@ -1858,26 +1824,26 @@ uint32_t ShaderConverter::SwizzlePointer(const Token& token)
 		return originalId;
 	}
 
-	outputId = GetNextId();
-
 	if (token.i & D3DSP_WRITEMASK_0)
 	{
-		PushAccessChain(outputTypeId, outputId, originalId, mConstantIntegerIds[0]);
+		outputId = PushAccessChain(originalId, 0);
 	}
 	else if (token.i & D3DSP_WRITEMASK_1)
 	{
-		PushAccessChain(outputTypeId, outputId, originalId, mConstantIntegerIds[1]);
+		outputId = PushAccessChain(originalId, 1);
 	}
 	else if (token.i & D3DSP_WRITEMASK_2)
 	{
-		PushAccessChain(outputTypeId, outputId, originalId, mConstantIntegerIds[2]);
+		outputId = PushAccessChain(originalId, 2);
 	}
 	else if (token.i & D3DSP_WRITEMASK_3)
 	{
-		PushAccessChain(outputTypeId, outputId, originalId, mConstantIntegerIds[3]);
+		outputId = PushAccessChain(originalId, 3);
 	}
-
-	mIdTypePairs[outputId] = outputType;
+	else
+	{
+		outputId = originalId;
+	}
 
 	return outputId;
 }
@@ -3316,6 +3282,30 @@ void ShaderConverter::PushCompositeExtract(uint32_t resultTypeId, uint32_t resul
 	Push(spv::OpCompositeExtract, resultTypeId, resultId, baseId, index1, index2);
 }
 
+uint32_t ShaderConverter::PushAccessChain(uint32_t baseId, uint32_t index)
+{	
+	uint32_t resultId = GetNextId();
+
+	PushAccessChain(resultId, baseId, index);
+
+	return resultId;
+}
+
+uint32_t ShaderConverter::PushAccessChain(uint32_t resultId, uint32_t baseId, uint32_t index)
+{
+	TypeDescription baseType = mIdTypePairs[baseId];
+	uint32_t baseTypeId = GetSpirVTypeId(baseType);
+
+	TypeDescription resultType = GetPointerComponentType(baseType);
+	uint32_t resultTypeId = GetSpirVTypeId(resultType);
+
+	mIdTypePairs[resultId] = resultType;
+
+	PushAccessChain(resultTypeId, resultId, baseId, mConstantIntegerIds[index]);
+
+	return resultId;
+}
+
 void ShaderConverter::PushAccessChain(uint32_t resultTypeId, uint32_t resultId, uint32_t baseId, uint32_t indexId)
 {
 #ifdef _EXTRA_SHADER_DEBUG_INFO
@@ -3933,7 +3923,7 @@ void ShaderConverter::Process_DCL_Pixel()
 		typeDescription.StorageClass = spv::StorageClassUniformConstant;
 		resultTypeId = GetSpirVTypeId(typeDescription);
 
-		Push(spv::OpAccessChain, resultTypeId, tokenId, mTexturesId, mConstantIntegerIds[registerNumber]);
+		PushAccessChain(tokenId, mTexturesId, registerNumber);
 		break;
 	case D3DSPR_TEMP:
 		if (registerNumber!=0) //r0 is used for pixel shader color output because reasons.
@@ -4124,53 +4114,19 @@ void ShaderConverter::Process_DCL_Vertex()
 				{
 					mColor2Id = tokenId;
 
-					TypeDescription pointerFloatType;
-					pointerFloatType.PrimaryType = spv::OpTypePointer;
-					pointerFloatType.SecondaryType = spv::OpTypeFloat;
-					pointerFloatType.StorageClass = spv::StorageClassOutput;
-					uint32_t floatTypeId = GetSpirVTypeId(pointerFloatType);
-
-					mColor2XId = GetNextId();
-					mIdTypePairs[mColor2XId] = pointerFloatType;
-					PushAccessChain(floatTypeId, mColor2XId, mColor2Id, mConstantIntegerIds[0]);
-
-					mColor2YId = GetNextId();
-					mIdTypePairs[mColor2YId] = pointerFloatType;
-					PushAccessChain(floatTypeId, mColor2YId, mColor2Id, mConstantIntegerIds[1]);
-
-					mColor2ZId = GetNextId();
-					mIdTypePairs[mColor2ZId] = pointerFloatType;
-					PushAccessChain(floatTypeId, mColor2ZId, mColor2Id, mConstantIntegerIds[2]);
-
-					mColor2WId = GetNextId();
-					mIdTypePairs[mColor2WId] = pointerFloatType;
-					PushAccessChain(floatTypeId, mColor2WId, mColor2Id, mConstantIntegerIds[3]);
+					mColor2XId = PushAccessChain(mColor2Id, 0);
+					mColor2YId = PushAccessChain(mColor2Id, 1);
+					mColor2ZId = PushAccessChain(mColor2Id, 2);
+					mColor2WId = PushAccessChain(mColor2Id, 3);
 				}
 				else
 				{
 					mColor1Id = tokenId;
 
-					TypeDescription pointerFloatType;
-					pointerFloatType.PrimaryType = spv::OpTypePointer;
-					pointerFloatType.SecondaryType = spv::OpTypeFloat;
-					pointerFloatType.StorageClass = spv::StorageClassOutput;
-					uint32_t floatTypeId = GetSpirVTypeId(pointerFloatType);
-
-					mColor1XId = GetNextId();
-					mIdTypePairs[mColor1XId] = pointerFloatType;
-					PushAccessChain(floatTypeId, mColor1XId, mColor1Id, mConstantIntegerIds[0]);
-
-					mColor1YId = GetNextId();
-					mIdTypePairs[mColor1YId] = pointerFloatType;
-					PushAccessChain(floatTypeId, mColor1YId, mColor1Id, mConstantIntegerIds[1]);
-
-					mColor1ZId = GetNextId();
-					mIdTypePairs[mColor1ZId] = pointerFloatType;
-					PushAccessChain(floatTypeId, mColor1ZId, mColor1Id, mConstantIntegerIds[2]);
-
-					mColor1WId = GetNextId();
-					mIdTypePairs[mColor1WId] = pointerFloatType;
-					PushAccessChain(floatTypeId, mColor1WId, mColor1Id, mConstantIntegerIds[3]);
+					mColor1XId = PushAccessChain(mColor1Id, 0);
+					mColor1YId = PushAccessChain(mColor1Id, 1);
+					mColor1ZId = PushAccessChain(mColor1Id, 2);
+					mColor1WId = PushAccessChain(mColor1Id, 3);
 				}
 			}
 			break;
@@ -5063,33 +5019,24 @@ void ShaderConverter::Process_TEXBEM()
 	uint32_t rgbaNId = GetSwizzledId(argumentToken2, GIVE_ME_VECTOR_4); //users are required to use tex first so the rgba result id should already be on file.
 
 	//Grab the environment bump map components.
-	uint32_t textureStageMId = GetNextId();
-	PushAccessChain(mTextureStageTypeId, textureStageMId, mTextureStagesId, mConstantIntegerIds[registerNumberM]);
+	uint32_t textureStageMId = PushAccessChain(mTextureStagesId, registerNumberM);
 
-	uint32_t bumpEnvironmentMatrix00PointerMId = GetNextId();
-	mIdTypePairs[bumpEnvironmentMatrix00PointerMId] = floatPointerType;
-	PushAccessChain(floatPointerTypeId, bumpEnvironmentMatrix00PointerMId, textureStageMId, mConstantIntegerIds[13]);
+	uint32_t bumpEnvironmentMatrix00PointerMId = PushAccessChain(textureStageMId, 13);
 	uint32_t bumpEnvironmentMatrix00MId = GetNextId();
 	mIdTypePairs[bumpEnvironmentMatrix00MId] = floatType;
 	PushLoad(floatTypeId, bumpEnvironmentMatrix00MId, bumpEnvironmentMatrix00PointerMId);
-
-	uint32_t bumpEnvironmentMatrix10PointerMId = GetNextId();
-	mIdTypePairs[bumpEnvironmentMatrix10PointerMId] = floatPointerType;
-	PushAccessChain(floatPointerTypeId, bumpEnvironmentMatrix10PointerMId, textureStageMId, mConstantIntegerIds[15]);
+	
+	uint32_t bumpEnvironmentMatrix10PointerMId = PushAccessChain(textureStageMId, 15);	
 	uint32_t bumpEnvironmentMatrix10MId = GetNextId();
 	mIdTypePairs[bumpEnvironmentMatrix10MId] = floatType;
 	PushLoad(floatTypeId, bumpEnvironmentMatrix10MId, bumpEnvironmentMatrix10PointerMId);
-
-	uint32_t bumpEnvironmentMatrix01PointerMId = GetNextId();
-	mIdTypePairs[bumpEnvironmentMatrix01PointerMId] = floatPointerType;
-	PushAccessChain(floatPointerTypeId, bumpEnvironmentMatrix01PointerMId, textureStageMId, mConstantIntegerIds[14]);
+	
+	uint32_t bumpEnvironmentMatrix01PointerMId = PushAccessChain(textureStageMId, 14);
 	uint32_t bumpEnvironmentMatrix01MId = GetNextId();
 	mIdTypePairs[bumpEnvironmentMatrix01MId] = floatType;
 	PushLoad(floatTypeId, bumpEnvironmentMatrix01MId, bumpEnvironmentMatrix01PointerMId);
-
-	uint32_t bumpEnvironmentMatrix11PointerMId = GetNextId();
-	mIdTypePairs[bumpEnvironmentMatrix11PointerMId] = floatPointerType;
-	PushAccessChain(floatPointerTypeId, bumpEnvironmentMatrix11PointerMId, textureStageMId, mConstantIntegerIds[16]);
+	
+	uint32_t bumpEnvironmentMatrix11PointerMId = PushAccessChain(textureStageMId, 16);
 	uint32_t bumpEnvironmentMatrix11MId = GetNextId();
 	mIdTypePairs[bumpEnvironmentMatrix11MId] = floatType;
 	PushLoad(floatTypeId, bumpEnvironmentMatrix11MId, bumpEnvironmentMatrix11PointerMId);

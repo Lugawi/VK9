@@ -274,6 +274,40 @@ inline _D3DSHADER_PARAM_REGISTER_TYPE GetRegisterType(uint32_t token)
 	return (_D3DSHADER_PARAM_REGISTER_TYPE)(((token & D3DSP_REGTYPE_MASK2) >> D3DSP_REGTYPE_SHIFT2) | ((token & D3DSP_REGTYPE_MASK) >> D3DSP_REGTYPE_SHIFT));
 }
 
+inline TypeDescription GetPointerComponentType(const TypeDescription& inputType)
+{
+	TypeDescription outputType = inputType;
+
+	outputType.PrimaryType = inputType.PrimaryType;
+	outputType.SecondaryType = inputType.TernaryType;
+	outputType.StorageClass = inputType.StorageClass;
+
+	return outputType;
+}
+
+inline TypeDescription GetComponentType(const TypeDescription& inputType)
+{
+	TypeDescription outputType = inputType;
+
+	outputType.PrimaryType = inputType.SecondaryType;
+	outputType.SecondaryType = inputType.TernaryType;
+	outputType.StorageClass = inputType.StorageClass;
+
+	return outputType;
+}
+
+inline TypeDescription GetValueType(const TypeDescription& inputType)
+{
+	TypeDescription outputType = inputType;
+
+	outputType.PrimaryType = inputType.SecondaryType;
+	outputType.SecondaryType = inputType.TernaryType;
+	outputType.StorageClass = inputType.StorageClass;
+	outputType.ComponentCount = inputType.ComponentCount;
+
+	return outputType;
+}
+
 inline const char* GetRegisterTypeName(_D3DSHADER_PARAM_REGISTER_TYPE token)
 {
 	switch (token)
@@ -633,6 +667,8 @@ private:
 	void PushName(uint32_t id, std::string& registerName);
 	void PushCompositeExtract(uint32_t resultTypeId, uint32_t resultId, uint32_t baseId, uint32_t index);
 	void PushCompositeExtract(uint32_t resultTypeId, uint32_t resultId, uint32_t baseId, uint32_t index1, uint32_t index2);
+	uint32_t PushAccessChain(uint32_t baseId, uint32_t index);
+	uint32_t PushAccessChain(uint32_t resultId, uint32_t baseId, uint32_t index);
 	void PushAccessChain(uint32_t resultTypeId, uint32_t resultId, uint32_t baseId, uint32_t indexId);
 	void PushInverseSqrt(uint32_t resultTypeId, uint32_t resultId, uint32_t argumentId);
 	void PushCos(uint32_t resultTypeId, uint32_t resultId, uint32_t argumentId);
