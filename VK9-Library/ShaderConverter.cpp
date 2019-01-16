@@ -1184,18 +1184,16 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 	}
 	break;
 	case D3DSPR_SAMPLER:
-
-		id = GetNextId();
 		description.PrimaryType = spv::OpTypePointer;
 		description.SecondaryType = spv::OpTypeImage;
 		description.StorageClass = spv::StorageClassUniformConstant; //spv::StorageClassUniformConstant;
 		typeId = GetSpirVTypeId(description);
 
+		id = PushAccessChain(mTexturesId, registerNumber);
+
 		mIdsByRegister[registerType][registerNumber] = id;
 		mRegistersById[registerType][id] = registerNumber;
 		mIdTypePairs[id] = description;
-
-		PushAccessChain(typeId, id, mTexturesId, mConstantIntegerIds[registerNumber]);
 
 		registerName = "s" + std::to_string(registerNumber);
 		PushName(id, registerName);
@@ -2203,13 +2201,11 @@ uint32_t ShaderConverter::ApplyWriteMask(const Token& token, uint32_t modifiedId
 					if (token.i & D3DSP_WRITEMASK_0)
 					{
 						uint32_t objectId1 = GetNextId();
-						uint32_t pointerId1 = GetNextId();
 
 						mIdTypePairs[objectId1] = floatType;
 						PushCompositeExtract(floatTypeId, objectId1, inputId, 0);
 
-						mIdTypePairs[pointerId1] = floatPointerType;
-						PushAccessChain(floatPointerTypeId, pointerId1, originalId, mConstantIntegerIds[0]);
+						uint32_t pointerId1 = PushAccessChain(originalId, 0);
 
 						PushStore(pointerId1, objectId1);
 					}
@@ -2217,13 +2213,11 @@ uint32_t ShaderConverter::ApplyWriteMask(const Token& token, uint32_t modifiedId
 					if (token.i & D3DSP_WRITEMASK_1)
 					{
 						uint32_t objectId2 = GetNextId();
-						uint32_t pointerId2 = GetNextId();
 
 						mIdTypePairs[objectId2] = floatType;
 						PushCompositeExtract(floatTypeId, objectId2, inputId, 1);
 
-						mIdTypePairs[pointerId2] = floatPointerType;
-						PushAccessChain(floatPointerTypeId, pointerId2, originalId, mConstantIntegerIds[1]);
+						uint32_t pointerId2 = PushAccessChain(originalId, 1);
 
 						PushStore(pointerId2, objectId2);
 					}
@@ -2231,13 +2225,11 @@ uint32_t ShaderConverter::ApplyWriteMask(const Token& token, uint32_t modifiedId
 					if (token.i & D3DSP_WRITEMASK_2)
 					{
 						uint32_t objectId3 = GetNextId();
-						uint32_t pointerId3 = GetNextId();
 
 						mIdTypePairs[objectId3] = floatType;
 						PushCompositeExtract(floatTypeId, objectId3, inputId, 2);
 
-						mIdTypePairs[pointerId3] = floatPointerType;
-						PushAccessChain(floatPointerTypeId, pointerId3, originalId, mConstantIntegerIds[2]);
+						uint32_t pointerId3 = PushAccessChain(originalId, 2);
 
 						PushStore(pointerId3, objectId3);
 					}
@@ -2245,13 +2237,11 @@ uint32_t ShaderConverter::ApplyWriteMask(const Token& token, uint32_t modifiedId
 					if (token.i & D3DSP_WRITEMASK_3)
 					{
 						uint32_t objectId4 = GetNextId();
-						uint32_t pointerId4 = GetNextId();
 
 						mIdTypePairs[objectId4] = floatType;
 						PushCompositeExtract(floatTypeId, objectId4, inputId, 3);
 
-						mIdTypePairs[pointerId4] = floatPointerType;
-						PushAccessChain(floatPointerTypeId, pointerId4, originalId, mConstantIntegerIds[3]);
+						uint32_t pointerId4 = PushAccessChain(originalId, 3);
 
 						PushStore(pointerId4, objectId4);
 					}
@@ -2262,40 +2252,28 @@ uint32_t ShaderConverter::ApplyWriteMask(const Token& token, uint32_t modifiedId
 
 					if (token.i & D3DSP_WRITEMASK_0)
 					{
-						uint32_t pointerId1 = GetNextId();
-
-						mIdTypePairs[pointerId1] = floatPointerType;
-						PushAccessChain(floatPointerTypeId, pointerId1, originalId, mConstantIntegerIds[0]);
+						uint32_t pointerId1 = PushAccessChain(originalId, 0);
 
 						PushStore(pointerId1, objectId1);
 					}
 
 					if (token.i & D3DSP_WRITEMASK_1)
 					{
-						uint32_t pointerId2 = GetNextId();
-
-						mIdTypePairs[pointerId2] = floatPointerType;
-						PushAccessChain(floatPointerTypeId, pointerId2, originalId, mConstantIntegerIds[1]);
+						uint32_t pointerId2 = PushAccessChain(originalId, 1);
 
 						PushStore(pointerId2, objectId1);
 					}
 
 					if (token.i & D3DSP_WRITEMASK_2)
 					{
-						uint32_t pointerId3 = GetNextId();
-
-						mIdTypePairs[pointerId3] = floatPointerType;
-						PushAccessChain(floatPointerTypeId, pointerId3, originalId, mConstantIntegerIds[2]);
+						uint32_t pointerId3 = PushAccessChain(originalId, 2);
 
 						PushStore(pointerId3, objectId1);
 					}
 
 					if (token.i & D3DSP_WRITEMASK_3)
 					{
-						uint32_t pointerId4 = GetNextId();
-
-						mIdTypePairs[pointerId4] = floatPointerType;
-						PushAccessChain(floatPointerTypeId, pointerId4, originalId, mConstantIntegerIds[3]);
+						uint32_t pointerId4 = PushAccessChain(originalId, 3);
 
 						PushStore(pointerId4, objectId1);
 					}
@@ -2477,9 +2455,7 @@ void ShaderConverter::GenerateDecoration(uint32_t registerNumber, uint32_t input
 				mPositionId = inputId;
 
 				//Add an access chain for later flipping.
-				mPositionYId = GetNextId();
-				mIdTypePairs[mPositionYId] = floatPointerType;
-				PushAccessChain(floatPointerTypeId, mPositionYId, mPositionId, mConstantIntegerIds[1]);
+				mPositionYId = PushAccessChain(mPositionId, 1);
 			}
 			else
 			{
