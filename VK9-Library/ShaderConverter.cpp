@@ -3203,6 +3203,30 @@ void ShaderConverter::PushName(uint32_t id, std::string& registerName)
 	mNameIdPairs[id] = registerName;
 }
 
+uint32_t ShaderConverter::PushCompositeExtract(uint32_t baseId, uint32_t index)
+{
+	uint32_t resultId = GetNextId();
+
+	PushCompositeExtract(resultId, baseId, index);
+
+	return resultId;
+}
+
+uint32_t ShaderConverter::PushCompositeExtract(uint32_t resultId, uint32_t baseId, uint32_t index)
+{
+	TypeDescription baseType = mIdTypePairs[baseId];
+	uint32_t baseTypeId = GetSpirVTypeId(baseType);
+
+	TypeDescription resultType = GetComponentType(baseType);
+	uint32_t resultTypeId = GetSpirVTypeId(resultType);
+
+	mIdTypePairs[resultId] = resultType;
+
+	PushCompositeExtract(resultTypeId, resultId, baseId, index);
+
+	return resultId;
+}
+
 void ShaderConverter::PushCompositeExtract(uint32_t resultTypeId, uint32_t resultId, uint32_t baseId, uint32_t index)
 {
 #ifdef _EXTRA_SHADER_DEBUG_INFO
@@ -3442,6 +3466,30 @@ void ShaderConverter::PushSin(uint32_t resultTypeId, uint32_t resultId, uint32_t
 #endif
 
 	Push(spv::OpExtInst, resultTypeId, resultId, mGlslExtensionId, GLSLstd450::GLSLstd450Sin, argumentId);
+}
+
+uint32_t ShaderConverter::PushLoad(uint32_t pointerId)
+{
+	uint32_t resultId = GetNextId();
+
+	PushLoad(resultId, pointerId);
+
+	return resultId;
+}
+
+uint32_t ShaderConverter::PushLoad(uint32_t resultId, uint32_t pointerId)
+{
+	TypeDescription pointerType = mIdTypePairs[pointerId];
+	uint32_t pointerTypeId = GetSpirVTypeId(pointerType);
+
+	TypeDescription resultType = GetValueType(pointerType);
+	uint32_t resultTypeId = GetSpirVTypeId(resultType);
+
+	mIdTypePairs[resultId] = resultType;
+
+	PushAccessChain(resultTypeId, resultId, pointerId);
+
+	return resultId;
 }
 
 void ShaderConverter::PushLoad(uint32_t resultTypeId, uint32_t resultId, uint32_t pointerId)

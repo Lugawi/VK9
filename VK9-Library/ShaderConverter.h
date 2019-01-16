@@ -665,6 +665,8 @@ private:
 
 	void PushMemberName(uint32_t id, std::string& registerName, uint32_t index);
 	void PushName(uint32_t id, std::string& registerName);
+	uint32_t PushCompositeExtract(uint32_t baseId, uint32_t index);
+	uint32_t PushCompositeExtract(uint32_t resultId, uint32_t baseId, uint32_t index);
 	void PushCompositeExtract(uint32_t resultTypeId, uint32_t resultId, uint32_t baseId, uint32_t index);
 	void PushCompositeExtract(uint32_t resultTypeId, uint32_t resultId, uint32_t baseId, uint32_t index1, uint32_t index2);
 	uint32_t PushAccessChain(uint32_t baseId, uint32_t index);
@@ -673,6 +675,8 @@ private:
 	void PushInverseSqrt(uint32_t resultTypeId, uint32_t resultId, uint32_t argumentId);
 	void PushCos(uint32_t resultTypeId, uint32_t resultId, uint32_t argumentId);
 	void PushSin(uint32_t resultTypeId, uint32_t resultId, uint32_t argumentId);
+	uint32_t PushLoad(uint32_t pointerId);
+	uint32_t PushLoad(uint32_t resultId, uint32_t pointerId);
 	void PushLoad(uint32_t resultTypeId, uint32_t resultId, uint32_t pointerId);
 	void PushStore(uint32_t pointerId, uint32_t objectId);
 	void PushVariable(uint32_t resultTypeId, uint32_t resultId, spv::StorageClass storageClass);
