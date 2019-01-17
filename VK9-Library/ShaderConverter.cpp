@@ -1189,7 +1189,8 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 		description.StorageClass = spv::StorageClassUniformConstant; //spv::StorageClassUniformConstant;
 		typeId = GetSpirVTypeId(description);
 
-		id = PushAccessChain(mTexturesId, registerNumber);
+		id = GetNextId();
+		PushAccessChain(typeId, id, mTexturesId, mConstantIntegerIds[registerNumber]);
 
 		mIdsByRegister[registerType][registerNumber] = id;
 		mRegistersById[registerType][id] = registerNumber;
@@ -1406,9 +1407,7 @@ uint32_t ShaderConverter::GetSwizzledId(const Token& token, uint32_t lookingFor)
 		loadedType.ComponentCount = originalType.ComponentCount;
 		loadedTypeId = GetSpirVTypeId(loadedType);
 
-		loadedId = GetNextId();
-		mIdTypePairs[loadedId] = loadedType;
-		PushLoad(loadedTypeId, loadedId, originalId);
+		loadedId = PushLoad(originalId);
 	}
 	else
 	{
@@ -1875,9 +1874,7 @@ void ShaderConverter::HandleColor(const Token& token, uint32_t inputId, uint32_t
 		{
 			if (inputType.SecondaryType == spv::OpTypeInt)
 			{
-				uint32_t rId = GetNextId();
-				mIdTypePairs[rId] = intType;
-				PushCompositeExtract(intTypeId, rId, inputId, 0);
+				uint32_t rId = PushCompositeExtract(inputId, 0);
 
 				mIdTypePairs[r2Id] = floatType;
 				Push(spv::OpConvertUToF, floatTypeId, r2Id, rId);
@@ -1886,7 +1883,6 @@ void ShaderConverter::HandleColor(const Token& token, uint32_t inputId, uint32_t
 			{
 				mIdTypePairs[r2Id] = floatType;
 				PushCompositeExtract(floatTypeId, r2Id, inputId, 0);
-
 			}
 
 			uint32_t rDividedId = GetNextId();
@@ -1907,9 +1903,7 @@ void ShaderConverter::HandleColor(const Token& token, uint32_t inputId, uint32_t
 		{
 			if (inputType.SecondaryType == spv::OpTypeInt)
 			{
-				uint32_t gId = GetNextId();
-				mIdTypePairs[gId] = intType;
-				PushCompositeExtract(intTypeId, gId, inputId, 1);
+				uint32_t gId = PushCompositeExtract(inputId, 1);
 
 				mIdTypePairs[g2Id] = floatType;
 				Push(spv::OpConvertUToF, floatTypeId, g2Id, gId);
@@ -1938,9 +1932,7 @@ void ShaderConverter::HandleColor(const Token& token, uint32_t inputId, uint32_t
 		{
 			if (inputType.SecondaryType == spv::OpTypeInt)
 			{
-				uint32_t bId = GetNextId();
-				mIdTypePairs[bId] = intType;
-				PushCompositeExtract(intTypeId, bId, inputId, 2);
+				uint32_t bId = PushCompositeExtract(inputId, 2);
 
 				mIdTypePairs[b2Id] = floatType;
 				Push(spv::OpConvertUToF, floatTypeId, b2Id, bId);
@@ -1969,9 +1961,7 @@ void ShaderConverter::HandleColor(const Token& token, uint32_t inputId, uint32_t
 		{
 			if (inputType.SecondaryType == spv::OpTypeInt)
 			{
-				uint32_t aId = GetNextId();
-				mIdTypePairs[aId] = intType;
-				PushCompositeExtract(intTypeId, aId, inputId, 3);
+				uint32_t aId = PushCompositeExtract(inputId, 3);
 
 				mIdTypePairs[a2Id] = floatType;
 				Push(spv::OpConvertUToF, floatTypeId, a2Id, aId);
@@ -2105,9 +2095,7 @@ uint32_t ShaderConverter::ApplyWriteMask(const Token& token, uint32_t modifiedId
 		loadedModifiedType.ComponentCount = modifiedType.ComponentCount;
 		uint32_t loadedModifiedTypeId = GetSpirVTypeId(loadedModifiedType);
 
-		inputId = GetNextId();
-		mIdTypePairs[inputId] = loadedModifiedType;
-		PushLoad(loadedModifiedTypeId, inputId, modifiedId);
+		inputId = PushLoad(modifiedId);
 	}
 	else
 	{
@@ -2200,11 +2188,7 @@ uint32_t ShaderConverter::ApplyWriteMask(const Token& token, uint32_t modifiedId
 					*/
 					if (token.i & D3DSP_WRITEMASK_0)
 					{
-						uint32_t objectId1 = GetNextId();
-
-						mIdTypePairs[objectId1] = floatType;
-						PushCompositeExtract(floatTypeId, objectId1, inputId, 0);
-
+						uint32_t objectId1 = PushCompositeExtract(inputId, 0);
 						uint32_t pointerId1 = PushAccessChain(originalId, 0);
 
 						PushStore(pointerId1, objectId1);
@@ -2212,11 +2196,7 @@ uint32_t ShaderConverter::ApplyWriteMask(const Token& token, uint32_t modifiedId
 
 					if (token.i & D3DSP_WRITEMASK_1)
 					{
-						uint32_t objectId2 = GetNextId();
-
-						mIdTypePairs[objectId2] = floatType;
-						PushCompositeExtract(floatTypeId, objectId2, inputId, 1);
-
+						uint32_t objectId2 = PushCompositeExtract(inputId, 1);
 						uint32_t pointerId2 = PushAccessChain(originalId, 1);
 
 						PushStore(pointerId2, objectId2);
@@ -2224,11 +2204,7 @@ uint32_t ShaderConverter::ApplyWriteMask(const Token& token, uint32_t modifiedId
 
 					if (token.i & D3DSP_WRITEMASK_2)
 					{
-						uint32_t objectId3 = GetNextId();
-
-						mIdTypePairs[objectId3] = floatType;
-						PushCompositeExtract(floatTypeId, objectId3, inputId, 2);
-
+						uint32_t objectId3 = PushCompositeExtract(inputId, 2);
 						uint32_t pointerId3 = PushAccessChain(originalId, 2);
 
 						PushStore(pointerId3, objectId3);
@@ -2236,11 +2212,7 @@ uint32_t ShaderConverter::ApplyWriteMask(const Token& token, uint32_t modifiedId
 
 					if (token.i & D3DSP_WRITEMASK_3)
 					{
-						uint32_t objectId4 = GetNextId();
-
-						mIdTypePairs[objectId4] = floatType;
-						PushCompositeExtract(floatTypeId, objectId4, inputId, 3);
-
+						uint32_t objectId4 = PushCompositeExtract(inputId, 3);
 						uint32_t pointerId4 = PushAccessChain(originalId, 3);
 
 						PushStore(pointerId4, objectId4);
@@ -2308,9 +2280,7 @@ void ShaderConverter::GenerateYFlip()
 	mTypeInstructions.push_back(negativeId); //Result (Id)
 	mTypeInstructions.push_back(bit_cast(-1.0f)); //Literal Value
 
-	uint32_t positionYId = GetNextId();
-	mIdTypePairs[positionYId] = floatType;
-	PushLoad(floatTypeId, positionYId, mPositionYId);
+	uint32_t positionYId = PushLoad(mPositionYId);
 
 	uint32_t resultId = GetNextId();
 	mIdTypePairs[resultId] = floatType;
@@ -3030,9 +3000,7 @@ uint32_t ShaderConverter::ConvertVec4ToVec3(uint32_t id)
 		loadedType.ComponentCount = originalType.ComponentCount;
 		uint32_t loadedTypeId = GetSpirVTypeId(loadedType);
 
-		loadedId = GetNextId();
-		mIdTypePairs[loadedId] = loadedType;
-		PushLoad(loadedTypeId, loadedId, id);
+		loadedId = PushLoad(id);
 	}
 	else
 	{
@@ -3053,17 +3021,9 @@ uint32_t ShaderConverter::ConvertVec4ToVec3(uint32_t id)
 	uint32_t vectorTypeId = GetSpirVTypeId(vectorType);
 
 	//
-	uint32_t xId = GetNextId();
-	mIdTypePairs[xId] = floatType;
-	PushCompositeExtract(floatTypeId, xId, loadedId, 0);
-
-	uint32_t yId = GetNextId();
-	mIdTypePairs[yId] = floatType;
-	PushCompositeExtract(floatTypeId, yId, loadedId, 1);
-
-	uint32_t zId = GetNextId();
-	mIdTypePairs[zId] = floatType;
-	PushCompositeExtract(floatTypeId, zId, loadedId, 1);
+	uint32_t xId = PushCompositeExtract(loadedId, 0);
+	uint32_t yId = PushCompositeExtract(loadedId, 1);
+	uint32_t zId = PushCompositeExtract(loadedId, 1);
 
 	//
 	uint32_t resultId = GetNextId();
@@ -3091,9 +3051,7 @@ uint32_t ShaderConverter::ConvertMat4ToMat3(uint32_t id)
 		loadedType.ComponentCount = originalType.ComponentCount;
 		loadedTypeId = GetSpirVTypeId(loadedType);
 
-		loadedId = GetNextId();
-		mIdTypePairs[loadedId] = loadedType;
-		PushLoad(loadedTypeId, loadedId, id);
+		loadedId = PushLoad(id);
 	}
 	else
 	{
@@ -3120,51 +3078,27 @@ uint32_t ShaderConverter::ConvertMat4ToMat3(uint32_t id)
 	uint32_t matrixTypeId = GetSpirVTypeId(matrixType);
 
 	//
-	uint32_t x1Id = GetNextId();
-	mIdTypePairs[x1Id] = floatType;
-	PushCompositeExtract(floatTypeId, x1Id, loadedId, 0, 0);
-
-	uint32_t y1Id = GetNextId();
-	mIdTypePairs[y1Id] = floatType;
-	PushCompositeExtract(floatTypeId, y1Id, loadedId, 0, 1);
-
-	uint32_t z1Id = GetNextId();
-	mIdTypePairs[z1Id] = floatType;
-	PushCompositeExtract(floatTypeId, z1Id, loadedId, 0, 2);
+	uint32_t x1Id = PushCompositeExtract2(loadedId, 0, 0);
+	uint32_t y1Id = PushCompositeExtract2(loadedId, 0, 1);
+	uint32_t z1Id = PushCompositeExtract2(loadedId, 0, 2);
 
 	uint32_t v1Id = GetNextId();
 	mIdTypePairs[v1Id] = vectorType;
 	Push(spv::OpCompositeConstruct, vectorTypeId, v1Id, x1Id, y1Id, z1Id);
 
 	//
-	uint32_t x2Id = GetNextId();
-	mIdTypePairs[x2Id] = floatType;
-	PushCompositeExtract(floatTypeId, x2Id, loadedId, 1, 0);
-
-	uint32_t y2Id = GetNextId();
-	mIdTypePairs[y2Id] = floatType;
-	PushCompositeExtract(floatTypeId, y2Id, loadedId, 1, 1);
-
-	uint32_t z2Id = GetNextId();
-	mIdTypePairs[z2Id] = floatType;
-	PushCompositeExtract(floatTypeId, z2Id, loadedId, 1, 2);
+	uint32_t x2Id = PushCompositeExtract2(loadedId, 1, 0);
+	uint32_t y2Id = PushCompositeExtract2(loadedId, 1, 1);
+	uint32_t z2Id = PushCompositeExtract2(loadedId, 1, 2);
 
 	uint32_t v2Id = GetNextId();
 	mIdTypePairs[v2Id] = vectorType;
 	Push(spv::OpCompositeConstruct, vectorTypeId, v2Id, x2Id, y2Id, z2Id);
 
 	//
-	uint32_t x3Id = GetNextId();
-	mIdTypePairs[x3Id] = floatType;
-	PushCompositeExtract(floatTypeId, x3Id, loadedId, 2, 0);
-
-	uint32_t y3Id = GetNextId();
-	mIdTypePairs[y3Id] = floatType;
-	PushCompositeExtract(floatTypeId, y3Id, loadedId, 2, 1);
-
-	uint32_t z3Id = GetNextId();
-	mIdTypePairs[z3Id] = floatType;
-	PushCompositeExtract(floatTypeId, z3Id, loadedId, 2, 2);
+	uint32_t x3Id = PushCompositeExtract2(loadedId, 2, 0);
+	uint32_t y3Id = PushCompositeExtract2(loadedId, 2, 1);
+	uint32_t z3Id = PushCompositeExtract2(loadedId, 2, 2);
 
 	uint32_t v3Id = GetNextId();
 	mIdTypePairs[v3Id] = vectorType;
@@ -3262,7 +3196,31 @@ void ShaderConverter::PushCompositeExtract(uint32_t resultTypeId, uint32_t resul
 	Push(spv::OpCompositeExtract, resultTypeId, resultId, baseId, index);
 }
 
-void ShaderConverter::PushCompositeExtract(uint32_t resultTypeId, uint32_t resultId, uint32_t baseId, uint32_t index1, uint32_t index2)
+uint32_t ShaderConverter::PushCompositeExtract2(uint32_t baseId, uint32_t index1, uint32_t index2)
+{
+	uint32_t resultId = GetNextId();
+
+	PushCompositeExtract2(resultId, baseId, index1, index2);
+
+	return resultId;
+}
+
+uint32_t ShaderConverter::PushCompositeExtract2(uint32_t resultId, uint32_t baseId, uint32_t index1, uint32_t index2)
+{
+	TypeDescription baseType = mIdTypePairs[baseId];
+	uint32_t baseTypeId = GetSpirVTypeId(baseType);
+
+	TypeDescription resultType = GetComponentType(baseType);
+	uint32_t resultTypeId = GetSpirVTypeId(resultType);
+
+	mIdTypePairs[resultId] = resultType;
+
+	PushCompositeExtract2(resultTypeId, resultId, baseId, index1, index2);
+
+	return resultId;
+}
+
+void ShaderConverter::PushCompositeExtract2(uint32_t resultTypeId, uint32_t resultId, uint32_t baseId, uint32_t index1, uint32_t index2)
 {
 #ifdef _EXTRA_SHADER_DEBUG_INFO
 	if (resultTypeId == 0)
@@ -3487,7 +3445,7 @@ uint32_t ShaderConverter::PushLoad(uint32_t resultId, uint32_t pointerId)
 
 	mIdTypePairs[resultId] = resultType;
 
-	PushAccessChain(resultTypeId, resultId, pointerId);
+	PushLoad(resultTypeId, resultId, pointerId);
 
 	return resultId;
 }
@@ -4448,14 +4406,10 @@ void ShaderConverter::Process_IFC(uint32_t extraInfo)
 
 	if (resultTypeId == boolVectorTypeId)
 	{
-		uint32_t resultId0 = GetNextId();
-		PushCompositeExtract(boolTypeId, resultId0, resultId, 0);
-		uint32_t resultId1 = GetNextId();
-		PushCompositeExtract(boolTypeId, resultId1, resultId, 1);
-		uint32_t resultId2 = GetNextId();
-		PushCompositeExtract(boolTypeId, resultId2, resultId, 2);
-		uint32_t resultId3 = GetNextId();
-		PushCompositeExtract(boolTypeId, resultId3, resultId, 3);
+		uint32_t resultId0 = PushCompositeExtract(resultId, 0);
+		uint32_t resultId1 = PushCompositeExtract(resultId, 1);
+		uint32_t resultId2 = PushCompositeExtract(resultId, 2);
+		uint32_t resultId3 = PushCompositeExtract(resultId, 3);
 
 		uint32_t result01Id = GetNextId();
 		Push(spv::OpLogicalAnd, boolTypeId, result01Id, resultId0, resultId1);
@@ -5046,42 +5000,24 @@ void ShaderConverter::Process_TEXBEM()
 	uint32_t textureStageMId = PushAccessChain(mTextureStagesId, registerNumberM);
 
 	uint32_t bumpEnvironmentMatrix00PointerMId = PushAccessChain(textureStageMId, 13);
-	uint32_t bumpEnvironmentMatrix00MId = GetNextId();
-	mIdTypePairs[bumpEnvironmentMatrix00MId] = floatType;
-	PushLoad(floatTypeId, bumpEnvironmentMatrix00MId, bumpEnvironmentMatrix00PointerMId);
+	uint32_t bumpEnvironmentMatrix00MId = PushLoad(bumpEnvironmentMatrix00PointerMId);
 	
 	uint32_t bumpEnvironmentMatrix10PointerMId = PushAccessChain(textureStageMId, 15);	
-	uint32_t bumpEnvironmentMatrix10MId = GetNextId();
-	mIdTypePairs[bumpEnvironmentMatrix10MId] = floatType;
-	PushLoad(floatTypeId, bumpEnvironmentMatrix10MId, bumpEnvironmentMatrix10PointerMId);
+	uint32_t bumpEnvironmentMatrix10MId = PushLoad(bumpEnvironmentMatrix10PointerMId);
 	
 	uint32_t bumpEnvironmentMatrix01PointerMId = PushAccessChain(textureStageMId, 14);
-	uint32_t bumpEnvironmentMatrix01MId = GetNextId();
-	mIdTypePairs[bumpEnvironmentMatrix01MId] = floatType;
-	PushLoad(floatTypeId, bumpEnvironmentMatrix01MId, bumpEnvironmentMatrix01PointerMId);
+	uint32_t bumpEnvironmentMatrix01MId = PushLoad(bumpEnvironmentMatrix01PointerMId);
 	
 	uint32_t bumpEnvironmentMatrix11PointerMId = PushAccessChain(textureStageMId, 16);
-	uint32_t bumpEnvironmentMatrix11MId = GetNextId();
-	mIdTypePairs[bumpEnvironmentMatrix11MId] = floatType;
-	PushLoad(floatTypeId, bumpEnvironmentMatrix11MId, bumpEnvironmentMatrix11PointerMId);
+	uint32_t bumpEnvironmentMatrix11MId = PushLoad(bumpEnvironmentMatrix11PointerMId);
 
 	//grab u and v from m.
-	uint32_t uMId = GetNextId();
-	mIdTypePairs[uMId] = floatType;
-	PushCompositeExtract(floatTypeId, uMId, textureCoordinatesMId, 0);
-
-	uint32_t vMId = GetNextId();
-	mIdTypePairs[vMId] = floatType;
-	PushCompositeExtract(floatTypeId, vMId, textureCoordinatesMId, 1);
+	uint32_t uMId = PushCompositeExtract(textureCoordinatesMId, 0);
+	uint32_t vMId = PushCompositeExtract(textureCoordinatesMId, 1);
 
 	//grab r and g from n
-	uint32_t rNId = GetNextId();
-	mIdTypePairs[rNId] = floatType;
-	PushCompositeExtract(floatTypeId, rNId, rgbaNId, 0);
-
-	uint32_t gNId = GetNextId();
-	mIdTypePairs[gNId] = floatType;
-	PushCompositeExtract(floatTypeId, gNId, rgbaNId, 1);
+	uint32_t rNId = PushCompositeExtract(rgbaNId, 0);
+	uint32_t gNId = PushCompositeExtract(rgbaNId, 1);
 
 	//calculate u'
 	uint32_t r00Id = GetNextId();
@@ -5149,9 +5085,7 @@ void ShaderConverter::Process_TEXKILL()
 	uint32_t argumentId1 = GetSwizzledId(argumentToken1, GIVE_ME_VECTOR_4);
 
 	//X
-	uint32_t xId = GetNextId();
-	mIdTypePairs[xId] = floatType;
-	PushCompositeExtract(floatTypeId, xId, argumentId1, 0);
+	uint32_t xId = PushCompositeExtract(argumentId1, 0);
 
 	uint32_t xConditionalId = GetNextId();
 	uint32_t xTrueLabelId = GetNextId();
@@ -5167,9 +5101,7 @@ void ShaderConverter::Process_TEXKILL()
 	Push(spv::OpLabel, xFalseLabelId);
 
 	//Y
-	uint32_t yId = GetNextId();
-	mIdTypePairs[yId] = floatType;
-	PushCompositeExtract(floatTypeId, yId, argumentId1, 1);
+	uint32_t yId = PushCompositeExtract(argumentId1, 1);
 
 	uint32_t yConditionalId = GetNextId();
 	uint32_t yTrueLabelId = GetNextId();
@@ -5185,9 +5117,7 @@ void ShaderConverter::Process_TEXKILL()
 	Push(spv::OpLabel, yFalseLabelId);
 
 	//Z
-	uint32_t zId = GetNextId();
-	mIdTypePairs[zId] = floatType;
-	PushCompositeExtract(floatTypeId, zId, argumentId1, 2);
+	uint32_t zId = PushCompositeExtract(argumentId1, 2);
 
 	uint32_t zConditionalId = GetNextId();
 	uint32_t zTrueLabelId = GetNextId();
@@ -5263,9 +5193,7 @@ void ShaderConverter::Process_GenericBinaryOperation(const char* tokenName, spv:
 		if (argumentRegisterType1 == D3DSPR_CONST)
 		{
 			uint32_t argumentTypeId2 = GetSpirVTypeId(argumentType2);
-			uint32_t xId = GetNextId();
-			mIdTypePairs[xId] = argumentType2;
-			PushCompositeExtract(argumentTypeId2, xId, argumentId1, 0);
+			uint32_t xId = PushCompositeExtract(argumentId1, 0);
 
 			uint32_t tempId = GetNextId();
 			mIdTypePairs[tempId] = argumentType2;
@@ -5321,9 +5249,7 @@ void ShaderConverter::Process_GenericBinaryOperation(const char* tokenName, spv:
 		if (argumentRegisterType2 == D3DSPR_CONST)
 		{
 			uint32_t argumentTypeId1 = GetSpirVTypeId(argumentType1);
-			uint32_t xId = GetNextId();
-			mIdTypePairs[xId] = argumentType1;
-			PushCompositeExtract(argumentTypeId1, xId, argumentId2, 0);
+			uint32_t xId = PushCompositeExtract(argumentId2, 0);
 
 			uint32_t tempId = GetNextId();
 			mIdTypePairs[tempId] = argumentType1;
@@ -7270,8 +7196,7 @@ void ShaderConverter::Process_SINCOS()
 		//Per the documentation Z is undefined so I'll just stick the same values in Z & W.
 		if (typeDescription.PrimaryType == spv::OpTypeVector)
 		{
-			uint32_t tempId = GetNextId();
-			PushCompositeExtract(floatTypeId, tempId, argumentId1, 0);
+			uint32_t tempId = PushCompositeExtract(argumentId1, 0);
 			PushCos(floatTypeId, cosResultId, tempId);
 			PushSin(floatTypeId, sinResultId, tempId);
 		}

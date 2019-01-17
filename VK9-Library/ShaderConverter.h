@@ -668,7 +668,9 @@ private:
 	uint32_t PushCompositeExtract(uint32_t baseId, uint32_t index);
 	uint32_t PushCompositeExtract(uint32_t resultId, uint32_t baseId, uint32_t index);
 	void PushCompositeExtract(uint32_t resultTypeId, uint32_t resultId, uint32_t baseId, uint32_t index);
-	void PushCompositeExtract(uint32_t resultTypeId, uint32_t resultId, uint32_t baseId, uint32_t index1, uint32_t index2);
+	uint32_t PushCompositeExtract2(uint32_t baseId, uint32_t index1, uint32_t index2);
+	uint32_t PushCompositeExtract2(uint32_t resultId, uint32_t baseId, uint32_t index1, uint32_t index2);
+	void PushCompositeExtract2(uint32_t resultTypeId, uint32_t resultId, uint32_t baseId, uint32_t index1, uint32_t index2);
 	uint32_t PushAccessChain(uint32_t baseId, uint32_t index);
 	uint32_t PushAccessChain(uint32_t resultId, uint32_t baseId, uint32_t index);
 	void PushAccessChain(uint32_t resultTypeId, uint32_t resultId, uint32_t baseId, uint32_t indexId);
