@@ -31,12 +31,12 @@ build_script:
  - msbuild VK9.sln /t:VK9-Library /p:Configuration=Release;Platform=Win32 /p:PlatformToolset=%PLATFORM_TOOLSET% /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
  - ps: copy C:\projects\vk9\Release\d3d9.dll "C:\VK9-x86-Release\d3d9.dll"
  - ps: copy C:\projects\vk9\Release\d3d9.pdb "C:\VK9-x86-Release\d3d9.pdb"
-# - ps: copy C:\projects\vk9\Release\VK9.conf "C:\VK9-x86-Release\VK9.conf"
+ - ps: copy C:\projects\vk9\VK9-Library\VK9.conf "C:\VK9-x86-Release\VK9.conf"
  - 7z a C:\VK9-x86-Release.zip C:\VK9-x86-Release
  - msbuild VK9.sln /t:VK9-Library /p:Configuration=Release;Platform=x64 /p:PlatformToolset=%PLATFORM_TOOLSET% /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
  - ps: copy C:\projects\vk9\x64\Release\d3d9.dll "C:\VK9-x64-Release\d3d9.dll"
  - ps: copy C:\projects\vk9\x64\Release\d3d9.pdb "C:\VK9-x64-Release\d3d9.pdb"
-# - ps: copy C:\projects\vk9\x64\VK9.conf "C:\VK9-x64-Release\VK9.conf"
+ - ps: copy C:\projects\vk9\VK9-Library\VK9.conf "C:\VK9-x64-Release\VK9.conf"
  - 7z a C:\VK9-x64-Release.zip C:\VK9-x64-Release
 
 after_build:
