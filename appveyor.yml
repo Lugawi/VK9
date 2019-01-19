@@ -1,0 +1,45 @@
+environment:
+ VK_SDK_PATH: "C:\\VulkanSDK\\1.1.85.0"
+ VULKAN_SDK: "C:\\VulkanSDK\\1.1.85.0"
+ EIGEN_DIR: "C:\\projects\\vk9\\include\\"
+version: '1.0.0.{build}'
+
+image:
+ - Visual Studio 2017
+
+clone_depth: 1
+
+install:
+ # Download Vulkan SDK
+ - ps: Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/1.1.85.0/windows/VulkanSDK-1.1.85.0-Installer.exe?Human=true -OutFile vulkan.exe
+ - .\vulkan.exe /S
+ # Download eigen
+ - ps: if(!(Test-Path C:\projects\vk9\eigen.zip)) { Invoke-WebRequest -Uri http://bitbucket.org/eigen/eigen/get/3.3.7.zip  -OutFile eigen.zip }
+ - ps: Expand-Archive ./eigen.zip -DestinationPath . 
+ - ps: if(!(Test-Path .\include)) { mkdir .\include }
+ - ps: cd eigen-*
+ - ps: move Eigen ../include/Eigen
+# Create build folders
+ - ps: if(!(Test-Path C:\VK9-x86-Release)) { mkdir C:\VK9-x86-Release }
+ - ps: if(!(Test-Path C:\VK9-x64-Release)) { mkdir C:\VK9-x64-Release }
+ # go back into the build dir
+ - ps: pushd "C:\projects\vk9\"
+
+build_script:
+ - ps: echo $ENV:VULKAN_SDK
+ - ps: $Env:PLATFORM_TOOLSET="v141"
+ - msbuild VK9.sln /t:VK9-Library /p:Configuration=Release;Platform=Win32 /p:PlatformToolset=%PLATFORM_TOOLSET% /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+ - ps: copy C:\projects\vk9\Release\d3d9.dll "C:\VK9-x86-Release\d3d9.dll"
+ - ps: copy C:\projects\vk9\Release\d3d9.pdb "C:\VK9-x86-Release\d3d9.pdb"
+# - ps: copy C:\projects\vk9\Release\VK9.conf "C:\VK9-x86-Release\VK9.conf"
+ - 7z a C:\VK9-x86-Release.zip C:\VK9-x86-Release
+ - msbuild VK9.sln /t:VK9-Library /p:Configuration=Release;Platform=x64 /p:PlatformToolset=%PLATFORM_TOOLSET% /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+ - ps: copy C:\projects\vk9\x64\Release\d3d9.dll "C:\VK9-x64-Release\d3d9.dll"
+ - ps: copy C:\projects\vk9\x64\Release\d3d9.pdb "C:\VK9-x64-Release\d3d9.pdb"
+# - ps: copy C:\projects\vk9\x64\VK9.conf "C:\VK9-x64-Release\VK9.conf"
+ - 7z a C:\VK9-x64-Release.zip C:\VK9-x64-Release
+
+after_build:
+ - ps: Push-AppveyorArtifact "C:\VK9-x86-Release.zip"
+ - ps: Push-AppveyorArtifact "C:\VK9-x64-Release.zip"
+
