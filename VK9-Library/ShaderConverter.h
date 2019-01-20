@@ -302,6 +302,7 @@ inline TypeDescription GetValueType(const TypeDescription& inputType)
 
 	outputType.PrimaryType = inputType.SecondaryType;
 	outputType.SecondaryType = inputType.TernaryType;
+	outputType.TernaryType = spv::OpTypeVoid;
 	outputType.StorageClass = inputType.StorageClass;
 	outputType.ComponentCount = inputType.ComponentCount;
 
@@ -536,6 +537,7 @@ private:
 	std::vector<uint32_t> mInputRegisters;
 	std::vector<uint32_t> mOutputRegisters;
 	std::unordered_map<_D3DDECLUSAGE, uint32_t> mOutputRegisterUsages;
+	std::unordered_map<uint32_t,_D3DDECLUSAGE> mUsages;
 
 	std::map<TypeDescription, uint32_t> mTypeIdPairs; //Using map because TypeDescription isn't supported by std::hash
 	std::unordered_map<uint32_t, TypeDescription> mIdTypePairs;
@@ -586,27 +588,16 @@ private:
 	uint32_t mEntryPointTypeId = -1;
 	uint32_t mEntryPointId = -1;
 	bool mIsVertexShader = false;
-	uint32_t mPositionId = 0;
-	uint32_t mPositionYId = 0;
 	uint32_t mGlslExtensionId = 0;
-
-	uint32_t mColor1Id = 0;
-	uint32_t mColor1XId = 0;
-	uint32_t mColor1YId = 0;
-	uint32_t mColor1ZId = 0;
-	uint32_t mColor1WId = 0;
-
-	uint32_t mColor2Id = 0;
-	uint32_t mColor2XId = 0;
-	uint32_t mColor2YId = 0;
-	uint32_t mColor2ZId = 0;
-	uint32_t mColor2WId = 0;
+	uint32_t mPositionYId = 0;
 
 	uint32_t m255FloatId = 0;
 	uint32_t m255VectorId = 0;
+	uint32_t mYFlipVectorId = 0;
 
 	uint32_t m0fId = 0;
 	uint32_t m1fId = 0;
+	uint32_t mn1fId = 0;
 
 	uint32_t m0vfId = 0;
 	uint32_t m1vfId = 0;
@@ -641,25 +632,28 @@ private:
 	uint32_t GetSpirVTypeId(spv::Op registerType1, spv::Op registerType2, spv::Op registerType3, uint32_t componentCount);
 	uint32_t GetSpirVTypeId(TypeDescription& registerType, uint32_t id = UINT_MAX);
 	uint32_t GetNextVersionId(const Token& token);
-	uint32_t GetIdByRegister(const Token& token, _D3DSHADER_PARAM_REGISTER_TYPE type = D3DSPR_FORCE_DWORD, _D3DDECLUSAGE usage = D3DDECLUSAGE_TEXCOORD, uint32_t usageIndex = 0);
+	uint32_t GetIdByRegister(const Token& token, _D3DSHADER_PARAM_REGISTER_TYPE type = D3DSPR_FORCE_DWORD, _D3DDECLUSAGE usage = D3DDECLUSAGE_COLOR, uint32_t usageIndex = 0);
 	void SetIdByRegister(const Token& token, uint32_t id);
-	TypeDescription GetTypeByRegister(const Token& token, _D3DDECLUSAGE usage = D3DDECLUSAGE_TEXCOORD);
+	TypeDescription GetTypeByRegister(const Token& token, _D3DDECLUSAGE usage = D3DDECLUSAGE_COLOR);
 	uint32_t GetSwizzledId(const Token& token, uint32_t lookingFor);
 	uint32_t SwizzlePointer(const Token& token);
-	void HandleColor(const Token& token, uint32_t inputId, uint32_t outputId, uint32_t originalId);
-	uint32_t ApplyWriteMask(const Token& token, uint32_t inputId, _D3DDECLUSAGE usage = D3DDECLUSAGE_TEXCOORD);
-	void GenerateYFlip();
+	uint32_t ApplyWriteMask(const Token& token, uint32_t inputId, _D3DDECLUSAGE usage = D3DDECLUSAGE_COLOR);
+
 	void GenerateConstantIndices();
 	void GenerateStore(const Token& token, uint32_t inputId);
 	void GenerateDecoration(uint32_t registerNumber, uint32_t inputId, _D3DDECLUSAGE usage, uint32_t usageIndex, bool isInput);
 	void Generate255Constants();
+	void GenerateYFlipConstants();
 	void GenerateConstantBlock();
 	void GenerateRenderStateBlock();
 	void GenerateSamplerBlock();
 	void GenerateTextureStageBlock();
+	void GenerateYFlip();
 	void CombineSpirVOpCodes();
 	void CreateSpirVModule();
 
+	uint32_t FixColor(uint32_t id);
+	uint32_t FixPosition(uint32_t id);
 	uint32_t ConvertVec4ToVec3(uint32_t id);
 	uint32_t ConvertMat4ToMat3(uint32_t id);
 
