@@ -1,5 +1,6 @@
 VK9 (Formerly SchaeferGL)
 ==========
+[![Build status](https://ci.appveyor.com/api/projects/status/jpugvv36dr61t3hi/branch/master?svg=true)](https://ci.appveyor.com/project/disks86/vk9/branch/master)
 
 Runs Direct3D 9 applications on Windows or Linux (/w Wine) over Vulkan.
 
