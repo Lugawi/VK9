@@ -1,7 +1,7 @@
 environment:
  VK_SDK_PATH: "C:\\VulkanSDK\\1.1.85.0"
  VULKAN_SDK: "C:\\VulkanSDK\\1.1.85.0"
- EIGEN_DIR: "C:\\projects\\vk9\\include\\"
+ EIGEN_DIR: "C:\\Eigen"
 version: '1.0.0.{build}'
 
 image:
@@ -9,16 +9,25 @@ image:
 
 clone_depth: 1
 
+cache:
+  - C:\VulkanSDK\1.1.85.0\Bin -> appveyor.yml
+  - C:\VulkanSDK\1.1.85.0\Bin32 -> appveyor.yml
+  - C:\VulkanSDK\1.1.85.0\Include -> appveyor.yml
+  - C:\VulkanSDK\1.1.85.0\Source\lib -> appveyor.yml
+  - C:\VulkanSDK\1.1.85.0\Source\lib32 -> appveyor.yml
+  - C:\VulkanSDK\1.1.85.0\spirv-tools -> appveyor.yml
+  - C:\Eigen -> appveyor.yml
+
 install:
- # Download Vulkan SDK
- - ps: Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/1.1.85.0/windows/VulkanSDK-1.1.85.0-Installer.exe?Human=true -OutFile vulkan.exe
- - .\vulkan.exe /S
- # Download eigen
- - ps: if(!(Test-Path C:\projects\vk9\eigen.zip)) { Invoke-WebRequest -Uri http://bitbucket.org/eigen/eigen/get/3.3.7.zip  -OutFile eigen.zip }
- - ps: Expand-Archive ./eigen.zip -DestinationPath . 
- - ps: if(!(Test-Path .\include)) { mkdir .\include }
- - ps: cd eigen-*
- - ps: move Eigen ../include/Eigen
+ # Download and Install Vulkan SDK
+ - ps: if(!(Test-Path C:\VulkanSDK)) { Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/1.1.85.0/windows/VulkanSDK-1.1.85.0-Installer.exe?Human=true -OutFile vulkan.exe }
+ - IF NOT EXIST C:\VulkanSDK ( vulkan.exe /S )
+ # Download Eigen
+ - ps: if(!(Test-Path C:\Eigen\Eigen)) { Invoke-WebRequest -Uri http://bitbucket.org/eigen/eigen/get/3.3.7.zip  -OutFile eigen.zip }
+ - ps: if(!(Test-Path C:\Eigen\Eigen)) { Expand-Archive ./eigen.zip -DestinationPath . }
+ - ps: if(!(Test-Path C:\Eigen\Eigen)) { mkdir C:\Eigen }
+ - ps: if(!(Test-Path C:\Eigen\Eigen)) { cd eigen-* }
+ - ps: if(!(Test-Path C:\Eigen\Eigen)) { move Eigen C:\Eigen\Eigen }
 # Create build folders
  - ps: if(!(Test-Path C:\VK9-x86-Release)) { mkdir C:\VK9-x86-Release }
  - ps: if(!(Test-Path C:\VK9-x64-Release)) { mkdir C:\VK9-x64-Release }
