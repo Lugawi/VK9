@@ -173,7 +173,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealTexture* colorTexture,
 
 	vk::ImageView attachments[2];
 	attachments[0] = mColorTexture->mImageView;
-	attachments[1] = mDepthSurface->mStagingImageView;
+	attachments[1] = mDepthSurface->mImageView;
 
 	vk::FramebufferCreateInfo framebufferCreateInfo;
 	framebufferCreateInfo.renderPass = mStoreRenderPass;
@@ -359,8 +359,8 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealSurface* colorSurface,
 	}
 
 	vk::ImageView attachments[2];
-	attachments[0] = mColorSurface->mStagingImageView;
-	attachments[1] = mDepthSurface->mStagingImageView;
+	attachments[0] = mColorSurface->mImageView;
+	attachments[1] = mDepthSurface->mImageView;
 
 	vk::FramebufferCreateInfo framebufferCreateInfo;
 	framebufferCreateInfo.renderPass = mStoreRenderPass;
@@ -394,7 +394,7 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealSurface* colorSurface,
 	mImageMemoryBarrier.newLayout = vk::ImageLayout::eGeneral; //ePresentSrcKHR
 	mImageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	mImageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	mImageMemoryBarrier.image = mColorSurface->mStagingImage;
+	mImageMemoryBarrier.image = mColorSurface->mImage;
 	mImageMemoryBarrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
 
 }
@@ -462,7 +462,7 @@ void RealRenderTarget::StartScene(vk::CommandBuffer command, DeviceState& device
 	//This little check allows us to transition from source optimal rather than unknown without causing a spec violation on the first use.
 	if (mWasUsed)
 	{
-		ReallySetImageLayout(command, mColorSurface->mStagingImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eGeneral, 1, 0, 1); //ePresentSrcKHR
+		ReallySetImageLayout(command, mColorSurface->mImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eGeneral, 1, 0, 1); //ePresentSrcKHR
 	}
 	else
 	{
@@ -472,15 +472,15 @@ void RealRenderTarget::StartScene(vk::CommandBuffer command, DeviceState& device
 	auto& realFormat = mDepthSurface->mRealFormat;
 	if (realFormat == vk::Format::eD16UnormS8Uint || realFormat == vk::Format::eD24UnormS8Uint || realFormat == vk::Format::eD32SfloatS8Uint)
 	{
-		ReallySetImageLayout(command, mDepthSurface->mStagingImage, vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, 1, 0, 1); //eDepthStencilAttachmentOptimal
+		ReallySetImageLayout(command, mDepthSurface->mImage, vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, 1, 0, 1); //eDepthStencilAttachmentOptimal
 	}
 	else if (realFormat == vk::Format::eS8Uint)
 	{
-		ReallySetImageLayout(command, mDepthSurface->mStagingImage, vk::ImageAspectFlagBits::eStencil, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, 1, 0, 1); //eDepthStencilAttachmentOptimal
+		ReallySetImageLayout(command, mDepthSurface->mImage, vk::ImageAspectFlagBits::eStencil, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, 1, 0, 1); //eDepthStencilAttachmentOptimal
 	}
 	else
 	{
-		ReallySetImageLayout(command, mDepthSurface->mStagingImage, vk::ImageAspectFlagBits::eDepth, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, 1, 0, 1); //eDepthStencilAttachmentOptimal
+		ReallySetImageLayout(command, mDepthSurface->mImage, vk::ImageAspectFlagBits::eDepth, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, 1, 0, 1); //eDepthStencilAttachmentOptimal
 	}
 
 	command.beginRenderPass(&mRenderPassBeginInfo, vk::SubpassContents::eInline);
@@ -527,9 +527,9 @@ void RealRenderTarget::Clear(vk::CommandBuffer command, DeviceState& deviceState
 			mClearColorValue.float32[1] = D3DCOLOR_G(Color);
 			mClearColorValue.float32[0] = D3DCOLOR_R(Color);
 
-			ReallySetImageLayout(command, mColorSurface->mStagingImage, subResourceRange.aspectMask, vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferDstOptimal, 1, 0, 1);
-			command.clearColorImage(mColorSurface->mStagingImage, vk::ImageLayout::eTransferDstOptimal, &mClearColorValue, 1, &subResourceRange);
-			ReallySetImageLayout(command, mColorSurface->mStagingImage, subResourceRange.aspectMask, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eGeneral, 1, 0, 1);
+			ReallySetImageLayout(command, mColorSurface->mImage, subResourceRange.aspectMask, vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferDstOptimal, 1, 0, 1);
+			command.clearColorImage(mColorSurface->mImage, vk::ImageLayout::eTransferDstOptimal, &mClearColorValue, 1, &subResourceRange);
+			ReallySetImageLayout(command, mColorSurface->mImage, subResourceRange.aspectMask, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eGeneral, 1, 0, 1);
 		}
 
 		if (((Flags & D3DCLEAR_STENCIL) == D3DCLEAR_STENCIL) || ((Flags & D3DCLEAR_ZBUFFER) == D3DCLEAR_ZBUFFER))
@@ -575,9 +575,9 @@ void RealRenderTarget::Clear(vk::CommandBuffer command, DeviceState& deviceState
 				Log(warning) << "RealRenderTarget::Clear unknown depth/stencil flag combination " << Flags << std::endl;
 			}
 
-			ReallySetImageLayout(command, mDepthSurface->mStagingImage, formatAspectMask, vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferDstOptimal, 1, 0, 1);
-			command.clearDepthStencilImage(mDepthSurface->mStagingImage, vk::ImageLayout::eTransferDstOptimal, &mClearDepthValue, 1, &subResourceRange);
-			ReallySetImageLayout(command, mDepthSurface->mStagingImage, formatAspectMask, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eGeneral, 1, 0, 1);
+			ReallySetImageLayout(command, mDepthSurface->mImage, formatAspectMask, vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferDstOptimal, 1, 0, 1);
+			command.clearDepthStencilImage(mDepthSurface->mImage, vk::ImageLayout::eTransferDstOptimal, &mClearDepthValue, 1, &subResourceRange);
+			ReallySetImageLayout(command, mDepthSurface->mImage, formatAspectMask, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eGeneral, 1, 0, 1);
 		}
 
 		command.beginRenderPass(&mRenderPassBeginInfo, vk::SubpassContents::eInline);

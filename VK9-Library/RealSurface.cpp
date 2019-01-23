@@ -59,6 +59,10 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 
 	}
 
+	VmaAllocationCreateInfo imageAllocInfo = {};
+	imageAllocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+	//imageAllocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+
 	vk::ImageCreateInfo imageCreateInfo;
 	vk::ImageViewCreateInfo imageViewCreateInfo;
 	vk::FormatProperties formatProperties;
@@ -111,6 +115,7 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 		imageCreateInfo.initialLayout = vk::ImageLayout::ePreinitialized;
 
 		imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst;
+		imageAllocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 	}
 	else
 	{
@@ -125,24 +130,12 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 		{
 			imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eColorAttachment; //
 		}
+		imageAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 	}
 
 	mExtent = imageCreateInfo.extent;
 
-
-	VmaAllocationCreateInfo imageAllocInfo = {};
-	imageAllocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
-
-	if (surface9->mTexture != nullptr || surface9->mCubeTexture != nullptr)
-	{
-		imageAllocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-	}
-	else
-	{
-		imageAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-	}
-
-	result = (vk::Result)vmaCreateImage(mRealDevice->mAllocator, (VkImageCreateInfo*)&imageCreateInfo, &imageAllocInfo, (VkImage*)&mStagingImage, &mImageAllocation, &mImageAllocationInfo);
+	result = (vk::Result)vmaCreateImage(mRealDevice->mAllocator, (VkImageCreateInfo*)&imageCreateInfo, &imageAllocInfo, (VkImage*)&mImage, &mImageAllocation, &mImageAllocationInfo);
 	if (result != vk::Result::eSuccess)
 	{
 		Log(fatal) << "RealSurface::RealSurface (CSurface9*) vmaCreateImage failed with return code of " << GetResultString((VkResult)result) << std::endl;
@@ -158,13 +151,48 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 	mSubresource.arrayLayer = 0; //if this is wrong you may get 4294967296.
 	mLayouts[0] = {};
 
-	if (imageCreateInfo.tiling == vk::ImageTiling::eLinear)
+	if (surface9->mTexture == nullptr && surface9->mCubeTexture == nullptr)
 	{
-		//Log(info) << "RealSurface::RealSurface (CSurface9) using format " << (VkFormat)mRealFormat;
-		realDevice->mDevice.getImageSubresourceLayout(mStagingImage, &mSubresource, &mLayouts[0]);
+		imageCreateInfo.tiling = vk::ImageTiling::eLinear;
+		imageCreateInfo.initialLayout = vk::ImageLayout::ePreinitialized;
+
+		imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst;
+		imageAllocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+
+		result = (vk::Result)vmaCreateImage(mRealDevice->mAllocator, (VkImageCreateInfo*)&imageCreateInfo, &imageAllocInfo, (VkImage*)&mStagingImage, &mStagingImageAllocation, &mImageAllocationInfo);
+		if (result != vk::Result::eSuccess)
+		{
+			Log(fatal) << "RealSurface::RealSurface2 (CSurface9*) vmaCreateImage failed with return code of " << GetResultString((VkResult)result) << std::endl;
+			Log(fatal) << "RealSurface::RealSurface2 (CSurface9*)" <<
+				" format:" << (uint32_t)imageCreateInfo.format <<
+				" imageType:" << (uint32_t)imageCreateInfo.imageType <<
+				" tiling:" << (uint32_t)imageCreateInfo.tiling <<
+				" usage:" << (uint32_t)imageCreateInfo.usage << std::endl;
+			return;
+		}
+
+		auto invalidLayout = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+		if (mSubresource.aspectMask != invalidLayout)
+		{
+			realDevice->mDevice.getImageSubresourceLayout(mStagingImage, &mSubresource, &mLayouts[0]);
+		}
+
+		realDevice->SetImageLayout(mStagingImage, mSubresource.aspectMask, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+	}
+	else
+	{
+		mStagingImage = mImage;
+		mStagingImageAllocation = mImageAllocation;
+
+		auto invalidLayout = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+		if (mSubresource.aspectMask != invalidLayout)
+		{
+			realDevice->mDevice.getImageSubresourceLayout(mImage, &mSubresource, &mLayouts[0]);
+		}
 	}
 
-	imageViewCreateInfo.image = mStagingImage;
+
+	imageViewCreateInfo.image = mImage;
 	//imageViewCreateInfo.viewType = vk::ImageViewType::e3D;
 	imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
 	imageViewCreateInfo.format = mRealFormat;
@@ -225,7 +253,7 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 
 	if (surface9->mTexture == nullptr && surface9->mCubeTexture == nullptr)
 	{
-		result = realDevice->mDevice.createImageView(&imageViewCreateInfo, nullptr, &mStagingImageView);
+		result = realDevice->mDevice.createImageView(&imageViewCreateInfo, nullptr, &mImageView);
 		if (result != vk::Result::eSuccess)
 		{
 			Log(fatal) << "RealSurface::RealSurface (CSurface9*) vkCreateImageView failed with return code of " << GetResultString((VkResult)result) << std::endl;
@@ -237,7 +265,7 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 		imageViewCreateInfo.format = vk::Format::eB8G8R8A8Unorm; //TODO: revisit image format
 		imageViewCreateInfo.image = (*parentImage);
 
-		result = realDevice->mDevice.createImageView(&imageViewCreateInfo, nullptr, &mStagingImageView);
+		result = realDevice->mDevice.createImageView(&imageViewCreateInfo, nullptr, &mImageView);
 		if (result != vk::Result::eSuccess)
 		{
 			Log(fatal) << "RealSurface::RealSurface (CSurface9*) vkCreateImageView failed with return code of " << GetResultString((VkResult)result) << std::endl;
@@ -245,22 +273,7 @@ RealSurface::RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image*
 		}
 	}
 
-	if (mRealFormat == vk::Format::eD16UnormS8Uint || mRealFormat == vk::Format::eD24UnormS8Uint || mRealFormat == vk::Format::eD32SfloatS8Uint)
-	{
-		realDevice->SetImageLayout(mStagingImage, vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
-	}
-	else if (mRealFormat == vk::Format::eS8Uint)
-	{
-		realDevice->SetImageLayout(mStagingImage, vk::ImageAspectFlagBits::eStencil, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
-	}
-	else if (mRealFormat == vk::Format::eD16Unorm)
-	{
-		realDevice->SetImageLayout(mStagingImage, vk::ImageAspectFlagBits::eDepth, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
-	}
-	else
-	{
-		realDevice->SetImageLayout(mStagingImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
-	}
+	realDevice->SetImageLayout(mImage, mSubresource.aspectMask, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
 }
 
 RealSurface::~RealSurface()
@@ -268,9 +281,13 @@ RealSurface::~RealSurface()
 	if (mRealDevice != nullptr)
 	{
 		auto& device = mRealDevice->mDevice;
-		device.destroyImageView(mStagingImageView, nullptr);
+		device.destroyImageView(mImageView, nullptr);
 
-		vmaDestroyImage(mRealDevice->mAllocator, (VkImage)mStagingImage, mImageAllocation);
+		if (mStagingImage != mImage)
+		{
+			vmaDestroyImage(mRealDevice->mAllocator, (VkImage)mStagingImage, mStagingImageAllocation);
+		}
+		vmaDestroyImage(mRealDevice->mAllocator, (VkImage)mImage, mImageAllocation);
 	}
 }
 
@@ -283,10 +300,19 @@ void RealSurface::Lock(D3DLOCKED_RECT* pLockedRect, const RECT* pRect, DWORD Fla
 	{
 		if (mIsFlushed)
 		{
-			mRealDevice->SetImageLayout(mStagingImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral); //VK_IMAGE_LAYOUT_PREINITIALIZED			
+			mRealDevice->SetImageLayout(mImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
 		}
 
-		result = (vk::Result)vmaMapMemory(mRealDevice->mAllocator, mImageAllocation, &mData);
+		if (mImage != mStagingImage)
+		{
+			mRealDevice->SetImageLayout(mImage, mSubresource.aspectMask, vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferSrcOptimal);
+			mRealDevice->SetImageLayout(mStagingImage, mSubresource.aspectMask, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+			mRealDevice->CopyImage(mImage, mStagingImage, 1, 1, mExtent.width, mExtent.height, mExtent.depth);
+			mRealDevice->SetImageLayout(mImage, mSubresource.aspectMask, vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eGeneral);
+			mRealDevice->SetImageLayout(mStagingImage, mSubresource.aspectMask, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eGeneral);
+		}
+
+		result = (vk::Result)vmaMapMemory(mRealDevice->mAllocator, mStagingImageAllocation, &mData);
 		if (result != vk::Result::eSuccess)
 		{
 			Log(fatal) << "RealSurface::Lock vkMapMemory failed with return code of " << GetResultString((VkResult)result) << std::endl;
@@ -357,10 +383,19 @@ void RealSurface::Unlock()
 {
 	if (mData != nullptr)
 	{
-		vmaUnmapMemory(mRealDevice->mAllocator, mImageAllocation);
-		vmaFlushAllocation(mRealDevice->mAllocator, mImageAllocation, 0, VK_WHOLE_SIZE);
+		vmaUnmapMemory(mRealDevice->mAllocator, mStagingImageAllocation);
+		vmaFlushAllocation(mRealDevice->mAllocator, mStagingImageAllocation, 0, VK_WHOLE_SIZE);
 
 		mData = nullptr;
+
+		if (mImage != mStagingImage)
+		{
+			mRealDevice->SetImageLayout(mStagingImage, mSubresource.aspectMask, vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferSrcOptimal);
+			mRealDevice->SetImageLayout(mImage, mSubresource.aspectMask, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+			mRealDevice->CopyImage(mStagingImage, mImage, 1, 1, mExtent.width, mExtent.height, mExtent.depth);
+			mRealDevice->SetImageLayout(mStagingImage, mSubresource.aspectMask, vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eGeneral);
+			mRealDevice->SetImageLayout(mImage, mSubresource.aspectMask, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eGeneral);
+		}
 	}
 
 	mIsFlushed = false;
@@ -412,7 +447,7 @@ void RealSurface::Flush()
 		return;
 	}
 
-	ReallySetImageLayout(commandBuffer, mStagingImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1); //eGeneral
+	ReallySetImageLayout(commandBuffer, mImage, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1); //eGeneral
 	ReallySetImageLayout(commandBuffer, (*mParentImage), vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, 1, mSurface9->mMipIndex, mSurface9->mTargetLayer + 1);
 
 	vk::ImageSubresourceLayers subResource1;
@@ -452,7 +487,7 @@ void RealSurface::Flush()
 	//}
 	//else
 	//{
-		ReallyCopyImage(commandBuffer, mStagingImage, (*mParentImage), 0, 0, mSurface9->mWidth, mSurface9->mHeight, 1, 0, mSurface9->mMipIndex, 0, mSurface9->mTargetLayer);
+	ReallyCopyImage(commandBuffer, mImage, (*mParentImage), 0, 0, mSurface9->mWidth, mSurface9->mHeight, 1, 0, mSurface9->mMipIndex, 0, mSurface9->mTargetLayer);
 	//}
 
 	ReallySetImageLayout(commandBuffer, (*mParentImage), vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eGeneral, 1, mSurface9->mMipIndex, mSurface9->mTargetLayer + 1);

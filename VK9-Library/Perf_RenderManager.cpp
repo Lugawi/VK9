@@ -347,7 +347,7 @@ vk::Result RenderManager::Present(std::shared_ptr<RealDevice> realDevice, const 
 
 	auto colorSurface = deviceState.mRenderTarget->mColorSurface;
 
-	vk::Result result = swapchain->Present(currentBuffer, realDevice->mQueue, colorSurface->mStagingImage, colorSurface->mExtent.width, colorSurface->mExtent.height);
+	vk::Result result = swapchain->Present(currentBuffer, realDevice->mQueue, colorSurface->mImage, colorSurface->mExtent.width, colorSurface->mExtent.height);
 	if (result == vk::Result::eErrorOutOfDateKHR)
 	{
 		mStateManager.mSwapChains.erase(hDestWindowOverride);
@@ -488,11 +488,11 @@ void RenderManager::StretchRect(std::shared_ptr<RealDevice> realDevice, IDirect3
 
 	CSurface9& source9 = (*(CSurface9*)pSourceSurface);
 	source = mStateManager.mSurfaces[source9.mId];
-	ReallySetImageLayout(commandBuffer, source->mStagingImage, vk::ImageAspectFlags(), vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferSrcOptimal, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
+	ReallySetImageLayout(commandBuffer, source->mImage, vk::ImageAspectFlags(), vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferSrcOptimal, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
 
 	CSurface9& target9 = (*(CSurface9*)pDestSurface);
 	target = mStateManager.mSurfaces[target9.mId];
-	ReallySetImageLayout(commandBuffer, target->mStagingImage, vk::ImageAspectFlags(), vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
+	ReallySetImageLayout(commandBuffer, target->mImage, vk::ImageAspectFlags(), vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
 
 	vk::ImageSubresourceLayers subResource1;
 	subResource1.aspectMask = vk::ImageAspectFlagBits::eColor;
@@ -515,12 +515,12 @@ void RenderManager::StretchRect(std::shared_ptr<RealDevice> realDevice, IDirect3
 	region.dstOffsets[1] = vk::Offset3D(pDestRect->right, pDestRect->bottom, 1);
 
 	commandBuffer.blitImage(
-		source->mStagingImage, vk::ImageLayout::eTransferSrcOptimal,
-		target->mStagingImage, vk::ImageLayout::eTransferDstOptimal,
+		source->mImage, vk::ImageLayout::eTransferSrcOptimal,
+		target->mImage, vk::ImageLayout::eTransferDstOptimal,
 		1, &region, ConvertFilter(Filter));
 
-	ReallySetImageLayout(commandBuffer, source->mStagingImage, vk::ImageAspectFlags(), vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eGeneral, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
-	ReallySetImageLayout(commandBuffer, target->mStagingImage, vk::ImageAspectFlags(), vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eGeneral, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
+	ReallySetImageLayout(commandBuffer, source->mImage, vk::ImageAspectFlags(), vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eGeneral, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
+	ReallySetImageLayout(commandBuffer, target->mImage, vk::ImageAspectFlags(), vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eGeneral, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
 
 	commandBuffer.end();
 
@@ -597,11 +597,11 @@ void RenderManager::UpdateSurface(std::shared_ptr<RealDevice> realDevice, IDirec
 
 	CSurface9& target9 = (*(CSurface9*)pDestinationSurface);
 	target = mStateManager.mSurfaces[target9.mId];
-	ReallySetImageLayout(commandBuffer, target->mStagingImage, vk::ImageAspectFlags(), vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
+	ReallySetImageLayout(commandBuffer, target->mImage, vk::ImageAspectFlags(), vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
 
 	CSurface9& source9 = (*(CSurface9*)pSourceSurface);
 	source = mStateManager.mSurfaces[source9.mId];
-	ReallySetImageLayout(commandBuffer, source->mStagingImage, vk::ImageAspectFlags(), vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferSrcOptimal, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
+	ReallySetImageLayout(commandBuffer, source->mImage, vk::ImageAspectFlags(), vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferSrcOptimal, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
 
 	vk::ImageSubresourceLayers subResource1;
 	subResource1.aspectMask = vk::ImageAspectFlagBits::eColor;
@@ -624,12 +624,12 @@ void RenderManager::UpdateSurface(std::shared_ptr<RealDevice> realDevice, IDirec
 	region.dstOffsets[1] = vk::Offset3D(pSourceRect->right, pSourceRect->bottom, 1);
 
 	commandBuffer.blitImage(
-		source->mStagingImage, vk::ImageLayout::eTransferSrcOptimal,
-		target->mStagingImage, vk::ImageLayout::eTransferDstOptimal,
+		source->mImage, vk::ImageLayout::eTransferSrcOptimal,
+		target->mImage, vk::ImageLayout::eTransferDstOptimal,
 		1, &region, vk::Filter::eLinear);
 
-	ReallySetImageLayout(commandBuffer, source->mStagingImage, vk::ImageAspectFlags(), vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eGeneral, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
-	ReallySetImageLayout(commandBuffer, target->mStagingImage, vk::ImageAspectFlags(), vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eGeneral, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
+	ReallySetImageLayout(commandBuffer, source->mImage, vk::ImageAspectFlags(), vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eGeneral, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
+	ReallySetImageLayout(commandBuffer, target->mImage, vk::ImageAspectFlags(), vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eGeneral, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
 
 	commandBuffer.end();
 

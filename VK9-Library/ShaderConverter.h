@@ -632,12 +632,12 @@ private:
 	uint32_t GetSpirVTypeId(spv::Op registerType1, spv::Op registerType2, spv::Op registerType3, uint32_t componentCount);
 	uint32_t GetSpirVTypeId(TypeDescription& registerType, uint32_t id = UINT_MAX);
 	uint32_t GetNextVersionId(const Token& token);
-	uint32_t GetIdByRegister(const Token& token, _D3DSHADER_PARAM_REGISTER_TYPE type = D3DSPR_FORCE_DWORD, _D3DDECLUSAGE usage = D3DDECLUSAGE_COLOR, uint32_t usageIndex = 0);
+	uint32_t GetIdByRegister(const Token& token, _D3DSHADER_PARAM_REGISTER_TYPE type = D3DSPR_FORCE_DWORD, _D3DDECLUSAGE usage = D3DDECLUSAGE_TEXCOORD, uint32_t usageIndex = 0);
 	void SetIdByRegister(const Token& token, uint32_t id);
-	TypeDescription GetTypeByRegister(const Token& token, _D3DDECLUSAGE usage = D3DDECLUSAGE_COLOR);
+	TypeDescription GetTypeByRegister(const Token& token, _D3DDECLUSAGE usage = D3DDECLUSAGE_TEXCOORD);
 	uint32_t GetSwizzledId(const Token& token, uint32_t lookingFor);
 	uint32_t SwizzlePointer(const Token& token);
-	uint32_t ApplyWriteMask(const Token& token, uint32_t inputId, _D3DDECLUSAGE usage = D3DDECLUSAGE_COLOR);
+	uint32_t ApplyWriteMask(const Token& token, uint32_t inputId, _D3DDECLUSAGE usage = D3DDECLUSAGE_TEXCOORD);
 
 	void GenerateConstantIndices();
 	void GenerateStore(const Token& token, uint32_t inputId);

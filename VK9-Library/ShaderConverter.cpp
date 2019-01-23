@@ -935,14 +935,11 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 
 		break;
 	case D3DSPR_TEMP:
-		registerName = "r" + std::to_string(registerNumber);
-		PushName(id, registerName);
-		//Fall through is on purpose.
 	case D3DSPR_RASTOUT:
 	case D3DSPR_ATTROUT:
 	case D3DSPR_COLOROUT:
 	case D3DSPR_DEPTHOUT:
-	case D3DSPR_OUTPUT:	
+	case D3DSPR_OUTPUT:
 		/*
 		D3DSPR_TEMP is included with the outputs because for pixel shaders r0 is the color output.
 		So rather than duplicate everything I put some logic here and there to decide if it's an output or a temp.
@@ -1001,6 +998,7 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 				case D3DSPR_RASTOUT:
 					usage = D3DDECLUSAGE_POSITION;
 					break;
+				case D3DSPR_ATTROUT:
 				case D3DSPR_COLOROUT:
 					usage = D3DDECLUSAGE_COLOR;
 					break;
@@ -1018,19 +1016,33 @@ uint32_t ShaderConverter::GetIdByRegister(const Token& token, _D3DSHADER_PARAM_R
 				case D3DSPR_RASTOUT:
 					usage = D3DDECLUSAGE_POSITION;
 					break;
+				case D3DSPR_ATTROUT:
+				case D3DSPR_OUTPUT:
+				case D3DSPR_COLOROUT:
+					usage = D3DDECLUSAGE_COLOR;
+					break;
 				default:
 					//just leave it a lone.
 					break;
 				}
 				break;
 			case 3:
-				switch (registerType)
-				{
-					usage = D3DDECLUSAGE_TEXCOORD;
-				}
+				//just leave it a lone.
 				break;
 			default:
 				//just leave it a lone.
+				break;
+			}
+		}
+		else
+		{
+			switch (registerType)
+			{
+			case D3DSPR_DEPTHOUT:
+				usage = D3DDECLUSAGE_DEPTH;
+				break;
+			default:
+				usage = D3DDECLUSAGE_COLOR;
 				break;
 			}
 		}
@@ -3724,7 +3736,7 @@ void ShaderConverter::Process_DCL_Pixel()
 	TypeDescription typeDescription;
 	uint32_t registerComponents = (registerToken.i & D3DSP_WRITEMASK_ALL) >> 16;
 	uint32_t resultTypeId;
-	uint32_t textureType;
+	//uint32_t textureType;
 	//std::string registerName;
 
 	if (registerType == D3DSPR_SAMPLER)
@@ -5067,6 +5079,30 @@ void ShaderConverter::Process_GenericBinaryOperation(const char* tokenName, spv:
 		mIdTypePairs[resultId] = typeDescription;
 		Push(floatOp, dataTypeId, resultId, argumentId1, argumentId2);
 	}
+	else if (argumentType1.PrimaryType == spv::OpTypeFloat && argumentType2.PrimaryType == spv::OpTypeInt)
+	{
+		typeDescription = argumentType1;
+		uint32_t dataTypeId = GetSpirVTypeId(typeDescription);
+
+		uint32_t convertedId = GetNextId();
+		mIdTypePairs[convertedId] = typeDescription;
+		Push(spv::OpConvertUToF, dataTypeId, convertedId, argumentId2);
+
+		mIdTypePairs[resultId] = typeDescription;
+		Push(floatOp, dataTypeId, resultId, argumentId1, convertedId);
+	}
+	else if (argumentType1.PrimaryType == spv::OpTypeInt && argumentType2.PrimaryType == spv::OpTypeFloat)
+	{
+		typeDescription = argumentType2;
+		uint32_t dataTypeId = GetSpirVTypeId(typeDescription);
+
+		uint32_t convertedId = GetNextId();
+		mIdTypePairs[convertedId] = typeDescription;
+		Push(spv::OpConvertUToF, dataTypeId, convertedId, argumentId1);
+
+		mIdTypePairs[resultId] = typeDescription;
+		Push(floatOp, dataTypeId, resultId, convertedId, argumentId2);
+	}
 	else if (argumentType1.PrimaryType == spv::OpTypeVector && argumentType2.PrimaryType == spv::OpTypeVector
 		&& argumentType1.SecondaryType == spv::OpTypeFloat && argumentType2.SecondaryType == spv::OpTypeFloat)
 	{
@@ -5082,6 +5118,32 @@ void ShaderConverter::Process_GenericBinaryOperation(const char* tokenName, spv:
 		uint32_t dataTypeId = GetSpirVTypeId(typeDescription);
 		mIdTypePairs[resultId] = typeDescription;
 		Push(integerOp, dataTypeId, resultId, argumentId1, argumentId2);
+	}
+	else if (argumentType1.PrimaryType == spv::OpTypeVector && argumentType2.PrimaryType == spv::OpTypeVector
+		&& argumentType1.SecondaryType == spv::OpTypeFloat && argumentType2.SecondaryType == spv::OpTypeInt)
+	{
+		typeDescription = argumentType1;
+		uint32_t dataTypeId = GetSpirVTypeId(typeDescription);
+
+		uint32_t convertedId = GetNextId();
+		mIdTypePairs[convertedId] = typeDescription;
+		Push(spv::OpConvertUToF, dataTypeId, convertedId, argumentId2);
+
+		mIdTypePairs[resultId] = typeDescription;
+		Push(floatOp, dataTypeId, resultId, argumentId1, convertedId);
+	}
+	else if (argumentType1.PrimaryType == spv::OpTypeVector && argumentType2.PrimaryType == spv::OpTypeVector
+		&& argumentType1.SecondaryType == spv::OpTypeInt && argumentType2.SecondaryType == spv::OpTypeFloat)
+	{
+		typeDescription = argumentType2;
+		uint32_t dataTypeId = GetSpirVTypeId(typeDescription);
+
+		uint32_t convertedId = GetNextId();
+		mIdTypePairs[convertedId] = typeDescription;
+		Push(spv::OpConvertUToF, dataTypeId, convertedId, argumentId1);
+
+		mIdTypePairs[resultId] = typeDescription;
+		Push(floatOp, dataTypeId, resultId, convertedId, argumentId2);
 	}
 	else if (argumentType1.PrimaryType == spv::OpTypeVector && argumentType2.PrimaryType == spv::OpTypeFloat)
 	{

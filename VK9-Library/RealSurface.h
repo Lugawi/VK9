@@ -33,11 +33,15 @@ struct RealSurface
 {
 	BOOL mIsFlushed = true;
 	void* mData = nullptr;
-	vk::Image mStagingImage;
 	vk::Image* mParentImage;
-	CSurface9* mSurface9=nullptr;
-	VmaAllocation mImageAllocation;
+	CSurface9* mSurface9 = nullptr;
 	VmaAllocationInfo mImageAllocationInfo;
+
+	vk::Image mImage;
+	VmaAllocation mImageAllocation;
+
+	vk::Image mStagingImage;
+	VmaAllocation mStagingImageAllocation;
 
 	std::vector< std::array<vk::Offset3D, 2> > mDirtyRects;
 
@@ -46,7 +50,7 @@ struct RealSurface
 	vk::ImageLayout mImageLayout = vk::ImageLayout::eGeneral;
 	vk::SubresourceLayout mLayouts[1] = {};
 	vk::ImageSubresource mSubresource;
-	vk::ImageView mStagingImageView;
+	vk::ImageView mImageView;
 
 	RealDevice* mRealDevice = nullptr; //null if not owner.
 	RealSurface(RealDevice* realDevice, CSurface9* surface9, vk::Image* parentImage);
