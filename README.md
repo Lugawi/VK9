@@ -12,7 +12,7 @@ Join the discord server (VKx) to communicate with the community. https://discord
 
 For the latest project news visit my blog. http://techtinker.blogspot.com/
 
-Special thanks to my patrons over on Patreon. https://www.patreon.com/disks86
+Special thanks to my patrons over on Patreon. https://www.patreon.com/sketchy_gaming
 
 ---
 
