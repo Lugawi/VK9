@@ -82,8 +82,8 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealTexture* colorTexture,
 	mRenderAttachments[1].finalLayout = vk::ImageLayout::eGeneral;
 
 	vk::SubpassDependency dependency;
-	dependency.srcStageMask = vk::PipelineStageFlagBits::eAllCommands;
-	dependency.dstStageMask = vk::PipelineStageFlagBits::eAllCommands;
+	dependency.srcStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+	dependency.dstStageMask = vk::PipelineStageFlagBits::eAllGraphics;
 	dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
 
 	vk::RenderPassCreateInfo renderPassCreateInfo;
@@ -269,8 +269,8 @@ RealRenderTarget::RealRenderTarget(vk::Device device, RealSurface* colorSurface,
 	mRenderAttachments[1].finalLayout = vk::ImageLayout::eGeneral;
 
 	vk::SubpassDependency dependency;
-	dependency.srcStageMask = vk::PipelineStageFlagBits::eAllCommands;
-	dependency.dstStageMask = vk::PipelineStageFlagBits::eAllCommands;
+	dependency.srcStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+	dependency.dstStageMask = vk::PipelineStageFlagBits::eAllGraphics;
 	dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
 
 	vk::RenderPassCreateInfo renderPassCreateInfo;

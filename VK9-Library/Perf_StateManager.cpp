@@ -531,13 +531,8 @@ void StateManager::CreateQuery(size_t id, void* argument1)
 		break;
 	}
 
-	vk::ResultValue<vk::QueryPool> poolResult = device->mDevice.createQueryPool(createInfo, nullptr); //&(ptr->mQueryPool)
-	if (poolResult.result != vk::Result::eSuccess)
-	{
-		Log(fatal) << "StateManager::CreateQuery vkCreateQueryPool failed with return code of " << GetResultString((VkResult)poolResult.result) << std::endl;
-		return;
-	}
-	ptr->mQueryPool = poolResult.value;
+	vk::QueryPool poolResult = device->mDevice.createQueryPool(createInfo, nullptr); //&(ptr->mQueryPool)
+	ptr->mQueryPool = poolResult;
 
 	mQueries.push_back(ptr);
 }

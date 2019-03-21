@@ -80,7 +80,8 @@ RealInstance::RealInstance(bool enableDebugLayers)
 	if (result == vk::Result::eSuccess)
 	{
 		//Fetch an array of available physical devices.
-		result = mInstance.enumeratePhysicalDevices(&mPhysicalDeviceCount, nullptr);
+		vk::PhysicalDevice* nullPhysicalDevice = nullptr;
+		result = mInstance.enumeratePhysicalDevices(&mPhysicalDeviceCount, nullPhysicalDevice);
 		if (result == vk::Result::eSuccess)
 		{
 			mPhysicalDevices = new vk::PhysicalDevice[mPhysicalDeviceCount];

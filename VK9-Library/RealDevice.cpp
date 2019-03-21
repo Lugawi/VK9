@@ -168,7 +168,8 @@ RealDevice::RealDevice(StateManager* stateManager, vk::Instance instance, vk::Ph
 	physicalDevice.getMemoryProperties(&mPhysicalDeviceMemoryProperties);
 
 	//QueueFamilyProperties
-	physicalDevice.getQueueFamilyProperties(&mQueueFamilyPropertyCount, nullptr);
+	vk::QueueFamilyProperties* nullQueueFamilyProperties = nullptr;
+	physicalDevice.getQueueFamilyProperties(&mQueueFamilyPropertyCount, nullQueueFamilyProperties);
 	mQueueFamilyProperties = new vk::QueueFamilyProperties[mQueueFamilyPropertyCount];
 	physicalDevice.getQueueFamilyProperties(&mQueueFamilyPropertyCount, mQueueFamilyProperties);
 

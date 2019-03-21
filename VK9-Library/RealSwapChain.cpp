@@ -133,7 +133,8 @@ void RealSwapChain::InitSurface()
 	mSwapchainExtent = mSurfaceCapabilities.currentExtent;
 
 	//Find surface formats
-	mResult = mPhysicalDevice.getSurfaceFormatsKHR(mSurface, &mSurfaceFormatCount, nullptr);
+	vk::SurfaceFormatKHR* nullSurfaceFormat = nullptr;
+	mResult = mPhysicalDevice.getSurfaceFormatsKHR(mSurface, &mSurfaceFormatCount, nullSurfaceFormat);
 	if (mResult != vk::Result::eSuccess)
 	{
 		Log(fatal) << "RealSwapChain::InitSurface vkGetPhysicalDeviceSurfaceFormatsKHR failed with return code of " << GetResultString((VkResult)mResult) << std::endl;
@@ -168,7 +169,8 @@ void RealSwapChain::InitSurface()
 
 	//Search for queues to use for presentation.
 	uint32_t queueFamilyPropertyCount;
-	mPhysicalDevice.getQueueFamilyProperties(&queueFamilyPropertyCount, nullptr);
+	vk::QueueFamilyProperties* nullQueueFamilyProperties = nullptr;
+	mPhysicalDevice.getQueueFamilyProperties(&queueFamilyPropertyCount, nullQueueFamilyProperties);
 	auto queueFamilyProperties = new vk::QueueFamilyProperties[queueFamilyPropertyCount];
 	mPhysicalDevice.getQueueFamilyProperties(&queueFamilyPropertyCount, queueFamilyProperties);
 
@@ -177,7 +179,7 @@ void RealSwapChain::InitSurface()
 	for (uint32_t i = 0; i < queueFamilyPropertyCount; i++)
 	{
 		auto result = mPhysicalDevice.getSurfaceSupportKHR(i, mSurface);
-		if (result.result == vk::Result::eSuccess && result.value)
+		if (result)
 		{
 			presentationQueueIndex = i;
 			break;
@@ -194,7 +196,8 @@ void RealSwapChain::InitSurface()
 	VK_PRESENT_MODE_FIFO_KHR - Wait for the next vertical blanking interval to update the image. If the interval is missed wait for the next one. New images will be queued for display.
 	*/
 	uint32_t presentationModeCount;
-	mResult = mPhysicalDevice.getSurfacePresentModesKHR(mSurface, &presentationModeCount, nullptr);
+	vk::PresentModeKHR* nullPresentMode = nullptr;
+	mResult = mPhysicalDevice.getSurfacePresentModesKHR(mSurface, &presentationModeCount, nullPresentMode);
 	if (mResult != vk::Result::eSuccess)
 	{
 		Log(fatal) << "RealSwapChain::InitSurface vkGetPhysicalDeviceSurfacePresentModesKHR failed with return code of " << GetResultString((VkResult)mResult) << std::endl;
@@ -265,7 +268,8 @@ void RealSwapChain::InitSwapChain()
 	}
 
 	//Create the images (buffers) that will be used by the swap chain.
-	mResult = mDevice.getSwapchainImagesKHR(mSwapchain, &mSwapchainImageCount, nullptr);
+	vk::Image* nullImage = nullptr;
+	mResult = mDevice.getSwapchainImagesKHR(mSwapchain, &mSwapchainImageCount, nullImage);
 	if (mResult != vk::Result::eSuccess)
 	{
 		Log(fatal) << "RealSwapChain::InitSwapChain vkGetSwapchainImagesKHR failed with return code of " << GetResultString((VkResult)mResult) << std::endl;
