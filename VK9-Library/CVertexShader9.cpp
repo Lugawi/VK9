@@ -24,13 +24,12 @@ misrepresented as being the original software.
  
 #include "CVertexShader9.h"
 #include "CDevice9.h"
-
-#include "Utilities.h"
+#include "LogManager.h"
+//#include "PrivateTypes.h"
 
 CVertexShader9::CVertexShader9(CDevice9* device, const DWORD* pFunction)
 	: mDevice(device),
-	mFunction((DWORD*)pFunction),
-	mId(0)
+	mFunction((DWORD*)pFunction)
 {
 	Log(info) << "CVertexShader9::CVertexShader9" << std::endl;
 }
@@ -39,10 +38,6 @@ CVertexShader9::~CVertexShader9()
 {
 	Log(info) << "CVertexShader9::~CVertexShader9" << std::endl;
 
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(nullptr);
-	workItem->WorkItemType = WorkItemType::Shader_Destroy;
-	workItem->Id = mId;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
 
 	free(mFunction);
 }

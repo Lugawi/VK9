@@ -21,8 +21,11 @@ misrepresented as being the original software.
 #ifndef CINDEXBUFFER9_H
 #define CINDEXBUFFER9_H
 
-#include "d3d9.h" // Base class: IDirect3DIndexBuffer9
-#include "Perf_CommandStreamManager.h"
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_sdk_platform.h>
+#include "d3d9.h"
+
+class CDevice9;
 
 class CIndexBuffer9 : public IDirect3DIndexBuffer9
 {
@@ -31,9 +34,6 @@ public:
 	~CIndexBuffer9();
 
 	void Init();
-
-	size_t mId;
-	std::shared_ptr<CommandStreamManager> mCommandStreamManager;
 
 	CDevice9* mDevice = nullptr;
 	UINT mLength;

@@ -21,10 +21,13 @@ misrepresented as being the original software.
 #ifndef CBaseTexture9_H
 #define CBaseTexture9_H
 
-#include "d3d9.h" // Base class: IDirect3DBaseTexture9
-#include "CResource9.h"
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_sdk_platform.h>
+#include "d3d9.h"
 
-class CBaseTexture9 : public IDirect3DBaseTexture9,CResource9
+class CDevice9;
+
+class CBaseTexture9 : public IDirect3DBaseTexture9
 {
 private:
 	CDevice9* mDevice;

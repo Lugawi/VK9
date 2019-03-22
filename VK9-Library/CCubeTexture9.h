@@ -21,10 +21,12 @@ misrepresented as being the original software.
 #ifndef CCUBETEXTURE9_H
 #define CCUBETEXTURE9_H
 
-#include "d3d9.h" // Base class: IDirect3DCubeTexture9
-#include "CBaseTexture9.h"
-#include "CSurface9.h"
-#include "Perf_CommandStreamManager.h"
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_sdk_platform.h>
+#include "d3d9.h"
+
+class CDevice9;
+class CSurface9;
 
 class CCubeTexture9 : public IDirect3DCubeTexture9
 {		
@@ -33,9 +35,6 @@ public:
 	~CCubeTexture9();
 
 	void Init();
-
-	size_t mId;
-	std::shared_ptr<CommandStreamManager> mCommandStreamManager;
 
 	CDevice9* mDevice;
 	UINT mEdgeLength = 0;

@@ -21,9 +21,11 @@ misrepresented as being the original software.
 #ifndef CSURFACE9_H
 #define CSURFACE9_H
 
-#include "d3d9.h" // Base class: IDirect3DSurface9
-#include "Perf_CommandStreamManager.h"
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_sdk_platform.h>
+#include "d3d9.h"
 
+class CDevice9;
 class CTexture9;
 class CCubeTexture9;
 
@@ -41,11 +43,6 @@ public:
 	CSurface9(CDevice9* Device, CTexture9* Texture, UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, HANDLE *pSharedHandle);
 	CSurface9(CDevice9* Device, CCubeTexture9* Texture, UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, HANDLE *pSharedHandle);
 	~CSurface9();
-
-	size_t mId = -1;
-	size_t mTextureId = -1;
-	size_t mLastTextureId = -1;
-	std::shared_ptr<CommandStreamManager> mCommandStreamManager;
 
 	CDevice9* mDevice = nullptr;
 	CTexture9* mTexture = nullptr;

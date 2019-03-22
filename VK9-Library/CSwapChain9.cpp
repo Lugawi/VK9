@@ -25,8 +25,8 @@ misrepresented as being the original software.
 #include "CSwapChain9.h"
 #include "CSurface9.h"
 #include "CDevice9.h"
-
-#include "Utilities.h"
+#include "LogManager.h"
+//#include "PrivateTypes.h"
 
 CSwapChain9::CSwapChain9(CDevice9* Device, D3DPRESENT_PARAMETERS *pPresentationParameters)
 	: mDevice(Device),
@@ -41,8 +41,6 @@ CSwapChain9::CSwapChain9(CDevice9* Device, D3DPRESENT_PARAMETERS *pPresentationP
 	
 	mBackBuffer = new CSurface9(Device, pPresentationParameters);
 	mFrontBuffer = new CSurface9(Device, pPresentationParameters);
-	mCommandStreamManager = mDevice->mCommandStreamManager;
-	mId = mDevice->mId;
 }
 
 CSwapChain9::~CSwapChain9()

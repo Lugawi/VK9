@@ -33,26 +33,28 @@ misrepresented as being the original software.
 #include "CDevice9.h"
 #include "CSwapChain9.h"
 #include "CSurface9.h"
-
-#include "Utilities.h"
+#include "LogManager.h"
+//#include "PrivateTypes.h"
 
 #define APP_SHORT_NAME "VK9"
 
-#include "PrivateTypes.h"
+#define D3DFMT_INTZ ((D3DFORMAT)(MAKEFOURCC('I','N','T','Z')))
+#define D3DFMT_RAWZ ((D3DFORMAT)(MAKEFOURCC('R','A','W','Z')))
+#define D3DFMT_DF24 ((D3DFORMAT)(MAKEFOURCC('D','F','2','4')))
+#define D3DFMT_DF16 ((D3DFORMAT)(MAKEFOURCC('D','F','1','6')))
+#define D3DFMT_INST ((D3DFORMAT)(MAKEFOURCC('I','N','S','T')))
+#define D3DFMT_NULL ((D3DFORMAT)(MAKEFOURCC('N','U','L','L')))
 
 C9::C9()
 {
-	mCommandStreamManager = std::make_shared<CommandStreamManager>();
+
 
 	Log(info) << "C9::C9" << std::endl;
 }
 
 C9::~C9()
 {
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(nullptr);
-	workItem->WorkItemType = WorkItemType::Instance_Destroy;
-	workItem->Id = mId;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
+
 
 	Log(info) << "C9::~C9" << std::endl;
 }
@@ -645,15 +647,15 @@ HRESULT STDMETHODCALLTYPE C9::CheckDeviceType(UINT Adapter, D3DDEVTYPE DeviceTyp
 {
 	Log(info) << "C9::CheckDeviceType Adapter: " << Adapter << std::endl;
 
-	if ((ConvertFormat(DisplayFormat) == vk::Format::eUndefined && DisplayFormat != D3DFMT_UNKNOWN))
-	{
-		return D3DERR_NOTAVAILABLE;
-	}
+	//if ((ConvertFormat(DisplayFormat) == vk::Format::eUndefined && DisplayFormat != D3DFMT_UNKNOWN))
+	//{
+	//	return D3DERR_NOTAVAILABLE;
+	//}
 
-	if ((ConvertFormat(BackBufferFormat) == vk::Format::eUndefined && BackBufferFormat != D3DFMT_UNKNOWN))
-	{
-		return D3DERR_NOTAVAILABLE;
-	}
+	//if ((ConvertFormat(BackBufferFormat) == vk::Format::eUndefined && BackBufferFormat != D3DFMT_UNKNOWN))
+	//{
+	//	return D3DERR_NOTAVAILABLE;
+	//}
 
 	return S_OK;
 }
@@ -751,13 +753,7 @@ HRESULT STDMETHODCALLTYPE C9::GetAdapterIdentifier(UINT Adapter, DWORD Flags, D3
 		return D3DERR_INVALIDCALL;
 	}
 
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::Instance_GetAdapterIdentifier;
-	workItem->Id = mId;
-	workItem->Argument1 = (void*)Adapter;
-	workItem->Argument2 = (void*)Flags;
-	workItem->Argument3 = (void*)pIdentifier;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
+
 
 	return S_OK;
 }
@@ -816,13 +812,7 @@ HRESULT STDMETHODCALLTYPE C9::GetDeviceCaps(UINT Adapter, D3DDEVTYPE DeviceType,
 		return D3DERR_INVALIDCALL;
 	}
 
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::Instance_GetDeviceCaps;
-	workItem->Id = mId;
-	workItem->Argument1 = (void*)Adapter;
-	workItem->Argument2 = (void*)DeviceType;
-	workItem->Argument3 = (void*)pCaps;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
+
 
 	return S_OK;
 }

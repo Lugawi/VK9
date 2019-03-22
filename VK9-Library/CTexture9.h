@@ -21,10 +21,12 @@ misrepresented as being the original software.
 #ifndef CTEXTURE9_H
 #define CTEXTURE9_H
 
-#include "d3d9.h" // Base class: IDirect3DTexture9
-#include "Perf_CommandStreamManager.h"
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_sdk_platform.h>
+#include "d3d9.h"
 
 class CSurface9;
+class CDevice9;
 
 class CTexture9 : public IDirect3DTexture9
 {
@@ -33,9 +35,6 @@ public:
 	~CTexture9();
 
 	void Init();
-
-	size_t mId;
-	std::shared_ptr<CommandStreamManager> mCommandStreamManager;
 
 	CDevice9* mDevice = nullptr;
 	UINT mWidth = 0;

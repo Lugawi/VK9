@@ -21,20 +21,20 @@ misrepresented as being the original software.
 #ifndef CVOLUMETEXTURE9_H
 #define CVOLUMETEXTURE9_H
 
-#include "d3d9.h" // Base class: IDirect3DCubeTexture9
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_sdk_platform.h>
+#include "d3d9.h"
+
 #include <vector>
-#include "Perf_CommandStreamManager.h"
 
 class CVolume9;
+class CDevice9;
 
 class CVolumeTexture9 : public IDirect3DVolumeTexture9
 {
 public:
 	CVolumeTexture9(CDevice9* device, UINT Width, UINT Height, UINT Depth, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, HANDLE *pSharedHandle);
 	~CVolumeTexture9();
-
-	size_t mId;
-	std::shared_ptr<CommandStreamManager> mCommandStreamManager;
 
 	CDevice9* mDevice;
 	UINT mWidth;

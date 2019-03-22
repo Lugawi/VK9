@@ -21,7 +21,9 @@ misrepresented as being the original software.
 #ifndef CResource9_H
 #define CResource9_H
 
-#include "d3d9.h" // Base class: IDirect3DResource9
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_sdk_platform.h>
+#include "d3d9.h"
 
 class CDevice9;
 

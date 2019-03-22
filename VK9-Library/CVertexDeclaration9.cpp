@@ -24,8 +24,8 @@ misrepresented as being the original software.
  
 #include "CVertexDeclaration9.h"
 #include "CDevice9.h"
-
-#include "Utilities.h"
+#include "LogManager.h"
+//#include "PrivateTypes.h"
 
 CVertexDeclaration9::CVertexDeclaration9(CDevice9* device, const D3DVERTEXELEMENT9* pVertexElements)
 	: mDevice(device)

@@ -21,9 +21,11 @@ misrepresented as being the original software.
 #ifndef C9_H
 #define C9_H
 
-#include "d3d9.h" // Base class: IDirect3D9
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_sdk_platform.h>
+#include "d3d9.h"
+
 #include <vector>
-#include "Perf_CommandStreamManager.h"
 
 struct Monitor
 {
@@ -66,13 +68,10 @@ public:
 	C9();
 	~C9();
 
-	std::shared_ptr<CommandStreamManager> mCommandStreamManager;
-	size_t mId;
 
-	uint32_t mDisplayCount = 0;
-	
+	//Monitor stuff
+	uint32_t mDisplayCount = 0;	
 	std::vector<Monitor> mMonitors;
-	bool mValidationPresent = false;
 	LUID mLUID = {};
 
 public:

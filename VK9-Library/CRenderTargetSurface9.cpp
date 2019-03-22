@@ -24,8 +24,8 @@ misrepresented as being the original software.
 
 #include "CRenderTargetSurface9.h"
 #include "CDevice9.h"
-
-#include "Utilities.h"
+#include "LogManager.h"
+//#include "PrivateTypes.h"
 
 CRenderTargetSurface9::CRenderTargetSurface9(CDevice9* Device, UINT Width, UINT Height, D3DFORMAT Format)
 	: mDevice(Device),

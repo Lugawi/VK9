@@ -21,8 +21,9 @@ misrepresented as being the original software.
 #ifndef CQUERY9_H
 #define CQUERY9_H
 
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_sdk_platform.h>
 #include "d3d9.h"
-#include "Perf_CommandStreamManager.h"
 
 class CDevice9;
 
@@ -31,10 +32,7 @@ class CQuery9 : public IDirect3DQuery9
 public:
 	CQuery9(CDevice9* device, D3DQUERYTYPE Type);
 	~CQuery9();
-	
-	size_t mId = -1;
-	std::shared_ptr<CommandStreamManager> mCommandStreamManager;
-	
+		
 	void* mData = nullptr;
 	size_t mSize = 4;
 

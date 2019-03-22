@@ -24,8 +24,8 @@ misrepresented as being the original software.
  
 #include "CIndexBuffer9.h"
 #include "CDevice9.h"
-
-#include "Utilities.h"
+#include "LogManager.h"
+//#include "PrivateTypes.h"
 
 CIndexBuffer9::CIndexBuffer9(CDevice9* device, UINT Length, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, HANDLE* pSharedHandle)
 	: mReferenceCount(1),
@@ -38,13 +38,8 @@ CIndexBuffer9::CIndexBuffer9(CDevice9* device, UINT Length, DWORD Usage, D3DFORM
 	mCapacity(0),
 	mIsDirty(true),
 	mLockCount(0),
-	mSize(0),
-	mId(0)
+	mSize(0)
 {
-	this->mCommandStreamManager = this->mDevice->mCommandStreamManager;
-
-	mFrameBit = mCommandStreamManager->mFrameBit;
-
 	mSize = mLength / sizeof(float);
 }
 
@@ -52,21 +47,13 @@ CIndexBuffer9::~CIndexBuffer9()
 {
 	for (size_t id : mIds)
 	{
-		WorkItem* workItem = mCommandStreamManager->GetWorkItem(nullptr);
-		workItem->WorkItemType = WorkItemType::IndexBuffer_Destroy;
-		workItem->Id = id;
-		mCommandStreamManager->RequestWorkAndWait(workItem);
+
 	}
 }
 
 void CIndexBuffer9::Init()
 {
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->Id = this->mDevice->mId;
-	workItem->WorkItemType = WorkItemType::IndexBuffer_Create;
-	workItem->Argument1 = (void*)this;
-	this->mId = mCommandStreamManager->RequestWorkAndWait(workItem);
-	this->mIds.push_back(this->mId); //Added so it won't be lost.
+
 }
 
 ULONG STDMETHODCALLTYPE CIndexBuffer9::AddRef(void)
@@ -210,50 +197,36 @@ HRESULT STDMETHODCALLTYPE CIndexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLock
 		}
 	}
 
-	if (mFrameBit != mCommandStreamManager->mFrameBit)
-	{
-		mIndex = 0;
-	}
-	else
-	{
-		if ((Flags & D3DLOCK_NOOVERWRITE) != D3DLOCK_NOOVERWRITE && (Flags & D3DLOCK_READONLY) != D3DLOCK_READONLY)
-		{
-			mLastIndex = mIndex;
-			mIndex++;
-		}
-	}
+	//if (mFrameBit != mCommandStreamManager->mFrameBit)
+	//{
+	//	mIndex = 0;
+	//}
+	//else
+	//{
+	//	if ((Flags & D3DLOCK_NOOVERWRITE) != D3DLOCK_NOOVERWRITE && (Flags & D3DLOCK_READONLY) != D3DLOCK_READONLY)
+	//	{
+	//		mLastIndex = mIndex;
+	//		mIndex++;
+	//	}
+	//}
 
-	if (mIndex > mIds.size() - 1)
-	{
-		Init();
-	}
-	else
-	{
-		mId = mIds[mIndex];
-	}
+	//if (mIndex > mIds.size() - 1)
+	//{
+	//	Init();
+	//}
+	//else
+	//{
+	//	mId = mIds[mIndex];
+	//}
 
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::IndexBuffer_Lock;
-	workItem->Id = mId;
-	workItem->Argument1 = (void*)OffsetToLock;
-	workItem->Argument2 = (void*)SizeToLock;
-	workItem->Argument3 = (void*)ppbData;
-	workItem->Argument4 = (void*)Flags;
-	workItem->Argument5 = (void*)mIds[mLastIndex];
-	mCommandStreamManager->RequestWorkAndWait(workItem);
 
-	mLastIndex = mIndex;
-	mFrameBit = mCommandStreamManager->mFrameBit;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CIndexBuffer9::Unlock()
 {
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::IndexBuffer_Unlock;
-	workItem->Id = mId;
-	mCommandStreamManager->RequestWork(workItem);
+
 
 	InterlockedDecrement(&mLockCount);
 

@@ -24,8 +24,8 @@ misrepresented as being the original software.
 
 #include "CVertexBuffer9.h"
 #include "CDevice9.h"
-
-#include "Utilities.h"
+#include "LogManager.h"
+//#include "PrivateTypes.h"
 
 CVertexBuffer9::CVertexBuffer9(CDevice9* device, UINT Length, DWORD Usage, DWORD FVF, D3DPOOL Pool, HANDLE* pSharedHandle)
 	: mReferenceCount(1),
@@ -38,12 +38,8 @@ CVertexBuffer9::CVertexBuffer9(CDevice9* device, UINT Length, DWORD Usage, DWORD
 	mSize(0),
 	mCapacity(0),
 	mIsDirty(true),
-	mLockCount(0),
-	mId(0)
+	mLockCount(0)
 {
-	this->mCommandStreamManager = this->mDevice->mCommandStreamManager;
-
-	mFrameBit = mCommandStreamManager->mFrameBit;
 
 	mSize = mLength / sizeof(float);
 }
@@ -52,21 +48,13 @@ CVertexBuffer9::~CVertexBuffer9()
 {
 	for (size_t id : mIds)
 	{
-		WorkItem* workItem = mCommandStreamManager->GetWorkItem(nullptr);
-		workItem->WorkItemType = WorkItemType::VertexBuffer_Destroy;
-		workItem->Id = id;
-		mCommandStreamManager->RequestWorkAndWait(workItem);
+
 	}
 }
 
 void CVertexBuffer9::Init()
 {
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->Id = this->mDevice->mId;
-	workItem->WorkItemType = WorkItemType::VertexBuffer_Create;
-	workItem->Argument1 = (void*)this;
-	this->mId = mCommandStreamManager->RequestWorkAndWait(workItem);
-	this->mIds.push_back(this->mId); //Added so it won't be lost.
+
 }
 
 ULONG STDMETHODCALLTYPE CVertexBuffer9::AddRef(void)
@@ -213,50 +201,36 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLoc
 	mOffsetToLock = OffsetToLock;
 	mSizeToLock = SizeToLock;
 
-	if (mFrameBit != mCommandStreamManager->mFrameBit)
-	{
-		mIndex = 0;	
-	}
-	else
-	{
-		if ((Flags & D3DLOCK_NOOVERWRITE) != D3DLOCK_NOOVERWRITE && (Flags & D3DLOCK_READONLY) != D3DLOCK_READONLY)
-		{
-			mLastIndex = mIndex;
-			mIndex++;
-		}
-	}
+	//if (mFrameBit != mCommandStreamManager->mFrameBit)
+	//{
+	//	mIndex = 0;	
+	//}
+	//else
+	//{
+	//	if ((Flags & D3DLOCK_NOOVERWRITE) != D3DLOCK_NOOVERWRITE && (Flags & D3DLOCK_READONLY) != D3DLOCK_READONLY)
+	//	{
+	//		mLastIndex = mIndex;
+	//		mIndex++;
+	//	}
+	//}
 
-	if (mIndex > mIds.size() - 1)
-	{
-		Init();
-	}
-	else
-	{
-		mId = mIds[mIndex];
-	}
+	//if (mIndex > mIds.size() - 1)
+	//{
+	//	Init();
+	//}
+	//else
+	//{
+	//	mId = mIds[mIndex];
+	//}
 
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::VertexBuffer_Lock;
-	workItem->Id = mId;
-	workItem->Argument1 = (void*)OffsetToLock;
-	workItem->Argument2 = (void*)SizeToLock;
-	workItem->Argument3 = (void*)ppbData;
-	workItem->Argument4 = (void*)Flags;
-	workItem->Argument5 = (void*)mIds[mLastIndex];
-	mCommandStreamManager->RequestWorkAndWait(workItem);
 
-	mLastIndex = mIndex;
-	mFrameBit = mCommandStreamManager->mFrameBit;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CVertexBuffer9::Unlock()
 {
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::VertexBuffer_Unlock;
-	workItem->Id = mId;
-	mCommandStreamManager->RequestWork(workItem); //RequestWorkAndWait
+
 
 	InterlockedDecrement(&mLockCount);
 

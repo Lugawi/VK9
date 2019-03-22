@@ -21,17 +21,17 @@ misrepresented as being the original software.
 #ifndef CVERTEXSHADER9_H
 #define CVERTEXSHADER9_H
 
-#include "d3d9.h" // Base class: IDirect3DVertexShader9
-#include "Perf_CommandStreamManager.h"
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_sdk_platform.h>
+#include "d3d9.h"
+
+class CDevice9;
 
 class CVertexShader9 : public IDirect3DVertexShader9
 {
 public:
 	CVertexShader9(CDevice9* device, const DWORD* pFunction);
 	~CVertexShader9();
-
-	size_t mId;
-	std::shared_ptr<CommandStreamManager> mCommandStreamManager;
 
 	CDevice9* mDevice = nullptr;
 	DWORD* mFunction = nullptr;

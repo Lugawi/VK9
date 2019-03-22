@@ -57,9 +57,6 @@
     <ClCompile Include="CTexture9.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CTypes.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CVertexBuffer9.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -75,61 +72,10 @@
     <ClCompile Include="CStateBlock9.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BufferManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Utilities.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CSwapChain9.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CRenderTargetSurface9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ShaderConverter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GarbageManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Perf_CommandStreamManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Perf_StateManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Perf_RenderManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RealInstance.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RealTexture.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RealSurface.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RealVertexBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RealIndexBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SamplerRequest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ResourceContext.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DrawContext.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RealDevice.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Perf_ProcessQueue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CVolume9.cpp">
@@ -137,18 +83,6 @@
     </ClCompile>
     <ClCompile Include="pch\stdafx.cpp">
       <Filter>Precompiled Header</Filter>
-    </ClCompile>
-    <ClCompile Include="RealQuery.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RealSwapChain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RealRenderTarget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RealVolume.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="LogManager.cpp">
       <Filter>Source Files</Filter>
@@ -188,9 +122,6 @@
     <ClInclude Include="CTexture9.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CTypes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CVertexBuffer9.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -203,19 +134,10 @@
     <ClInclude Include="CVolumeTexture9.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utilities.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CStateBlock9.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BufferManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PrivateTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CSwapChain9.h">
@@ -224,55 +146,10 @@
     <ClInclude Include="CRenderTargetSurface9.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ShaderConverter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GarbageManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Perf_CommandStreamManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Perf_RenderManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Perf_StateManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RealDevice.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RealInstance.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RealTexture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RealSurface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RealVertexBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RealIndexBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SamplerRequest.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ResourceContext.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DrawContext.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="WorkItemType.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WorkItem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Perf_ProcessQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CVolume9.h">
@@ -281,25 +158,13 @@
     <ClInclude Include="pch\stdafx.h">
       <Filter>Precompiled Header</Filter>
     </ClInclude>
-    <ClInclude Include="RealQuery.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RealSwapChain.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RealRenderTarget.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vk_mem_alloc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="TinyQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RealVolume.h">
+    <ClInclude Include="LogManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LogManager.h">
+    <ClInclude Include="PrivateTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

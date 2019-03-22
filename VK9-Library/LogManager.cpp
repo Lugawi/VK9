@@ -24,8 +24,6 @@ misrepresented as being the original software.
 
 #include "LogManager.h"
 
-//#include "Utilities.h"
-
 static char SeverityText[6][20] =
 {
 	"[TRACE] ",

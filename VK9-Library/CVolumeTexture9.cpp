@@ -30,8 +30,8 @@ misrepresented as being the original software.
 #include "CDevice9.h"
 #include "CSurface9.h"
 #include "CVolume9.h"
-
-#include "Utilities.h"
+#include "LogManager.h"
+//#include "PrivateTypes.h"
 
 CVolumeTexture9::CVolumeTexture9(CDevice9* device, UINT Width, UINT Height, UINT Depth, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, HANDLE *pSharedHandle)
 	: mReferenceCount(1),
@@ -44,8 +44,7 @@ CVolumeTexture9::CVolumeTexture9(CDevice9* device, UINT Width, UINT Height, UINT
 	mFormat(Format),
 	mPool(Pool),
 	mSharedHandle(pSharedHandle),
-	mResult(VK_SUCCESS),
-	mId(0)
+	mResult(VK_SUCCESS)
 {
 	Log(info) << "CVolumeTexture9::CVolumeTexture9" << std::endl;
 
@@ -82,11 +81,6 @@ CVolumeTexture9::~CVolumeTexture9()
 	{
 		mVolumes[i]->Release();
 	}
-
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(nullptr);
-	workItem->WorkItemType = WorkItemType::VolumeTexture_Destroy;
-	workItem->Id = mId;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
 }
 
 ULONG STDMETHODCALLTYPE CVolumeTexture9::AddRef(void)
@@ -207,11 +201,7 @@ HRESULT STDMETHODCALLTYPE CVolumeTexture9::SetPrivateData(REFGUID refguid, const
 
 VOID STDMETHODCALLTYPE CVolumeTexture9::GenerateMipSubLevels()
 {
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::VolumeTexture_GenerateMipSubLevels;
-	workItem->Id = mId;
-	workItem->Argument1 = this;
-	mCommandStreamManager->RequestWork(workItem);
+
 }
 
 D3DTEXTUREFILTERTYPE STDMETHODCALLTYPE CVolumeTexture9::GetAutoGenFilterType()

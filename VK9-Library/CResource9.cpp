@@ -24,8 +24,8 @@ misrepresented as being the original software.
  
 #include "CResource9.h"
 #include "CDevice9.h"
-
-#include "Utilities.h"
+#include "LogManager.h"
+//#include "PrivateTypes.h"
 
 CResource9::CResource9()
 	: mReferenceCount(1)

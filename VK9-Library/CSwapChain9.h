@@ -21,8 +21,9 @@ misrepresented as being the original software.
 #ifndef CSWAPCHAIN9_H
 #define CSWAPCHAIN9_H
 
-#include "d3d9.h" // Base class: IDirect3DSurface9
-#include "Perf_CommandStreamManager.h"
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_sdk_platform.h>
+#include "d3d9.h"
 
 class CDevice9;
 class CSurface9;
@@ -58,9 +59,6 @@ public:
 	D3DPRESENT_PARAMETERS* mPresentationParameters;
 	CSurface9* mBackBuffer = nullptr;
 	CSurface9* mFrontBuffer = nullptr;
-
-	size_t mId;
-	std::shared_ptr<CommandStreamManager> mCommandStreamManager;
 
 	CSwapChain9(CDevice9* Device, D3DPRESENT_PARAMETERS *pPresentationParameters);
 	~CSwapChain9();

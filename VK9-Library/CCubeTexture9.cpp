@@ -25,8 +25,8 @@ misrepresented as being the original software.
 #include "CCubeTexture9.h"
 #include "CDevice9.h"
 #include "CSurface9.h"
-
-#include "Utilities.h"
+#include "LogManager.h"
+//#include "PrivateTypes.h"
 
 CCubeTexture9::CCubeTexture9(CDevice9* device, UINT EdgeLength, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, HANDLE *pSharedHandle)
 	: mDevice(device),
@@ -37,12 +37,10 @@ CCubeTexture9::CCubeTexture9(CDevice9* device, UINT EdgeLength, UINT Levels, DWO
 	mPool(Pool),
 	mSharedHandle(pSharedHandle),
 	mReferenceCount(1),
-	mResult(vk::Result::eSuccess),
-	mId(0)
+	mResult(vk::Result::eSuccess)
 {
 	Log(info) << "CCubeTexture9::CCubeTexture9" << std::endl;
 	
-	this->mCommandStreamManager = this->mDevice->mCommandStreamManager;
 
 	if (!mLevels)
 	{
@@ -86,10 +84,7 @@ CCubeTexture9::~CCubeTexture9()
 		}		
 	}
 
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(nullptr);
-	workItem->WorkItemType = WorkItemType::CubeTexture_Destroy;
-	workItem->Id = mId;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
+
 }
 
 void CCubeTexture9::Init()
@@ -97,11 +92,7 @@ void CCubeTexture9::Init()
 	//Work-around for games using strange formats that don't support sampling.
 	mFormat = D3DFMT_A8R8G8B8;
 
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->Id = this->mDevice->mId;
-	workItem->WorkItemType = WorkItemType::CubeTexture_Create;
-	workItem->Argument1 = (void*)this;
-	mId = mCommandStreamManager->RequestWorkAndWait(workItem);
+
 }
 
 ULONG STDMETHODCALLTYPE CCubeTexture9::AddRef(void)
@@ -222,11 +213,7 @@ HRESULT STDMETHODCALLTYPE CCubeTexture9::SetPrivateData(REFGUID refguid, const v
 
 VOID STDMETHODCALLTYPE CCubeTexture9::GenerateMipSubLevels()
 {
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::CubeTexture_GenerateMipSubLevels;
-	workItem->Id = mId;
-	workItem->Argument1 = this;
-	mCommandStreamManager->RequestWork(workItem);
+
 }
 
 D3DTEXTUREFILTERTYPE STDMETHODCALLTYPE CCubeTexture9::GetAutoGenFilterType()

@@ -21,8 +21,9 @@ misrepresented as being the original software.
 #ifndef CSTATEBLOCK9_H
 #define CSTATEBLOCK9_H
 
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_sdk_platform.h>
 #include "d3d9.h"
-#include "Perf_CommandStreamManager.h"
 
 class CDevice9;
 
@@ -36,8 +37,6 @@ public:
 	CStateBlock9(CDevice9* device);
 	~CStateBlock9();
 
-	size_t mId;
-	std::shared_ptr<CommandStreamManager> mCommandStreamManager;
 	ULONG mReferenceCount = 1;
 	ULONG mPrivateReferenceCount = 0;
 
@@ -60,7 +59,7 @@ public:
 
 	//Device State
 	D3DSTATEBLOCKTYPE mType = D3DSBT_FORCE_DWORD;
-	DeviceState mDeviceState;
+	//DeviceState mDeviceState;
 
 public:
 

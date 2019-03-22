@@ -25,13 +25,12 @@ misrepresented as being the original software.
 #include "CStateBlock9.h"
 #include "CDevice9.h"
 #include "CTexture9.h"
-
-#include "Utilities.h"
+#include "LogManager.h"
+//#include "PrivateTypes.h"
 
 CStateBlock9::CStateBlock9(CDevice9* device, D3DSTATEBLOCKTYPE Type)
 	: mDevice(device),
-	mType(Type),
-	mId(0)
+	mType(Type)
 {
 
 }
@@ -39,8 +38,7 @@ CStateBlock9::CStateBlock9(CDevice9* device, D3DSTATEBLOCKTYPE Type)
 CStateBlock9::CStateBlock9(CDevice9* device)
 	: mDevice(device)
 {
-	mCommandStreamManager = device->mCommandStreamManager;
-	this->mId = device->mId;
+
 }
 
 CStateBlock9::~CStateBlock9()
@@ -98,22 +96,14 @@ ULONG STDMETHODCALLTYPE CStateBlock9::Release(void)
 
 HRESULT STDMETHODCALLTYPE CStateBlock9::Capture()
 {
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->Id = this->mId;
-	workItem->WorkItemType = WorkItemType::StateBlock_Capture;
-	workItem->Argument1 = this;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
+
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CStateBlock9::Apply()
 {
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->Id = this->mId;
-	workItem->WorkItemType = WorkItemType::StateBlock_Apply;
-	workItem->Argument1 = this;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
+
 
 	return S_OK;
 }

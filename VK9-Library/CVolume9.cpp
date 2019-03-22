@@ -25,9 +25,8 @@ misrepresented as being the original software.
 #include "CDevice9.h"
 #include "CVolume9.h"
 #include "CVolumeTexture9.h"
-#include "CTypes.h"
-
-#include "Utilities.h"
+#include "LogManager.h"
+//#include "PrivateTypes.h"
 
 CVolume9::CVolume9(CDevice9* device, CVolumeTexture9* texture, UINT Width, UINT Height, UINT Depth, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, HANDLE *pSharedHandle)
 	: mReferenceCount(1),
@@ -39,9 +38,7 @@ CVolume9::CVolume9(CDevice9* device, CVolumeTexture9* texture, UINT Width, UINT 
 	mUsage(Usage),
 	mFormat(Format),
 	mPool(Pool),
-	mSharedHandle(pSharedHandle),
-	mId(0),
-	mTextureId(0)
+	mSharedHandle(pSharedHandle)
 {
 	Log(info) << "CVolume9::CVolume9" << std::endl;
 	if (mTexture!=nullptr)
@@ -54,10 +51,7 @@ CVolume9::~CVolume9()
 {
 	Log(info) << "CVolume9::~CVolume9" << std::endl;
 
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(nullptr);
-	workItem->WorkItemType = WorkItemType::Volume_Destroy;
-	workItem->Id = mId;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
+
 
 	if (mTexture != nullptr)
 	{
@@ -84,24 +78,12 @@ void CVolume9::Init()
 		break;
 	}
 
-	mTextureId = mTexture->mId;
 
-
-	mCommandStreamManager = mDevice->mCommandStreamManager;
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->Id = mDevice->mId;
-	workItem->WorkItemType = WorkItemType::Volume_Create;
-	workItem->Argument1 = this;
-	mId = mCommandStreamManager->RequestWorkAndWait(workItem);
 }
 
 void CVolume9::Flush()
 {
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::Volume_Flush;
-	workItem->Id = mId;
-	workItem->Argument1 = (void*)this;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
+
 }
 
 //IUnknown
@@ -208,13 +190,6 @@ HRESULT STDMETHODCALLTYPE CVolume9::LockBox(D3DLOCKED_BOX* pLockedVolume, CONST 
 {
 	mFlags = Flags;
 
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::Volume_LockRect;
-	workItem->Id = mId;
-	workItem->Argument1 = (void*)pLockedVolume;
-	workItem->Argument2 = (void*)pBox;
-	workItem->Argument3 = (void*)Flags;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
 
 	Log(info) << "CVolume9::LockBox" << std::endl;
 
@@ -223,11 +198,7 @@ HRESULT STDMETHODCALLTYPE CVolume9::LockBox(D3DLOCKED_BOX* pLockedVolume, CONST 
 
 HRESULT STDMETHODCALLTYPE CVolume9::UnlockBox()
 {
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::Volume_UnlockRect;
-	workItem->Id = mId;
-	workItem->Argument1 = (void*)this;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
+
 
 	this->Flush();
 

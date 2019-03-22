@@ -21,8 +21,9 @@ misrepresented as being the original software.
 #ifndef CDEVICE9_H
 #define CDEVICE9_H
 
-#include "d3d9.h" // Base class: IDirect3DDevice9
-#include "Perf_CommandStreamManager.h"
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_sdk_platform.h>
+#include "d3d9.h"
 
 #include<vector>
 
@@ -30,6 +31,10 @@ class C9;
 class CSwapChain9;
 class CVertexBuffer9;
 class CIndexBuffer9;
+class CSurface9;
+class CPixelShader9;
+class CVertexShader9;
+class CVertexDeclaration9;
 
 template <typename T1>
 struct Pair
@@ -45,11 +50,6 @@ public:
 	~CDevice9();
 	void Init();
 	void Destroy();
-
-	//CSMT
-	std::shared_ptr<CommandStreamManager> mCommandStreamManager;
-	size_t mInstanceId = 0;
-	size_t mId = 0;
 
 	//Creation Parameters
 	C9* mInstance = nullptr;

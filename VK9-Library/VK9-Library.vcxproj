@@ -398,7 +398,6 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="BufferManager.cpp" />
     <ClCompile Include="C9.cpp" />
     <ClCompile Include="CBaseTexture9.cpp" />
     <ClCompile Include="CCubeTexture9.cpp" />
@@ -412,7 +411,6 @@
     <ClCompile Include="CSurface9.cpp" />
     <ClCompile Include="CSwapChain9.cpp" />
     <ClCompile Include="CTexture9.cpp" />
-    <ClCompile Include="CTypes.cpp" />
     <ClCompile Include="CVertexBuffer9.cpp" />
     <ClCompile Include="CVertexDeclaration9.cpp" />
     <ClCompile Include="CVertexShader9.cpp" />
@@ -433,8 +431,6 @@
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsManaged>
     </ClCompile>
-    <ClCompile Include="DrawContext.cpp" />
-    <ClCompile Include="GarbageManager.cpp" />
     <ClCompile Include="LogManager.cpp" />
     <ClCompile Include="pch\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -454,27 +450,8 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdafx.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="Perf_CommandStreamManager.cpp" />
-    <ClCompile Include="Perf_ProcessQueue.cpp" />
-    <ClCompile Include="Perf_RenderManager.cpp" />
-    <ClCompile Include="Perf_StateManager.cpp" />
-    <ClCompile Include="RealDevice.cpp" />
-    <ClCompile Include="RealIndexBuffer.cpp" />
-    <ClCompile Include="RealInstance.cpp" />
-    <ClCompile Include="RealQuery.cpp" />
-    <ClCompile Include="RealRenderTarget.cpp" />
-    <ClCompile Include="RealSurface.cpp" />
-    <ClCompile Include="RealSwapChain.cpp" />
-    <ClCompile Include="RealTexture.cpp" />
-    <ClCompile Include="RealVertexBuffer.cpp" />
-    <ClCompile Include="RealVolume.cpp" />
-    <ClCompile Include="ResourceContext.cpp" />
-    <ClCompile Include="SamplerRequest.cpp" />
-    <ClCompile Include="ShaderConverter.cpp" />
-    <ClCompile Include="Utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BufferManager.h" />
     <ClInclude Include="C9.h" />
     <ClInclude Include="CBaseTexture9.h" />
     <ClInclude Include="CCubeTexture9.h" />
@@ -488,39 +465,17 @@
     <ClInclude Include="CSurface9.h" />
     <ClInclude Include="CSwapChain9.h" />
     <ClInclude Include="CTexture9.h" />
-    <ClInclude Include="CTypes.h" />
     <ClInclude Include="CVertexBuffer9.h" />
     <ClInclude Include="CVertexDeclaration9.h" />
     <ClInclude Include="CVertexShader9.h" />
     <ClInclude Include="CVolume9.h" />
     <ClInclude Include="CVolumeTexture9.h" />
-    <ClInclude Include="DrawContext.h" />
-    <ClInclude Include="GarbageManager.h" />
     <ClInclude Include="LogManager.h" />
     <ClInclude Include="pch\stdafx.h" />
-    <ClInclude Include="Perf_CommandStreamManager.h" />
-    <ClInclude Include="Perf_ProcessQueue.h" />
-    <ClInclude Include="Perf_RenderManager.h" />
-    <ClInclude Include="Perf_StateManager.h" />
     <ClInclude Include="PrivateTypes.h" />
-    <ClInclude Include="RealDevice.h" />
-    <ClInclude Include="RealIndexBuffer.h" />
-    <ClInclude Include="RealInstance.h" />
-    <ClInclude Include="RealQuery.h" />
-    <ClInclude Include="RealRenderTarget.h" />
-    <ClInclude Include="RealSurface.h" />
-    <ClInclude Include="RealSwapChain.h" />
-    <ClInclude Include="RealTexture.h" />
-    <ClInclude Include="RealVertexBuffer.h" />
-    <ClInclude Include="RealVolume.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="ResourceContext.h" />
-    <ClInclude Include="SamplerRequest.h" />
-    <ClInclude Include="ShaderConverter.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TinyQueue.h" />
-    <ClInclude Include="Utilities.h" />
-    <ClInclude Include="vk_mem_alloc.h" />
     <ClInclude Include="WorkItem.h" />
     <ClInclude Include="WorkItemType.h" />
   </ItemGroup>

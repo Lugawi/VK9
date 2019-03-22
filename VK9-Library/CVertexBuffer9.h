@@ -21,8 +21,11 @@ misrepresented as being the original software.
 #ifndef CVERTEXBUFFER9_H
 #define CVERTEXBUFFER9_H
 
-#include "d3d9.h" // Base class: IDirect3DVertexBuffer9
-#include "Perf_CommandStreamManager.h"
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_sdk_platform.h>
+#include "d3d9.h"
+
+class CDevice9;
 
 class CVertexBuffer9 : public IDirect3DVertexBuffer9
 {
@@ -31,9 +34,6 @@ public:
 	~CVertexBuffer9();
 
 	void Init();
-
-	size_t mId;
-	std::shared_ptr<CommandStreamManager> mCommandStreamManager;
 
 	CDevice9* mDevice;
 	UINT mLength;

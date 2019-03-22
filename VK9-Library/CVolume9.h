@@ -21,8 +21,9 @@ misrepresented as being the original software.
 #ifndef CVOLUME9_H
 #define CVOLUME9_H
 
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_sdk_platform.h>
 #include "d3d9.h"
-#include "Perf_CommandStreamManager.h"
 
 class CDevice9;
 class CVolumeTexture9;
@@ -32,10 +33,6 @@ class CVolume9 : public IDirect3DVolume9
 public:
 	CVolume9(CDevice9* device, CVolumeTexture9* texture, UINT Width, UINT Height, UINT Depth, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, HANDLE *pSharedHandle);
 	~CVolume9();
-
-	size_t mId;
-	size_t mTextureId;
-	std::shared_ptr<CommandStreamManager> mCommandStreamManager;
 
 	CDevice9* mDevice = nullptr;
 	CVolumeTexture9* mTexture = nullptr;

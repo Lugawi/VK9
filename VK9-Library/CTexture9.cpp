@@ -32,8 +32,8 @@ misrepresented as being the original software.
 #include "CTexture9.h"
 #include "CSurface9.h"
 #include "CDevice9.h"
-
-#include "Utilities.h"
+#include "LogManager.h"
+//#include "PrivateTypes.h"
 
 CTexture9::CTexture9(CDevice9* device, UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, HANDLE *pSharedHandle)
 	: mDevice(device),
@@ -43,12 +43,10 @@ CTexture9::CTexture9(CDevice9* device, UINT Width, UINT Height, UINT Levels, DWO
 	mUsage(Usage),
 	mFormat(Format),
 	mPool(Pool),
-	mSharedHandle(pSharedHandle),
-	mId(0)
+	mSharedHandle(pSharedHandle)
 {
 	Log(info) << "CTexture9::CTexture9" << std::endl;
 
-	this->mCommandStreamManager = this->mDevice->mCommandStreamManager;
 	//mDevice->AddRef();
 
 	if (!mLevels)
@@ -98,10 +96,7 @@ CTexture9::~CTexture9()
 
 	for (size_t id : mIds)
 	{
-		WorkItem* workItem = mCommandStreamManager->GetWorkItem(nullptr);
-		workItem->WorkItemType = WorkItemType::Texture_Destroy;
-		workItem->Id = id;
-		mCommandStreamManager->RequestWorkAndWait(workItem);
+
 	}
 }
 
@@ -110,12 +105,7 @@ void CTexture9::Init()
 	//Work-around for games using strange formats that don't support sampling.
 	mFormat = D3DFMT_A8R8G8B8;
 
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->Id = this->mDevice->mId;
-	workItem->WorkItemType = WorkItemType::Texture_Create;
-	workItem->Argument1 = (void*)this;
-	this->mId = mCommandStreamManager->RequestWorkAndWait(workItem);
-	this->mIds.push_back(this->mId); //Added so it won't be lost.
+
 }
 
 ULONG STDMETHODCALLTYPE CTexture9::AddRef(void)
@@ -236,11 +226,7 @@ HRESULT STDMETHODCALLTYPE CTexture9::SetPrivateData(REFGUID refguid, const void*
 
 VOID STDMETHODCALLTYPE CTexture9::GenerateMipSubLevels()
 {
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::Texture_GenerateMipSubLevels;
-	workItem->Id = mId;
-	workItem->Argument1 = this;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
+
 }
 
 D3DTEXTUREFILTERTYPE STDMETHODCALLTYPE CTexture9::GetAutoGenFilterType()

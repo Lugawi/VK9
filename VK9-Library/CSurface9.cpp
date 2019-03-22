@@ -26,9 +26,8 @@ misrepresented as being the original software.
 #include "CDevice9.h"
 #include "CTexture9.h"
 #include "CCubeTexture9.h"
-#include "CTypes.h"
-
-#include "Utilities.h"
+#include "LogManager.h"
+//#include "PrivateTypes.h"
 
 CSurface9::CSurface9(CDevice9* Device, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DFORMAT Format)
 	: mDevice(Device)
@@ -193,35 +192,22 @@ void CSurface9::Init()
 
 	if (mCubeTexture != nullptr)
 	{
-		mTextureId = mCubeTexture->mId;
 		mCubeTexture->AddRef();
 	}
 	else if (mTexture!=nullptr)
 	{
-		mTextureId = mTexture->mId;
 		mTexture->AddRef();
 	}
-	mLastTextureId = mTextureId;
 
-	mCommandStreamManager = mDevice->mCommandStreamManager;
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->Id = mDevice->mId;
-	workItem->WorkItemType = WorkItemType::Surface_Create;
-	workItem->Argument1 = this;
-	mId = mCommandStreamManager->RequestWorkAndWait(workItem);
+
+
 }
 
 CSurface9::~CSurface9()
 {
 	Log(info) << "CSurface9::~CSurface9" << std::endl;
 
-	if (mId != -1)
-	{
-		WorkItem* workItem = mCommandStreamManager->GetWorkItem(nullptr);
-		workItem->WorkItemType = WorkItemType::Surface_Destroy;
-		workItem->Id = mId;
-		mCommandStreamManager->RequestWorkAndWait(workItem);
-	}
+
 
 	if (mCubeTexture != nullptr)
 	{
@@ -386,15 +372,7 @@ HRESULT STDMETHODCALLTYPE CSurface9::LockRect(D3DLOCKED_RECT* pLockedRect, const
 {
 	mFlags = Flags;
 	
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::Surface_LockRect;
-	workItem->Id = mId;
-	workItem->Argument1 = (void*)pLockedRect;
-	workItem->Argument2 = (void*)pRect;
-	workItem->Argument3 = (void*)Flags;
-	workItem->Argument4 = (void*)mTextureId;
-	workItem->Argument5 = (void*)mLastTextureId;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
+
 
 	return S_OK;
 }
@@ -410,11 +388,7 @@ HRESULT STDMETHODCALLTYPE CSurface9::ReleaseDC(HDC hdc)
 
 HRESULT STDMETHODCALLTYPE CSurface9::UnlockRect()
 {
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::Surface_UnlockRect;
-	workItem->Id = mId;
-	workItem->Argument1 = (void*)this;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
+
 
 	this->Flush();
 
@@ -423,9 +397,5 @@ HRESULT STDMETHODCALLTYPE CSurface9::UnlockRect()
 
 void CSurface9::Flush()
 {
-	WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	workItem->WorkItemType = WorkItemType::Surface_Flush;
-	workItem->Id = mId;
-	workItem->Argument1 = (void*)this;
-	mCommandStreamManager->RequestWorkAndWait(workItem);
+
 }

@@ -24,8 +24,8 @@ misrepresented as being the original software.
  
 #include "CBaseTexture9.h"
 #include "CDevice9.h"
-
-#include "Utilities.h"
+#include "LogManager.h"
+//#include "PrivateTypes.h"
 
 CBaseTexture9::CBaseTexture9()
 	: mReferenceCount(1),

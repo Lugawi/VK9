@@ -21,7 +21,9 @@ misrepresented as being the original software.
 #ifndef CRENDERTARGETSURFACE9_H
 #define CRENDERTARGETSURFACE9_H
 
-#include "d3d9.h" // Base class: IDirect3DSurface9
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_sdk_platform.h>
+#include "d3d9.h"
 
 class CTexture9;
 class CDevice9;

@@ -21,8 +21,9 @@ misrepresented as being the original software.
 #ifndef CVERTEXDECLARATION9_H
 #define CVERTEXDECLARATION9_H
 
-#include "d3d9.h" // Base class: IDirect3DVertexDeclaration9
-#include "Perf_CommandStreamManager.h"
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_sdk_platform.h>
+#include "d3d9.h"
 
 class CDevice9;
 
