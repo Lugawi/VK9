@@ -1,3 +1,5 @@
+#pragma once
+
 /*
 Copyright(c) 2019 Christopher Joseph Dean Schaefer
 
@@ -18,9 +20,6 @@ misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#ifndef LOGMANAGER_H
-#define LOGMANAGER_H
-
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -32,7 +31,9 @@ misrepresented as being the original software.
 #include <vulkan/vk_sdk_platform.h>
 #include <vulkan/vulkan.hpp>
 #include <spirv.hpp>
-#include <GLSL.std.450.h>
+//#include <GLSL.std.450.h>
+
+std::ostream& operator<< (std::ostream& os, vk::Result result);
 
 enum SeverityLevel
 {
@@ -135,5 +136,3 @@ public:
 };
 
 LockedStream Log(SeverityLevel severityLevel);
-
-#endif // LOGMANAGER_H

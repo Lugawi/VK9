@@ -54,7 +54,7 @@ CVolumeTexture9::CVolumeTexture9(CDevice9* device, UINT Width, UINT Height, UINT
 	}
 	else if (!mLevels)
 	{
-		mLevels = std::min(std::log2(std::max(mWidth, mHeight)) + 1.0, 10.0);
+		mLevels = (UINT)std::min(std::log2(std::max(mWidth, mHeight)) + 1.0, 10.0);
 	}
 
 	mVolumes.reserve(mLevels);

@@ -452,6 +452,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BitCast.h" />
     <ClInclude Include="C9.h" />
     <ClInclude Include="CBaseTexture9.h" />
     <ClInclude Include="CCubeTexture9.h" />

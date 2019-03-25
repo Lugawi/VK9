@@ -44,7 +44,7 @@ CCubeTexture9::CCubeTexture9(CDevice9* device, UINT EdgeLength, UINT Levels, DWO
 
 	if (!mLevels)
 	{
-		mLevels = std::log2(mEdgeLength) + 1;
+		mLevels = (UINT)std::log2(mEdgeLength) + 1;
 	}
 
 	//mLevels = 1; //workaround

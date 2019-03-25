@@ -51,7 +51,7 @@ CTexture9::CTexture9(CDevice9* device, UINT Width, UINT Height, UINT Levels, DWO
 
 	if (!mLevels)
 	{
-		mLevels = std::log2( std::max(mWidth, mHeight) ) + 1;
+		mLevels = (UINT)std::log2( std::max(mWidth, mHeight) ) + 1;
 	}
 
 	//mLevels = 1; //workaround

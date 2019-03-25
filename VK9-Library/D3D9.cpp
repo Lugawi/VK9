@@ -33,18 +33,12 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
 {
 	C9* instance = new C9();
 
-	//WINAPI to get monitor info
-	EnumDisplayMonitors(GetDC(NULL), NULL, MonitorEnumProc, (LPARAM)&(instance->mMonitors));
-
 	return (IDirect3D9*)instance;
 }
 
 HRESULT WINAPI Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** out)
 {
 	C9* instance = new C9();
-
-	//WINAPI to get monitor info
-	EnumDisplayMonitors(GetDC(NULL), NULL, MonitorEnumProc, (LPARAM)&(instance->mMonitors));
 
 	(*out) = (IDirect3D9Ex*)instance;
 

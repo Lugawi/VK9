@@ -1,5 +1,7 @@
+#pragma once
+
 /*
-Copyright(c) 2016 Christopher Joseph Dean Schaefer
+Copyright(c) 2016-2019 Christopher Joseph Dean Schaefer
 
 This software is provided 'as-is', without any express or implied
 warranty.In no event will the authors be held liable for any damages
@@ -17,15 +19,55 @@ appreciated but is not required.
 misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
- 
-#ifndef C9_H
-#define C9_H
 
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vk_sdk_platform.h>
 #include "d3d9.h"
 
 #include <vector>
+
+#include "renderdoc_app.h"
+
+VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object, size_t location, int32_t messageCode, const char* layerPrefix, const char* message, void* userData);
+
+static PFN_vkCmdPushDescriptorSetKHR pfn_vkCmdPushDescriptorSetKHR;
+VKAPI_ATTR void VKAPI_CALL vkCmdPushDescriptorSetKHR(
+	VkCommandBuffer                             commandBuffer,
+	VkPipelineBindPoint                         pipelineBindPoint,
+	VkPipelineLayout                            layout,
+	uint32_t                                    set,
+	uint32_t                                    descriptorWriteCount,
+	const VkWriteDescriptorSet*                 pDescriptorWrites);
+
+static PFN_vkCreateDebugReportCallbackEXT pfn_vkCreateDebugReportCallbackEXT;
+VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugReportCallbackEXT(
+	VkInstance                                  instance,
+	const VkDebugReportCallbackCreateInfoEXT*   pCreateInfo,
+	const VkAllocationCallbacks*                pAllocator,
+	VkDebugReportCallbackEXT*                   pCallback);
+
+static PFN_vkDestroyDebugReportCallbackEXT pfn_vkDestroyDebugReportCallbackEXT;
+VKAPI_ATTR void VKAPI_CALL vkDestroyDebugReportCallbackEXT(
+	VkInstance                                  instance,
+	VkDebugReportCallbackEXT                    callback,
+	const VkAllocationCallbacks*                pAllocator);
+
+static PFN_vkDebugReportMessageEXT pfn_vkDebugReportMessageEXT;
+VKAPI_ATTR void VKAPI_CALL vkDebugReportMessageEXT(
+	VkInstance                                  instance,
+	VkDebugReportFlagsEXT                       flags,
+	VkDebugReportObjectTypeEXT                  objectType,
+	uint64_t                                    object,
+	size_t                                      location,
+	int32_t                                     messageCode,
+	const char*                                 pLayerPrefix,
+	const char*                                 pMessage);
+
+BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData);
+
+void LTrim(std::string &s);
+void RTrim(std::string &s);
+void Trim(std::string &s);
 
 struct Monitor
 {
@@ -37,42 +79,56 @@ struct Monitor
 	uint32_t PixelBits = 0;
 	uint32_t ColorPlanes = 0;
 
+	LUID LUID = {};
+
 	std::vector<D3DDISPLAYMODE> Modes;
 	std::vector<D3DDISPLAYMODEEX> ExModes;
+};
+
+struct CustomGUID
+{
+	DWORD Data1;
+	WORD  Data2;
+	WORD  Data3;
+	WORD  Data4;
+	uint64_t  Data5; //really this is 6 but we'll just truncate.
 };
 
 class C9 : public IDirect3D9Ex
 {
 public:
-	ULONG mReferenceCount = 1;
-	ULONG mPrivateReferenceCount = 0;
-
-	ULONG PrivateAddRef(void)
-	{
-		return InterlockedIncrement(&mPrivateReferenceCount);
-	}
-
-	ULONG PrivateRelease(void)
-	{
-		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
-
-		if (ref == 0 && mReferenceCount == 0)
-		{
-			delete this;
-		}
-
-		return ref;
-	}
-
-public:
 	C9();
 	~C9();
 
+	//Reference Counting
+	ULONG mReferenceCount = 1;
+	ULONG mPrivateReferenceCount = 0;
+
+	ULONG PrivateAddRef(void);
+	ULONG PrivateRelease(void);
 
 	//Monitor stuff
 	uint32_t mDisplayCount = 0;	
-	std::vector<Monitor> mMonitors;
-	LUID mLUID = {};
+	std::vector<Monitor> mMonitors;	
+
+	//Vulkan
+	vk::UniqueInstance mInstance;
+	vk::UniqueDebugReportCallbackEXT mCallback;
+	std::vector<vk::PhysicalDevice> mPhysicalDevices;
+	size_t mPhysicalDeviceIndex;
+	vk::PhysicalDeviceProperties mPhysicalDeviceProperties;
+	vk::PhysicalDeviceMemoryProperties mPhysicalDeviceMemoryProperties;
+	std::vector<vk::QueueFamilyProperties> mQueueFamilyProperties;
+	size_t mGraphicsQueueFamilyIndex;
+
+	//RenderDoc
+	HMODULE mRenderDocDll = nullptr;
+	RENDERDOC_API_1_1_1* mRenderDocApi = nullptr;
+
+	//Configuration
+	std::map<std::string, std::string> mConfiguration;
+	void LoadConfiguration(std::string filename);
+	std::string mGameName;
 
 public:
 	//IUnknown
@@ -102,10 +158,4 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE GetAdapterDisplayModeEx(UINT Adapter, D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation);
 	virtual HRESULT STDMETHODCALLTYPE CreateDeviceEx(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode, IDirect3DDevice9Ex **ppReturnedDeviceInterface);
 	virtual HRESULT STDMETHODCALLTYPE GetAdapterLUID(UINT Adapter, LUID *pLUID);
-
-
 };
-
-BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData);
-
-#endif // C9_H
