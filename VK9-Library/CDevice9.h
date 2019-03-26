@@ -1,5 +1,7 @@
+#pragma once
+
 /*
-Copyright(c) 2016 Christopher Joseph Dean Schaefer
+Copyright(c) 2016-2019 Christopher Joseph Dean Schaefer
 
 This software is provided 'as-is', without any express or implied
 warranty.In no event will the authors be held liable for any damages
@@ -18,12 +20,11 @@ misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
  */
 
-#ifndef CDEVICE9_H
-#define CDEVICE9_H
-
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vk_sdk_platform.h>
 #include "d3d9.h"
+
+#include "DeviceState.h"
 
 #include<vector>
 
@@ -48,11 +49,16 @@ class CDevice9 : public IDirect3DDevice9Ex
 public:
 	CDevice9(C9* Instance, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode);
 	~CDevice9();
-	void Init();
-	void Destroy();
+
+	//Reference Counting
+	ULONG mReferenceCount = 1;
+	ULONG mPrivateReferenceCount = 0;
+
+	ULONG PrivateAddRef(void);
+	ULONG PrivateRelease(void);
 
 	//Creation Parameters
-	C9* mInstance = nullptr;
+	C9* mC9 = nullptr;
 	UINT mAdapter = 0;
 	D3DDEVTYPE mDeviceType = D3DDEVTYPE_HAL;
 	HWND mFocusWindow = 0;
@@ -60,50 +66,25 @@ public:
 	D3DPRESENT_PARAMETERS mPresentationParameters = {};
 	D3DDISPLAYMODEEX mFullscreenDisplayMode = {};
 
+	//Vulkan
+	vk::UniqueDevice mDevice;
+	vk::UniqueCommandPool mCommandPool;
+	vk::UniqueDescriptorPool mDescriptorPool;
+	vk::Queue mQueue;
+
+	vk::UniqueBuffer mUpVertexBuffer;
+	vk::UniqueBuffer mUpIndexBuffer;
+	vk::UniqueDeviceMemory mUpVertexBufferMemory;	
+	vk::UniqueDeviceMemory mUpIndexBufferMemory;
+
+	bool FindMemoryTypeFromProperties(uint32_t typeBits, vk::MemoryPropertyFlags requirements_mask, uint32_t* typeIndex);
+
+	//D3D9 State
+	DeviceState mDeviceState;
+
 	//Misc
-	ULONG mReferenceCount = 1;
-	ULONG mPrivateReferenceCount = 0;
-
-	ULONG PrivateAddRef(void)
-	{
-		return InterlockedIncrement(&mPrivateReferenceCount);
-	}
-
-	ULONG PrivateRelease(void)
-	{
-		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
-
-		if (ref == 0 && mReferenceCount == 0)
-		{
-			delete this;
-		}
-
-		return ref;
-	}
-
-	uint32_t mDisplayCount = 0;	
-	std::vector<CSwapChain9*> mSwapChains;
-	CSurface9* mRenderTargets[4] = {};
-
-	BOOL mIsDirty = true;
-	
 	PAINTSTRUCT* mPaintInformation = {};
 
-	CSurface9* mDepthStencilSurface = nullptr;
-	CIndexBuffer9* mIndexBuffer = nullptr;
-	CPixelShader9* mPixelShader = nullptr;
-	CVertexShader9* mVertexShader = nullptr;
-	CVertexBuffer9* mVertexBuffer = nullptr;
-	IDirect3DBaseTexture9* mTextures[16] = {};
-	CVertexDeclaration9* mVertexDeclaration = nullptr;
-
-	UINT mAvailableTextureMemory = 0;
-	UINT mMaxLatency = 0;
-	INT mPriority = 0;
-
-	//Buffer Caches
-	std::vector<CVertexBuffer9*> mTempVertexBuffers;
-	std::vector<CIndexBuffer9*> mTempIndexBuffers;
 
 public:
 
@@ -247,7 +228,3 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE ResetEx(D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode);
 	virtual HRESULT STDMETHODCALLTYPE GetDisplayModeEx(UINT iSwapChain, D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation);
 };
-
-
-
-#endif // CDEVICE9_H

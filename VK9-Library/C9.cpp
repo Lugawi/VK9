@@ -1239,8 +1239,6 @@ HRESULT STDMETHODCALLTYPE C9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, 
 
 	(*ppReturnedDeviceInterface) = (IDirect3DDevice9*)obj;
 
-	obj->Init();
-
 	return result;
 }
 
@@ -1835,8 +1833,6 @@ HRESULT STDMETHODCALLTYPE C9::CreateDeviceEx(UINT Adapter, D3DDEVTYPE DeviceType
 	CDevice9* obj = new CDevice9(this, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, pFullscreenDisplayMode);
 
 	(*ppReturnedDeviceInterface) = (IDirect3DDevice9Ex*)obj;
-
-	obj->Init();
 
 	return result;
 }

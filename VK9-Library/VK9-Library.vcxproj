@@ -471,6 +471,7 @@
     <ClInclude Include="CVertexShader9.h" />
     <ClInclude Include="CVolume9.h" />
     <ClInclude Include="CVolumeTexture9.h" />
+    <ClInclude Include="DeviceState.h" />
     <ClInclude Include="LogManager.h" />
     <ClInclude Include="pch\stdafx.h" />
     <ClInclude Include="PrivateTypes.h" />

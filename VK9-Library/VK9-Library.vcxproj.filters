@@ -170,6 +170,9 @@
     <ClInclude Include="BitCast.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DeviceState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="d3d9.def">

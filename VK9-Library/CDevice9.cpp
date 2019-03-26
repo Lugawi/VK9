@@ -1,7 +1,3 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-
 /*
 Copyright(c) 2016 Christopher Joseph Dean Schaefer
 
@@ -26,6 +22,14 @@ misrepresented as being the original software.
 #define NOMINMAX
 #endif // NOMINMAX
 
+#ifndef MAX_DESCRIPTOR
+#define MAX_DESCRIPTOR 2048u
+#endif // !MAX_DESCRIPTOR
+
+#ifndef MAX_BUFFERUPDATE
+#define MAX_BUFFERUPDATE 65536u
+#endif // !MAX_BUFFERUPDATE
+
 #include <wingdi.h> //used for gamma ramp
 
 #include "C9.h"
@@ -49,9 +53,9 @@ misrepresented as being the original software.
 #include "LogManager.h"
 //#include "PrivateTypes.h"
 
-CDevice9::CDevice9(C9* Instance, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode)
+CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode)
 	:
-	mInstance(Instance),
+	mC9(c9),
 	mAdapter(Adapter),
 	mDeviceType(DeviceType),
 	mFocusWindow(hFocusWindow),
@@ -72,16 +76,7 @@ CDevice9::CDevice9(C9* Instance, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocu
 	{
 		memcpy(&mFullscreenDisplayMode, pFullscreenDisplayMode, sizeof(D3DDISPLAYMODEEX));
 	}
-}
 
-CDevice9::~CDevice9()
-{
-	Destroy();
-	Log(info) << "CDevice9::~CDevice9" << std::endl;
-}
-
-void CDevice9::Init()
-{
 	//Setup Windows window
 	if (!mPresentationParameters.BackBufferWidth)
 	{
@@ -104,10 +99,56 @@ void CDevice9::Init()
 		InvalidateRect(mFocusWindow, 0, true);
 	}
 
+	//Create a device (unique device will auto destroy)
+	float queuePriority = 0.0f;
+	const vk::DeviceQueueCreateInfo deviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), static_cast<uint32_t>(mC9->mGraphicsQueueFamilyIndex), 1, &queuePriority);
+	std::vector<char const*> deviceExtensionNames;
+	deviceExtensionNames.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+	mDevice = mC9->mPhysicalDevices[mC9->mPhysicalDeviceIndex].createDeviceUnique(vk::DeviceCreateInfo({}, 1, &deviceQueueCreateInfo, 0, nullptr, static_cast<uint32_t>(deviceExtensionNames.size()), deviceExtensionNames.data()));
+
+	//Create command pool
+	mCommandPool = mDevice->createCommandPoolUnique(vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, deviceQueueCreateInfo.queueFamilyIndex));
+
+	//Create a descriptor pool that should be able to allocate enough of any type.
+	const vk::DescriptorPoolSize descriptorPoolSizes[11] = 
+	{
+		vk::DescriptorPoolSize(vk::DescriptorType::eSampler,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetSamplers)),
+		vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxPerStageDescriptorSamplers)),
+		vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetSampledImages)),
+		vk::DescriptorPoolSize(vk::DescriptorType::eStorageImage,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetStorageImages)),
+		vk::DescriptorPoolSize(vk::DescriptorType::eUniformTexelBuffer,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxPerStageDescriptorSampledImages)),
+		vk::DescriptorPoolSize(vk::DescriptorType::eStorageTexelBuffer,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxPerStageDescriptorStorageImages)),
+		vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetUniformBuffers)),
+		vk::DescriptorPoolSize(vk::DescriptorType::eStorageBuffer,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetStorageBuffers)),
+		vk::DescriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetUniformBuffersDynamic)),
+		vk::DescriptorPoolSize(vk::DescriptorType::eStorageBufferDynamic,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetStorageBuffersDynamic)),
+		vk::DescriptorPoolSize(vk::DescriptorType::eInputAttachment,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetInputAttachments))
+	};
+	mDescriptorPool = mDevice->createDescriptorPoolUnique(vk::DescriptorPoolCreateInfo(vk::DescriptorPoolCreateFlags(), std::min(MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetSamplers), 11, &descriptorPoolSizes[0]));
+
+	//Setup buffers for up draw methods
+	auto const upVertexBufferInfo = vk::BufferCreateInfo().setSize(MAX_BUFFERUPDATE).setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst);
+	auto const upIndexBufferInfo = vk::BufferCreateInfo().setSize(MAX_BUFFERUPDATE).setUsage(vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst);
+
+	mUpVertexBuffer = mDevice->createBufferUnique(upVertexBufferInfo);
+	mUpIndexBuffer = mDevice->createBufferUnique(upIndexBufferInfo);
+
+	vk::MemoryRequirements mem_reqs;
+	mDevice->getBufferMemoryRequirements(mUpVertexBuffer.get(), &mem_reqs);
+
+	auto mem_alloc = vk::MemoryAllocateInfo().setAllocationSize(mem_reqs.size).setMemoryTypeIndex(0);
+	FindMemoryTypeFromProperties(mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, &mem_alloc.memoryTypeIndex);
+
+	mUpVertexBufferMemory = mDevice->allocateMemoryUnique(mem_alloc);
+	mUpIndexBufferMemory = mDevice->allocateMemoryUnique(mem_alloc);
+
+	mDevice->bindBufferMemory(mUpVertexBuffer.get(), mUpVertexBufferMemory.get(),0);
+	mDevice->bindBufferMemory(mUpIndexBuffer.get(), mUpIndexBufferMemory.get(),0);
+
 	//Add implicit swap chain.
 	CSwapChain9* ptr = nullptr;
 	CreateAdditionalSwapChain(&mPresentationParameters, (IDirect3DSwapChain9**)&ptr);
-	mSwapChains.push_back(ptr);
+	mDeviceState.mSwapChains.push_back(ptr);
 
 	//Add implicit render target
 	SetRenderTarget(0, ptr->mBackBuffer);
@@ -119,25 +160,47 @@ void CDevice9::Init()
 	depth->Release();
 }
 
-void CDevice9::Destroy()
+CDevice9::~CDevice9()
 {
-	//Delete any temp buffers used to handle the UP draw calls.
-	for (auto buffer : mTempVertexBuffers)
+
+}
+
+ULONG CDevice9::PrivateAddRef(void)
+{
+	return InterlockedIncrement(&mPrivateReferenceCount);
+}
+
+ULONG CDevice9::PrivateRelease(void)
+{
+	ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
+
+	if (ref == 0 && mReferenceCount == 0)
 	{
-		delete buffer;
-	}
-	for (auto buffer : mTempIndexBuffers)
-	{
-		delete buffer;
+		delete this;
 	}
 
-	for (size_t i = 0; i < mSwapChains.size(); i++)
+	return ref;
+}
+
+bool CDevice9::FindMemoryTypeFromProperties(uint32_t typeBits, vk::MemoryPropertyFlags requirements_mask, uint32_t* typeIndex)
+{
+	// Search memtypes to find first index with those properties
+	for (uint32_t i = 0; i < VK_MAX_MEMORY_TYPES; i++)
 	{
-		delete mSwapChains[i];
+		if ((typeBits & 1) == 1)
+		{
+			// Type is available, does it match user properties?
+			if ((mC9->mPhysicalDeviceMemoryProperties.memoryTypes[i].propertyFlags & requirements_mask) == requirements_mask)
+			{
+				*typeIndex = i;
+				return true;
+			}
+		}
+		typeBits >>= 1;
 	}
-	mSwapChains.clear();
 
-
+	// No memory types matched, return failure
+	return false;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::Clear(DWORD Count, const D3DRECT *pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
@@ -152,11 +215,6 @@ HRESULT STDMETHODCALLTYPE CDevice9::BeginScene() //
 {
 	//According to a tip from the Nine team games don't always use the begin/end scene functions correctly.
 
-	//WorkItem* workItem = mCommandStreamManager->GetWorkItem(this);
-	//workItem->WorkItemType = WorkItemType::Device_BeginScene;
-	//workItem->Id = mId;
-	//mCommandStreamManager->RequestWork(workItem);
-
 	return D3D_OK;
 }
 
@@ -169,15 +227,6 @@ HRESULT STDMETHODCALLTYPE CDevice9::EndScene()
 
 HRESULT STDMETHODCALLTYPE CDevice9::Present(const RECT *pSourceRect, const RECT *pDestRect, HWND hDestWindowOverride, const RGNDATA *pDirtyRegion)
 {
-	//Mark the temp buffers as unused.
-	for (auto& buffer : mTempVertexBuffers)
-	{
-		buffer->mIsUsed = false;
-	}
-	for (auto& buffer : mTempIndexBuffers)
-	{
-		buffer->mIsUsed = false;
-	}
 
 	//if (mCommandStreamManager->mResult == vk::Result::eErrorDeviceLost) { return D3DERR_DEVICELOST; }
 
@@ -492,103 +541,103 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitive(D3DPRIMITIVETYPE Type, 
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, const void *pIndexData, D3DFORMAT IndexDataFormat, const void *pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
-	//Figure out the current buffer setup.
-	IDirect3DIndexBuffer9* oldIndexBuffer = nullptr;
+	////Figure out the current buffer setup.
+	//IDirect3DIndexBuffer9* oldIndexBuffer = nullptr;
 
-	GetIndices(&oldIndexBuffer);
+	//GetIndices(&oldIndexBuffer);
 
-	IDirect3DVertexBuffer9* oldVertexBuffer = nullptr;
-	UINT oldOffsetInBytes = 0;
-	UINT oldStride = 0;
+	//IDirect3DVertexBuffer9* oldVertexBuffer = nullptr;
+	//UINT oldOffsetInBytes = 0;
+	//UINT oldStride = 0;
 
-	GetStreamSource(0, &oldVertexBuffer, &oldOffsetInBytes, &oldStride);
+	//GetStreamSource(0, &oldVertexBuffer, &oldOffsetInBytes, &oldStride);
 
-	//Setup temp buffers
-	UINT indexLength = 0;
-	UINT vertexLength = NumVertices * VertexStreamZeroStride;
-	DWORD Usage = 0;
+	////Setup temp buffers
+	//UINT indexLength = 0;
+	//UINT vertexLength = NumVertices * VertexStreamZeroStride;
+	//DWORD Usage = 0;
 
-	switch (PrimitiveType)
-	{
-	case D3DPT_POINTLIST:
-		indexLength = (PrimitiveCount) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
-		break;
-	case D3DPT_LINELIST:
-		indexLength = (PrimitiveCount * 2) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
-		break;
-	case D3DPT_LINESTRIP:
-		indexLength = (PrimitiveCount + 1) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
-		break;
-	case D3DPT_TRIANGLELIST:
-		indexLength = (PrimitiveCount * 3) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
-		break;
-	case D3DPT_TRIANGLESTRIP:
-		indexLength = (PrimitiveCount + 2) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
-		break;
-	case D3DPT_TRIANGLEFAN:
-		indexLength = (PrimitiveCount + 2) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
-		break;
-	default:
-		//indexLength = PrimitiveCount;
-		break;
-	}
+	//switch (PrimitiveType)
+	//{
+	//case D3DPT_POINTLIST:
+	//	indexLength = (PrimitiveCount) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
+	//	break;
+	//case D3DPT_LINELIST:
+	//	indexLength = (PrimitiveCount * 2) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
+	//	break;
+	//case D3DPT_LINESTRIP:
+	//	indexLength = (PrimitiveCount + 1) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
+	//	break;
+	//case D3DPT_TRIANGLELIST:
+	//	indexLength = (PrimitiveCount * 3) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
+	//	break;
+	//case D3DPT_TRIANGLESTRIP:
+	//	indexLength = (PrimitiveCount + 2) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
+	//	break;
+	//case D3DPT_TRIANGLEFAN:
+	//	indexLength = (PrimitiveCount + 2) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
+	//	break;
+	//default:
+	//	//indexLength = PrimitiveCount;
+	//	break;
+	//}
 
-	CIndexBuffer9* indexBuffer = nullptr;
-	CVertexBuffer9* vertexBuffer = nullptr;
-	void* buffer = nullptr;
+	//CIndexBuffer9* indexBuffer = nullptr;
+	//CVertexBuffer9* vertexBuffer = nullptr;
+	//void* buffer = nullptr;
 
-	for (auto& buffer : mTempIndexBuffers)
-	{
-		if (!buffer->mIsUsed && buffer->mLength >= indexLength)
-		{
-			indexBuffer = buffer;
-			break;
-		}
-	}
-	if (indexBuffer == nullptr)
-	{
-		CreateIndexBuffer(indexLength, Usage, IndexDataFormat, D3DPOOL_DEFAULT, (IDirect3DIndexBuffer9**)&indexBuffer, nullptr);
-		mTempIndexBuffers.push_back(indexBuffer);
-	}
+	//for (auto& buffer : mTempIndexBuffers)
+	//{
+	//	if (!buffer->mIsUsed && buffer->mLength >= indexLength)
+	//	{
+	//		indexBuffer = buffer;
+	//		break;
+	//	}
+	//}
+	//if (indexBuffer == nullptr)
+	//{
+	//	CreateIndexBuffer(indexLength, Usage, IndexDataFormat, D3DPOOL_DEFAULT, (IDirect3DIndexBuffer9**)&indexBuffer, nullptr);
+	//	mTempIndexBuffers.push_back(indexBuffer);
+	//}
 
-	for (auto& buffer : mTempVertexBuffers)
-	{
-		if (!buffer->mIsUsed && buffer->mLength >= vertexLength)
-		{
-			vertexBuffer = buffer;
-			break;
-		}
-	}
-	if (vertexBuffer == nullptr)
-	{
-		CreateVertexBuffer(vertexLength, Usage, D3DFVF_XYZ, D3DPOOL_DEFAULT, (IDirect3DVertexBuffer9**)&vertexBuffer, nullptr);
-		mTempVertexBuffers.push_back(vertexBuffer);
-	}
+	//for (auto& buffer : mTempVertexBuffers)
+	//{
+	//	if (!buffer->mIsUsed && buffer->mLength >= vertexLength)
+	//	{
+	//		vertexBuffer = buffer;
+	//		break;
+	//	}
+	//}
+	//if (vertexBuffer == nullptr)
+	//{
+	//	CreateVertexBuffer(vertexLength, Usage, D3DFVF_XYZ, D3DPOOL_DEFAULT, (IDirect3DVertexBuffer9**)&vertexBuffer, nullptr);
+	//	mTempVertexBuffers.push_back(vertexBuffer);
+	//}
 
-	vertexBuffer->mIsUsed = true;
-	vertexBuffer->mSize = NumVertices;
-
-
-	vertexBuffer->Lock(0, 0, (void**)&buffer, 0);
-	memcpy(buffer, pVertexStreamZeroData, vertexLength);
-	vertexBuffer->Unlock();
-
-	indexBuffer->Lock(0, 0, (void**)&buffer, 0);
-	memcpy(buffer, pIndexData, indexLength);
-	indexBuffer->Unlock();
-
-	SetIndices(indexBuffer);
-	indexBuffer->Release();
-	SetStreamSource(0, vertexBuffer, 0, VertexStreamZeroStride);
-	vertexBuffer->Release();
-
-	//Queue draw command
-	//DrawIndexedPrimitive(PrimitiveType, 0, MinVertexIndex, NumVertices, 0, PrimitiveCount);
+	//vertexBuffer->mIsUsed = true;
+	//vertexBuffer->mSize = NumVertices;
 
 
-	//Switch the buffers back.
-	SetIndices(oldIndexBuffer);
-	SetStreamSource(0, oldVertexBuffer, oldOffsetInBytes, oldStride);
+	//vertexBuffer->Lock(0, 0, (void**)&buffer, 0);
+	//memcpy(buffer, pVertexStreamZeroData, vertexLength);
+	//vertexBuffer->Unlock();
+
+	//indexBuffer->Lock(0, 0, (void**)&buffer, 0);
+	//memcpy(buffer, pIndexData, indexLength);
+	//indexBuffer->Unlock();
+
+	//SetIndices(indexBuffer);
+	//indexBuffer->Release();
+	//SetStreamSource(0, vertexBuffer, 0, VertexStreamZeroStride);
+	//vertexBuffer->Release();
+
+	////Queue draw command
+	////DrawIndexedPrimitive(PrimitiveType, 0, MinVertexIndex, NumVertices, 0, PrimitiveCount);
+
+
+	////Switch the buffers back.
+	//SetIndices(oldIndexBuffer);
+	//SetStreamSource(0, oldVertexBuffer, oldOffsetInBytes, oldStride);
 
 	return S_OK;
 }
@@ -602,84 +651,84 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, const void *pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
-	//Figure out the current buffer setup.
-	IDirect3DVertexBuffer9* oldVertexBuffer = nullptr;
-	UINT oldOffsetInBytes = 0;
-	UINT oldStride = 0;
+	////Figure out the current buffer setup.
+	//IDirect3DVertexBuffer9* oldVertexBuffer = nullptr;
+	//UINT oldOffsetInBytes = 0;
+	//UINT oldStride = 0;
 
-	GetStreamSource(0, &oldVertexBuffer, &oldOffsetInBytes, &oldStride);
+	//GetStreamSource(0, &oldVertexBuffer, &oldOffsetInBytes, &oldStride);
 
-	//Setup temp buffers
-	UINT vertexLength = 0;
-	DWORD Usage = 0;
-	UINT NumVertices = 0;
+	////Setup temp buffers
+	//UINT vertexLength = 0;
+	//DWORD Usage = 0;
+	//UINT NumVertices = 0;
 
-	switch (PrimitiveType)
-	{
-	case D3DPT_POINTLIST:
-		NumVertices = (PrimitiveCount);
-		vertexLength = NumVertices * VertexStreamZeroStride;
-		break;
-	case D3DPT_LINELIST:
-		NumVertices = (PrimitiveCount * 2);
-		vertexLength = NumVertices * VertexStreamZeroStride;
-		break;
-	case D3DPT_LINESTRIP:
-		NumVertices = (PrimitiveCount + 1);
-		vertexLength = NumVertices * VertexStreamZeroStride;
-		break;
-	case D3DPT_TRIANGLELIST:
-		NumVertices = (PrimitiveCount * 3);
-		vertexLength = NumVertices * VertexStreamZeroStride;
-		break;
-	case D3DPT_TRIANGLESTRIP:
-		NumVertices = (PrimitiveCount + 2);
-		vertexLength = NumVertices * VertexStreamZeroStride;
-		break;
-	case D3DPT_TRIANGLEFAN:
-		NumVertices = (PrimitiveCount + 2);
-		vertexLength = NumVertices * VertexStreamZeroStride;
-		break;
-	default:
-		//NumVertices = PrimitiveCount;
-		//vertexLength = NumVertices * VertexStreamZeroStride;
-		break;
-	}
+	//switch (PrimitiveType)
+	//{
+	//case D3DPT_POINTLIST:
+	//	NumVertices = (PrimitiveCount);
+	//	vertexLength = NumVertices * VertexStreamZeroStride;
+	//	break;
+	//case D3DPT_LINELIST:
+	//	NumVertices = (PrimitiveCount * 2);
+	//	vertexLength = NumVertices * VertexStreamZeroStride;
+	//	break;
+	//case D3DPT_LINESTRIP:
+	//	NumVertices = (PrimitiveCount + 1);
+	//	vertexLength = NumVertices * VertexStreamZeroStride;
+	//	break;
+	//case D3DPT_TRIANGLELIST:
+	//	NumVertices = (PrimitiveCount * 3);
+	//	vertexLength = NumVertices * VertexStreamZeroStride;
+	//	break;
+	//case D3DPT_TRIANGLESTRIP:
+	//	NumVertices = (PrimitiveCount + 2);
+	//	vertexLength = NumVertices * VertexStreamZeroStride;
+	//	break;
+	//case D3DPT_TRIANGLEFAN:
+	//	NumVertices = (PrimitiveCount + 2);
+	//	vertexLength = NumVertices * VertexStreamZeroStride;
+	//	break;
+	//default:
+	//	//NumVertices = PrimitiveCount;
+	//	//vertexLength = NumVertices * VertexStreamZeroStride;
+	//	break;
+	//}
 
-	CVertexBuffer9* vertexBuffer = nullptr;
-	void* buffer = nullptr;
+	//CVertexBuffer9* vertexBuffer = nullptr;
+	//void* buffer = nullptr;
 
-	for (auto& buffer : mTempVertexBuffers)
-	{
-		if (!buffer->mIsUsed && buffer->mLength >= vertexLength)
-		{
-			vertexBuffer = buffer;
-			break;
-		}
-	}
-	if (vertexBuffer == nullptr)
-	{
-		CreateVertexBuffer(vertexLength, Usage, D3DFVF_XYZ, D3DPOOL_DEFAULT, (IDirect3DVertexBuffer9**)&vertexBuffer, nullptr);
-		mTempVertexBuffers.push_back(vertexBuffer);
-	}
+	//for (auto& buffer : mTempVertexBuffers)
+	//{
+	//	if (!buffer->mIsUsed && buffer->mLength >= vertexLength)
+	//	{
+	//		vertexBuffer = buffer;
+	//		break;
+	//	}
+	//}
+	//if (vertexBuffer == nullptr)
+	//{
+	//	CreateVertexBuffer(vertexLength, Usage, D3DFVF_XYZ, D3DPOOL_DEFAULT, (IDirect3DVertexBuffer9**)&vertexBuffer, nullptr);
+	//	mTempVertexBuffers.push_back(vertexBuffer);
+	//}
 
-	vertexBuffer->mIsUsed = true;
-	vertexBuffer->mSize = NumVertices;
-
-
-	vertexBuffer->Lock(0, 0, (void**)&buffer, 0);
-	memcpy(buffer, pVertexStreamZeroData, vertexLength);
-	vertexBuffer->Unlock();
-
-	SetStreamSource(0, vertexBuffer, 0, VertexStreamZeroStride);
-	//vertexBuffer->Release();
-
-	//Queue draw command
-	//DrawPrimitive(PrimitiveType, 0, PrimitiveCount);
+	//vertexBuffer->mIsUsed = true;
+	//vertexBuffer->mSize = NumVertices;
 
 
-	//Switch the buffers back.
-	SetStreamSource(0, oldVertexBuffer, oldOffsetInBytes, oldStride);
+	//vertexBuffer->Lock(0, 0, (void**)&buffer, 0);
+	//memcpy(buffer, pVertexStreamZeroData, vertexLength);
+	//vertexBuffer->Unlock();
+
+	//SetStreamSource(0, vertexBuffer, 0, VertexStreamZeroStride);
+	////vertexBuffer->Release();
+
+	////Queue draw command
+	////DrawPrimitive(PrimitiveType, 0, PrimitiveCount);
+
+
+	////Switch the buffers back.
+	//SetStreamSource(0, oldVertexBuffer, oldOffsetInBytes, oldStride);
 
 	return S_OK;
 }
@@ -732,12 +781,12 @@ UINT STDMETHODCALLTYPE CDevice9::GetAvailableTextureMem()
 {
 
 
-	return mAvailableTextureMemory;
+	return mDeviceState.mAvailableTextureMemory;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetBackBuffer(UINT  iSwapChain, UINT BackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9 **ppBackBuffer)
 {
-	return mSwapChains[iSwapChain]->GetBackBuffer(BackBuffer, Type, ppBackBuffer);
+	return mDeviceState.mSwapChains[iSwapChain]->GetBackBuffer(BackBuffer, Type, ppBackBuffer);
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetClipPlane(DWORD Index, float *pPlane)
@@ -779,11 +828,11 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetCurrentTexturePalette(UINT *pPaletteNumbe
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetDepthStencilSurface(IDirect3DSurface9 **ppZStencilSurface)
 {
-	(*ppZStencilSurface) = mDepthStencilSurface;
+	(*ppZStencilSurface) = mDeviceState.mDepthStencilSurface;
 
-	if (mDepthStencilSurface != nullptr)
+	if (mDeviceState.mDepthStencilSurface != nullptr)
 	{
-		mDepthStencilSurface->AddRef();
+		mDeviceState.mDepthStencilSurface->AddRef();
 	}
 
 	return S_OK;
@@ -798,9 +847,9 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetDeviceCaps(D3DCAPS9 *pCaps)
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetDirect3D(IDirect3D9 **ppD3D9)
 {
-	(*ppD3D9) = (IDirect3D9*)mInstance;
+	(*ppD3D9) = (IDirect3D9*)mC9;
 
-	mInstance->AddRef();
+	mC9->AddRef();
 
 	return S_OK;
 }
@@ -814,7 +863,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetDisplayMode(UINT  iSwapChain, D3DDISPLAYM
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetFrontBufferData(UINT  iSwapChain, IDirect3DSurface9 *pDestSurface)
 {
-	return mSwapChains[iSwapChain]->GetFrontBufferData(pDestSurface);
+	return mDeviceState.mSwapChains[iSwapChain]->GetFrontBufferData(pDestSurface);
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetFVF(DWORD *pFVF)
@@ -826,7 +875,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetFVF(DWORD *pFVF)
 
 void STDMETHODCALLTYPE CDevice9::GetGammaRamp(UINT  iSwapChain, D3DGAMMARAMP *pRamp)
 {
-	auto& swapChain = mSwapChains[iSwapChain];
+	auto& swapChain = mDeviceState.mSwapChains[iSwapChain];
 
 	HDC windowHdc = GetDC(swapChain->mPresentationParameters->hDeviceWindow);
 
@@ -930,7 +979,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetPixelShaderConstantI(UINT StartRegister, 
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetRasterStatus(UINT  iSwapChain, D3DRASTER_STATUS *pRasterStatus)
 {
-	return mSwapChains[iSwapChain]->GetRasterStatus(pRasterStatus);
+	return mDeviceState.mSwapChains[iSwapChain]->GetRasterStatus(pRasterStatus);
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetRenderState(D3DRENDERSTATETYPE State, DWORD* pValue)
@@ -942,9 +991,9 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetRenderState(D3DRENDERSTATETYPE State, DWO
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetRenderTarget(DWORD RenderTargetIndex, IDirect3DSurface9** ppRenderTarget)
 {
-	mRenderTargets[RenderTargetIndex]->AddRef();
+	mDeviceState.mRenderTargets[RenderTargetIndex]->AddRef();
 
-	(*ppRenderTarget) = mRenderTargets[RenderTargetIndex];
+	(*ppRenderTarget) = mDeviceState.mRenderTargets[RenderTargetIndex];
 
 	return S_OK;
 }
@@ -999,7 +1048,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetStreamSourceFreq(UINT StreamNumber, UINT 
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetSwapChain(UINT iSwapChain, IDirect3DSwapChain9** ppSwapChain)
 {
-	(*ppSwapChain) = (IDirect3DSwapChain9*)mSwapChains[iSwapChain];
+	(*ppSwapChain) = (IDirect3DSwapChain9*)mDeviceState.mSwapChains[iSwapChain];
 
 	if ((*ppSwapChain) != nullptr)
 	{
@@ -1186,12 +1235,12 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetDepthStencilSurface(IDirect3DSurface9* pN
 
 	((CSurface9*)pNewZStencil)->PrivateAddRef();
 
-	if (mDepthStencilSurface != nullptr)
+	if (mDeviceState.mDepthStencilSurface != nullptr)
 	{
-		mDepthStencilSurface->PrivateRelease();
+		mDeviceState.mDepthStencilSurface->PrivateRelease();
 	}
 
-	mDepthStencilSurface = (CSurface9*)pNewZStencil;
+	mDeviceState.mDepthStencilSurface = (CSurface9*)pNewZStencil;
 
 
 
@@ -1216,7 +1265,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetFVF(DWORD FVF)
 
 void STDMETHODCALLTYPE CDevice9::SetGammaRamp(UINT  iSwapChain, DWORD Flags, const D3DGAMMARAMP *pRamp)
 {
-	auto& swapChain = mSwapChains[iSwapChain];
+	auto& swapChain = mDeviceState.mSwapChains[iSwapChain];
 
 	HDC windowHdc = GetDC(swapChain->mPresentationParameters->hDeviceWindow);
 	SetDeviceGammaRamp(windowHdc, (LPVOID)pRamp);
@@ -1236,11 +1285,11 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetIndices(IDirect3DIndexBuffer9* pIndexData
 	{
 		((CIndexBuffer9*)pIndexData)->PrivateAddRef();
 	}
-	if (mIndexBuffer != nullptr)
+	if (mDeviceState.mIndexBuffer != nullptr)
 	{
-		mIndexBuffer->PrivateRelease();
+		mDeviceState.mIndexBuffer->PrivateRelease();
 	}
-	mIndexBuffer = (CIndexBuffer9*)pIndexData;
+	mDeviceState.mIndexBuffer = (CIndexBuffer9*)pIndexData;
 
 	return S_OK;
 }
@@ -1283,11 +1332,11 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShader(IDirect3DPixelShader9* pShade
 	{
 		((CPixelShader9*)pShader)->PrivateAddRef();
 	}
-	if (mPixelShader != nullptr)
+	if (mDeviceState.mPixelShader != nullptr)
 	{
-		mPixelShader->PrivateRelease();
+		mDeviceState.mPixelShader->PrivateRelease();
 	}
-	mPixelShader = (CPixelShader9*)pShader;
+	mDeviceState.mPixelShader = (CPixelShader9*)pShader;
 
 	return S_OK;
 }
@@ -1322,14 +1371,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetRenderState(D3DRENDERSTATETYPE State, DWO
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetRenderTarget(DWORD RenderTargetIndex, IDirect3DSurface9* pRenderTarget)
 {
-	if (mRenderTargets[RenderTargetIndex] != nullptr)
+	if (mDeviceState.mRenderTargets[RenderTargetIndex] != nullptr)
 	{
-		mRenderTargets[RenderTargetIndex]->PrivateRelease();
+		mDeviceState.mRenderTargets[RenderTargetIndex]->PrivateRelease();
 	}
-	mRenderTargets[RenderTargetIndex] = (CSurface9*)pRenderTarget;
-	if (mRenderTargets[RenderTargetIndex] != nullptr)
+	mDeviceState.mRenderTargets[RenderTargetIndex] = (CSurface9*)pRenderTarget;
+	if (mDeviceState.mRenderTargets[RenderTargetIndex] != nullptr)
 	{
-		mRenderTargets[RenderTargetIndex]->PrivateAddRef();
+		mDeviceState.mRenderTargets[RenderTargetIndex]->PrivateAddRef();
 	}
 
 
@@ -1368,11 +1417,11 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetStreamSource(UINT StreamNumber, IDirect3D
 	{
 		((CVertexBuffer9*)pStreamData)->PrivateAddRef();
 	}
-	if (mVertexBuffer != nullptr)
+	if (mDeviceState.mVertexBuffer != nullptr)
 	{
-		mVertexBuffer->PrivateRelease();
+		mDeviceState.mVertexBuffer->PrivateRelease();
 	}
-	mVertexBuffer = (CVertexBuffer9*)pStreamData;
+	mDeviceState.mVertexBuffer = (CVertexBuffer9*)pStreamData;
 
 	return S_OK;
 }
@@ -1407,24 +1456,24 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTexture(DWORD Sampler, IDirect3DBaseTextu
 			break;
 		}	
 	}
-	if (mTextures[Sampler] != nullptr)
+	if (mDeviceState.mTextures[Sampler] != nullptr)
 	{
-		switch (mTextures[Sampler]->GetType())
+		switch (mDeviceState.mTextures[Sampler]->GetType())
 		{
 		case D3DRTYPE_VOLUMETEXTURE:
-			((CVolumeTexture9*)mTextures[Sampler])->PrivateRelease();
+			((CVolumeTexture9*)mDeviceState.mTextures[Sampler])->PrivateRelease();
 			break;
 		case D3DRTYPE_CUBETEXTURE:
-			((CCubeTexture9*)mTextures[Sampler])->PrivateRelease();
+			((CCubeTexture9*)mDeviceState.mTextures[Sampler])->PrivateRelease();
 			break;
 		case D3DRTYPE_TEXTURE:
-			((CTexture9*)mTextures[Sampler])->PrivateRelease();
+			((CTexture9*)mDeviceState.mTextures[Sampler])->PrivateRelease();
 			break;
 		default:
 			break;
 		}
 	}
-	mTextures[Sampler] = pTexture;
+	mDeviceState.mTextures[Sampler] = pTexture;
 
 	return S_OK;
 }
@@ -1451,11 +1500,11 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexDeclaration(IDirect3DVertexDeclarat
 	{
 		((CVertexDeclaration9*)pDecl)->PrivateAddRef();
 	}
-	if (mVertexDeclaration != nullptr)
+	if (mDeviceState.mVertexDeclaration != nullptr)
 	{
-		mVertexDeclaration->PrivateRelease();
+		mDeviceState.mVertexDeclaration->PrivateRelease();
 	}
-	mVertexDeclaration = (CVertexDeclaration9*)pDecl;
+	mDeviceState.mVertexDeclaration = (CVertexDeclaration9*)pDecl;
 
 	return S_OK;
 }
@@ -1468,11 +1517,11 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShader(IDirect3DVertexShader9* pSha
 	{
 		((CVertexShader9*)pShader)->PrivateAddRef();
 	}
-	if (mVertexShader != nullptr)
+	if (mDeviceState.mVertexShader != nullptr)
 	{
-		mVertexShader->PrivateRelease();
+		mDeviceState.mVertexShader->PrivateRelease();
 	}
-	mVertexShader = (CVertexShader9*)pShader;
+	mDeviceState.mVertexShader = (CVertexShader9*)pShader;
 
 	return S_OK;
 }
@@ -1573,15 +1622,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::PresentEx(const RECT *pSourceRect, const REC
 {
 
 
-	//Mark the temp buffers as unused.
-	for (auto& buffer : mTempVertexBuffers)
-	{
-		buffer->mIsUsed = false;
-	}
-	for (auto& buffer : mTempIndexBuffers)
-	{
-		buffer->mIsUsed = false;
-	}
+
 
 
 
@@ -1590,14 +1631,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::PresentEx(const RECT *pSourceRect, const REC
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetGPUThreadPriority(INT *pPriority)
 {
-	(*pPriority) = mPriority;
+	(*pPriority) = mDeviceState.mPriority;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetGPUThreadPriority(INT Priority)
 {
-	mPriority = Priority;
+	mDeviceState.mPriority = Priority;
 
 	return S_OK;
 }
@@ -1622,14 +1663,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::CheckResourceResidency(IDirect3DResource9 **
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetMaximumFrameLatency(UINT MaxLatency)
 {
-	mMaxLatency = MaxLatency;
+	mDeviceState.mMaxLatency = MaxLatency;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetMaximumFrameLatency(UINT *pMaxLatency)
 {
-	(*pMaxLatency) = mMaxLatency;
+	(*pMaxLatency) = mDeviceState.mMaxLatency;
 
 	return S_OK;
 }
