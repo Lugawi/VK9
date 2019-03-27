@@ -53,6 +53,115 @@ misrepresented as being the original software.
 #include "LogManager.h"
 //#include "PrivateTypes.h"
 
+const uint32_t VERTEX_BUFFER_XYZRHW_VERT[] =
+#include "VertexBuffer_XYZRHW.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_VERT[] =
+#include "VertexBuffer_XYZ.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_FRAG[] =
+#include "VertexBuffer_XYZ.frag.h"
+;
+
+const uint32_t VERTEX_BUFFER_XYZRHW_DIFFUSE_VERT[] =
+#include "VertexBuffer_XYZRHW_DIFFUSE.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_DIFFUSE_VERT[] =
+#include "VertexBuffer_XYZ_DIFFUSE.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_DIFFUSE_FRAG[] =
+#include "VertexBuffer_XYZ_DIFFUSE.frag.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_DIFFUSE_GEOM[] =
+#include "VertexBuffer_XYZ_DIFFUSE.geom.h"
+;
+
+const uint32_t VERTEX_BUFFER_XYZRHW_TEX1_VERT[] =
+#include "VertexBuffer_XYZRHW_TEX1.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_TEX1_VERT[] =
+#include "VertexBuffer_XYZ_TEX1.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_TEX1_FRAG[] =
+#include "VertexBuffer_XYZ_TEX1.frag.h"
+;
+
+const uint32_t VERTEX_BUFFER_XYZRHW_TEX2_VERT[] =
+#include "VertexBuffer_XYZRHW_TEX2.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_TEX2_VERT[] =
+#include "VertexBuffer_XYZ_TEX2.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_TEX2_FRAG[] =
+#include "VertexBuffer_XYZ_TEX2.frag.h"
+;
+
+const uint32_t VERTEX_BUFFER_XYZRHW_DIFFUSE_TEX1_VERT[] =
+#include "VertexBuffer_XYZRHW_DIFFUSE_TEX1.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_DIFFUSE_TEX1_VERT[] =
+#include "VertexBuffer_XYZ_DIFFUSE_TEX1.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_DIFFUSE_TEX1_FRAG[] =
+#include "VertexBuffer_XYZ_DIFFUSE_TEX1.frag.h"
+;
+
+const uint32_t VERTEX_BUFFER_XYZRHW_DIFFUSE_TEX2_VERT[] =
+#include "VertexBuffer_XYZRHW_DIFFUSE_TEX2.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_DIFFUSE_TEX2_VERT[] =
+#include "VertexBuffer_XYZ_DIFFUSE_TEX2.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_DIFFUSE_TEX2_FRAG[] =
+#include "VertexBuffer_XYZ_DIFFUSE_TEX2.frag.h"
+;
+
+const uint32_t VERTEX_BUFFER_XYZ_NORMAL_VERT[] =
+#include "VertexBuffer_XYZ_NORMAL.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_NORMAL_FRAG[] =
+#include "VertexBuffer_XYZ_NORMAL.frag.h"
+;
+
+const uint32_t VERTEX_BUFFER_XYZ_NORMAL_TEX1_VERT[] =
+#include "VertexBuffer_XYZ_NORMAL_TEX1.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_NORMAL_TEX1_FRAG[] =
+#include "VertexBuffer_XYZ_NORMAL_TEX1.frag.h"
+;
+
+const uint32_t VERTEX_BUFFER_XYZ_NORMAL_TEX2_VERT[] =
+#include "VertexBuffer_XYZ_NORMAL_TEX2.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_NORMAL_TEX2_FRAG[] =
+#include "VertexBuffer_XYZ_NORMAL_TEX2.frag.h"
+;
+
+const uint32_t VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_VERT[] =
+#include "VertexBuffer_XYZ_NORMAL_DIFFUSE.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_FRAG[] =
+#include "VertexBuffer_XYZ_NORMAL_DIFFUSE.frag.h"
+;
+
+const uint32_t VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX1_VERT[] =
+#include "VertexBuffer_XYZ_NORMAL_DIFFUSE_TEX1.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX1_FRAG[] =
+#include "VertexBuffer_XYZ_NORMAL_DIFFUSE_TEX1.frag.h"
+;
+
+const uint32_t VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX2_VERT[] =
+#include "VertexBuffer_XYZ_NORMAL_DIFFUSE_TEX2.vert.h"
+;
+const uint32_t VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX2_FRAG[] =
+#include "VertexBuffer_XYZ_NORMAL_DIFFUSE_TEX2.frag.h"
+;
+
+const uint32_t PIXEL_PASSTHROUGH_FRAG[] =
+#include "PixelPassthrough.frag.h"
+;
+
 CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode)
 	:
 	mC9(c9),
@@ -99,51 +208,268 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 		InvalidateRect(mFocusWindow, 0, true);
 	}
 
-	//Create a device (unique device will auto destroy)
-	float queuePriority = 0.0f;
-	const vk::DeviceQueueCreateInfo deviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), static_cast<uint32_t>(mC9->mGraphicsQueueFamilyIndex), 1, &queuePriority);
-	std::vector<char const*> deviceExtensionNames;
-	deviceExtensionNames.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-	mDevice = mC9->mPhysicalDevices[mC9->mPhysicalDeviceIndex].createDeviceUnique(vk::DeviceCreateInfo({}, 1, &deviceQueueCreateInfo, 0, nullptr, static_cast<uint32_t>(deviceExtensionNames.size()), deviceExtensionNames.data()));
+	//Create a device and command pool (unique device will auto destroy)
+	{
+		float queuePriority = 0.0f;
+		const vk::DeviceQueueCreateInfo deviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), static_cast<uint32_t>(mC9->mGraphicsQueueFamilyIndex), 1, &queuePriority);
+		std::vector<char const*> deviceExtensionNames;
+		deviceExtensionNames.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+		mDevice = mC9->mPhysicalDevices[mC9->mPhysicalDeviceIndex].createDeviceUnique(vk::DeviceCreateInfo({}, 1, &deviceQueueCreateInfo, 0, nullptr, static_cast<uint32_t>(deviceExtensionNames.size()), deviceExtensionNames.data()));
 
-	//Create command pool
-	mCommandPool = mDevice->createCommandPoolUnique(vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, deviceQueueCreateInfo.queueFamilyIndex));
+		mCommandPool = mDevice->createCommandPoolUnique(vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, deviceQueueCreateInfo.queueFamilyIndex));
+	}
 
 	//Create a descriptor pool that should be able to allocate enough of any type.
-	const vk::DescriptorPoolSize descriptorPoolSizes[11] = 
 	{
-		vk::DescriptorPoolSize(vk::DescriptorType::eSampler,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetSamplers)),
-		vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxPerStageDescriptorSamplers)),
-		vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetSampledImages)),
-		vk::DescriptorPoolSize(vk::DescriptorType::eStorageImage,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetStorageImages)),
-		vk::DescriptorPoolSize(vk::DescriptorType::eUniformTexelBuffer,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxPerStageDescriptorSampledImages)),
-		vk::DescriptorPoolSize(vk::DescriptorType::eStorageTexelBuffer,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxPerStageDescriptorStorageImages)),
-		vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetUniformBuffers)),
-		vk::DescriptorPoolSize(vk::DescriptorType::eStorageBuffer,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetStorageBuffers)),
-		vk::DescriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetUniformBuffersDynamic)),
-		vk::DescriptorPoolSize(vk::DescriptorType::eStorageBufferDynamic,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetStorageBuffersDynamic)),
-		vk::DescriptorPoolSize(vk::DescriptorType::eInputAttachment,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetInputAttachments))
-	};
-	mDescriptorPool = mDevice->createDescriptorPoolUnique(vk::DescriptorPoolCreateInfo(vk::DescriptorPoolCreateFlags(), std::min(MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetSamplers), 11, &descriptorPoolSizes[0]));
+		const vk::DescriptorPoolSize descriptorPoolSizes[11] =
+		{
+			vk::DescriptorPoolSize(vk::DescriptorType::eSampler,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetSamplers)),
+			vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxPerStageDescriptorSamplers)),
+			vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetSampledImages)),
+			vk::DescriptorPoolSize(vk::DescriptorType::eStorageImage,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetStorageImages)),
+			vk::DescriptorPoolSize(vk::DescriptorType::eUniformTexelBuffer,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxPerStageDescriptorSampledImages)),
+			vk::DescriptorPoolSize(vk::DescriptorType::eStorageTexelBuffer,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxPerStageDescriptorStorageImages)),
+			vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetUniformBuffers)),
+			vk::DescriptorPoolSize(vk::DescriptorType::eStorageBuffer,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetStorageBuffers)),
+			vk::DescriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetUniformBuffersDynamic)),
+			vk::DescriptorPoolSize(vk::DescriptorType::eStorageBufferDynamic,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetStorageBuffersDynamic)),
+			vk::DescriptorPoolSize(vk::DescriptorType::eInputAttachment,std::min((uint32_t)MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetInputAttachments))
+		};
+		mDescriptorPool = mDevice->createDescriptorPoolUnique(vk::DescriptorPoolCreateInfo(vk::DescriptorPoolCreateFlags(), std::min(MAX_DESCRIPTOR, mC9->mPhysicalDeviceProperties.limits.maxDescriptorSetSamplers), 11, &descriptorPoolSizes[0]));
+	}
 
 	//Setup buffers for up draw methods
-	auto const upVertexBufferInfo = vk::BufferCreateInfo().setSize(MAX_BUFFERUPDATE).setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst);
-	auto const upIndexBufferInfo = vk::BufferCreateInfo().setSize(MAX_BUFFERUPDATE).setUsage(vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst);
+	{
+		auto const upVertexBufferInfo = vk::BufferCreateInfo().setSize(MAX_BUFFERUPDATE).setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		auto const upIndexBufferInfo = vk::BufferCreateInfo().setSize(MAX_BUFFERUPDATE).setUsage(vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst);
 
-	mUpVertexBuffer = mDevice->createBufferUnique(upVertexBufferInfo);
-	mUpIndexBuffer = mDevice->createBufferUnique(upIndexBufferInfo);
+		mUpVertexBuffer = mDevice->createBufferUnique(upVertexBufferInfo);
+		mUpIndexBuffer = mDevice->createBufferUnique(upIndexBufferInfo);
 
-	vk::MemoryRequirements mem_reqs;
-	mDevice->getBufferMemoryRequirements(mUpVertexBuffer.get(), &mem_reqs);
+		vk::MemoryRequirements mem_reqs;
+		mDevice->getBufferMemoryRequirements(mUpVertexBuffer.get(), &mem_reqs);
 
-	auto mem_alloc = vk::MemoryAllocateInfo().setAllocationSize(mem_reqs.size).setMemoryTypeIndex(0);
-	FindMemoryTypeFromProperties(mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, &mem_alloc.memoryTypeIndex);
+		auto mem_alloc = vk::MemoryAllocateInfo().setAllocationSize(mem_reqs.size).setMemoryTypeIndex(0);
+		FindMemoryTypeFromProperties(mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, &mem_alloc.memoryTypeIndex);
 
-	mUpVertexBufferMemory = mDevice->allocateMemoryUnique(mem_alloc);
-	mUpIndexBufferMemory = mDevice->allocateMemoryUnique(mem_alloc);
+		mUpVertexBufferMemory = mDevice->allocateMemoryUnique(mem_alloc);
+		mUpIndexBufferMemory = mDevice->allocateMemoryUnique(mem_alloc);
 
-	mDevice->bindBufferMemory(mUpVertexBuffer.get(), mUpVertexBufferMemory.get(),0);
-	mDevice->bindBufferMemory(mUpIndexBuffer.get(), mUpIndexBufferMemory.get(),0);
+		mDevice->bindBufferMemory(mUpVertexBuffer.get(), mUpVertexBufferMemory.get(), 0);
+		mDevice->bindBufferMemory(mUpIndexBuffer.get(), mUpIndexBufferMemory.get(), 0);
+	}
+
+	//Setup FF Buffers
+
+	//RenderState
+	{
+		auto const renderStateBufferInfo = vk::BufferCreateInfo().setSize(sizeof(uint32_t) /*FIX!*/).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		mRenderStateBuffer = mDevice->createBufferUnique(renderStateBufferInfo);
+		vk::MemoryRequirements renderStateMemoryRequirements;
+		mDevice->getBufferMemoryRequirements(mRenderStateBuffer.get(), &renderStateMemoryRequirements);
+		auto renderStateMemoryAllocateInfo = vk::MemoryAllocateInfo().setAllocationSize(renderStateMemoryRequirements.size).setMemoryTypeIndex(0);
+		FindMemoryTypeFromProperties(renderStateMemoryRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, &renderStateMemoryAllocateInfo.memoryTypeIndex);
+		mRenderStateBufferMemory = mDevice->allocateMemoryUnique(renderStateMemoryAllocateInfo);
+		mDevice->bindBufferMemory(mRenderStateBuffer.get(), mRenderStateBufferMemory.get(), 0);
+	}
+
+	//TextureStage
+	{
+		auto const textureStageBufferInfo = vk::BufferCreateInfo().setSize(sizeof(uint32_t) /*FIX!*/).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		mTextureStageBuffer = mDevice->createBufferUnique(textureStageBufferInfo);
+		vk::MemoryRequirements textureStageMemoryRequirements;
+		mDevice->getBufferMemoryRequirements(mTextureStageBuffer.get(), &textureStageMemoryRequirements);
+		auto textureStageMemoryAllocateInfo = vk::MemoryAllocateInfo().setAllocationSize(textureStageMemoryRequirements.size).setMemoryTypeIndex(0);
+		FindMemoryTypeFromProperties(textureStageMemoryRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, &textureStageMemoryAllocateInfo.memoryTypeIndex);
+		mTextureStageBufferMemory = mDevice->allocateMemoryUnique(textureStageMemoryAllocateInfo);
+		mDevice->bindBufferMemory(mTextureStageBuffer.get(), mTextureStageBufferMemory.get(), 0);
+	}
+
+	//Light
+	{
+		auto const lightBufferInfo = vk::BufferCreateInfo().setSize(sizeof(uint32_t) /*FIX!*/).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		mLightBuffer = mDevice->createBufferUnique(lightBufferInfo);
+		vk::MemoryRequirements lightMemoryRequirements;
+		mDevice->getBufferMemoryRequirements(mLightBuffer.get(), &lightMemoryRequirements);
+		auto lightMemoryAllocateInfo = vk::MemoryAllocateInfo().setAllocationSize(lightMemoryRequirements.size).setMemoryTypeIndex(0);
+		FindMemoryTypeFromProperties(lightMemoryRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, &lightMemoryAllocateInfo.memoryTypeIndex);
+		mLightBufferMemory = mDevice->allocateMemoryUnique(lightMemoryAllocateInfo);
+		mDevice->bindBufferMemory(mLightBuffer.get(), mLightBufferMemory.get(), 0);
+	}
+
+	//Material
+	{
+		auto const materialBufferInfo = vk::BufferCreateInfo().setSize(sizeof(D3DMATERIAL9)).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		mMaterialBuffer = mDevice->createBufferUnique(materialBufferInfo);
+		vk::MemoryRequirements materialMemoryRequirements;
+		mDevice->getBufferMemoryRequirements(mMaterialBuffer.get(), &materialMemoryRequirements);
+		auto materialMemoryAllocateInfo = vk::MemoryAllocateInfo().setAllocationSize(materialMemoryRequirements.size).setMemoryTypeIndex(0);
+		FindMemoryTypeFromProperties(materialMemoryRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, &materialMemoryAllocateInfo.memoryTypeIndex);
+		mMaterialBufferMemory = mDevice->allocateMemoryUnique(materialMemoryAllocateInfo);
+		mDevice->bindBufferMemory(mMaterialBuffer.get(), mMaterialBufferMemory.get(), 0);
+	}
+
+	//Transformation
+	{
+		auto const transformationBufferInfo = vk::BufferCreateInfo().setSize(sizeof(uint32_t) /*FIX!*/).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		mTransformationBuffer = mDevice->createBufferUnique(transformationBufferInfo);
+		vk::MemoryRequirements transformationMemoryRequirements;
+		mDevice->getBufferMemoryRequirements(mTransformationBuffer.get(), &transformationMemoryRequirements);
+		auto transformationMemoryAllocateInfo = vk::MemoryAllocateInfo().setAllocationSize(transformationMemoryRequirements.size).setMemoryTypeIndex(0);
+		FindMemoryTypeFromProperties(transformationMemoryRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, &transformationMemoryAllocateInfo.memoryTypeIndex);
+		mTransformationBufferMemory = mDevice->allocateMemoryUnique(transformationMemoryAllocateInfo);
+		mDevice->bindBufferMemory(mTransformationBuffer.get(), mTransformationBufferMemory.get(), 0);
+	}
+
+	//Setup Shader buffers
+
+	//VertexConstant
+	{
+		auto const vertexConstantBufferInfo = vk::BufferCreateInfo().setSize(sizeof(uint32_t) /*FIX!*/).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		mVertexConstantBuffer = mDevice->createBufferUnique(vertexConstantBufferInfo);
+		vk::MemoryRequirements vertexConstantMemoryRequirements;
+		mDevice->getBufferMemoryRequirements(mVertexConstantBuffer.get(), &vertexConstantMemoryRequirements);
+		auto vertexConstantMemoryAllocateInfo = vk::MemoryAllocateInfo().setAllocationSize(vertexConstantMemoryRequirements.size).setMemoryTypeIndex(0);
+		FindMemoryTypeFromProperties(vertexConstantMemoryRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, &vertexConstantMemoryAllocateInfo.memoryTypeIndex);
+		mVertexConstantBufferMemory = mDevice->allocateMemoryUnique(vertexConstantMemoryAllocateInfo);
+		mDevice->bindBufferMemory(mVertexConstantBuffer.get(), mVertexConstantBufferMemory.get(), 0);
+	}
+
+	//PixelConstant
+	{
+		auto const pixelConstantBufferInfo = vk::BufferCreateInfo().setSize(sizeof(uint32_t) /*FIX!*/).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		mPixelConstantBuffer = mDevice->createBufferUnique(pixelConstantBufferInfo);
+		vk::MemoryRequirements pixelConstantMemoryRequirements;
+		mDevice->getBufferMemoryRequirements(mPixelConstantBuffer.get(), &pixelConstantMemoryRequirements);
+		auto pixelConstantMemoryAllocateInfo = vk::MemoryAllocateInfo().setAllocationSize(pixelConstantMemoryRequirements.size).setMemoryTypeIndex(0);
+		FindMemoryTypeFromProperties(pixelConstantMemoryRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, &pixelConstantMemoryAllocateInfo.memoryTypeIndex);
+		mPixelConstantBufferMemory = mDevice->allocateMemoryUnique(pixelConstantMemoryAllocateInfo);
+		mDevice->bindBufferMemory(mPixelConstantBuffer.get(), mPixelConstantBufferMemory.get(), 0);
+	}
+
+	//Create Descriptor layout.
+	{
+		const uint32_t textureCount = 16;
+		const vk::DescriptorSetLayoutBinding layoutBindings[8] =
+		{
+			vk::DescriptorSetLayoutBinding() /*Render State*/
+				.setBinding(0)
+				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+				.setDescriptorCount(1)
+				.setStageFlags(vk::ShaderStageFlagBits::eAllGraphics)
+				.setPImmutableSamplers(nullptr),
+			vk::DescriptorSetLayoutBinding() /*Texture Stages*/
+				.setBinding(1)
+				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+				.setDescriptorCount(1)
+				.setStageFlags(vk::ShaderStageFlagBits::eFragment)
+				.setPImmutableSamplers(nullptr),
+			vk::DescriptorSetLayoutBinding() /*Lights*/
+				.setBinding(2)
+				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+				.setDescriptorCount(1)
+				.setStageFlags(vk::ShaderStageFlagBits::eVertex)
+				.setPImmutableSamplers(nullptr),
+			vk::DescriptorSetLayoutBinding() /*Material*/
+				.setBinding(3)
+				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+				.setDescriptorCount(1)
+				.setStageFlags(vk::ShaderStageFlagBits::eVertex)
+				.setPImmutableSamplers(nullptr),
+			vk::DescriptorSetLayoutBinding() /*Matrix*/
+				.setBinding(4)
+				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+				.setDescriptorCount(1)
+				.setStageFlags(vk::ShaderStageFlagBits::eVertex)
+				.setPImmutableSamplers(nullptr),
+			vk::DescriptorSetLayoutBinding() /*Vertex Shader Const*/
+				.setBinding(5)
+				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+				.setDescriptorCount(1)
+				.setStageFlags(vk::ShaderStageFlagBits::eFragment)
+				.setPImmutableSamplers(nullptr),
+			vk::DescriptorSetLayoutBinding() /*Pixel Shader Const*/
+				.setBinding(6)
+				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+				.setDescriptorCount(1)
+				.setStageFlags(vk::ShaderStageFlagBits::eFragment)
+				.setPImmutableSamplers(nullptr),
+			vk::DescriptorSetLayoutBinding() /*Image/Sampler*/
+				.setBinding(7)
+				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+				.setDescriptorCount(textureCount)
+				.setStageFlags(vk::ShaderStageFlagBits::eFragment)
+				.setPImmutableSamplers(nullptr)
+		};
+		auto const descriptorLayout = vk::DescriptorSetLayoutCreateInfo().setBindingCount(8).setPBindings(layoutBindings);
+		mDescriptorLayout = mDevice->createDescriptorSetLayoutUnique(descriptorLayout);
+	}
+
+	//Create Pipeline layout.
+	{
+		std::array<vk::PushConstantRange, 1> ranges =
+		{
+			vk::PushConstantRange
+			{
+				vk::ShaderStageFlagBits::eVertex,
+				0,
+				sizeof(uint32_t) * 4
+			}
+		};
+
+		auto const pipelineLayoutCreateInfo = vk::PipelineLayoutCreateInfo()
+			.setSetLayoutCount(1)
+			.setPPushConstantRanges(ranges.data())
+			.setPushConstantRangeCount(1)
+			.setPSetLayouts(&mDescriptorLayout.get());
+		mPipelineLayout = mDevice->createPipelineLayoutUnique(pipelineLayoutCreateInfo);
+	}
+
+	//Load fixed function shaders.
+	mVertShaderModule_XYZRHW = LoadShaderFromConst(VERTEX_BUFFER_XYZRHW_VERT);
+	mVertShaderModule_XYZ = LoadShaderFromConst(VERTEX_BUFFER_XYZ_VERT);
+	mFragShaderModule_XYZ = LoadShaderFromConst(VERTEX_BUFFER_XYZ_FRAG);
+
+	mVertShaderModule_XYZRHW_DIFFUSE = LoadShaderFromConst(VERTEX_BUFFER_XYZRHW_DIFFUSE_VERT);
+	mVertShaderModule_XYZ_DIFFUSE = LoadShaderFromConst(VERTEX_BUFFER_XYZ_DIFFUSE_VERT);
+	mFragShaderModule_XYZ_DIFFUSE = LoadShaderFromConst(VERTEX_BUFFER_XYZ_DIFFUSE_FRAG);
+	mGeomShaderModule_XYZ_DIFFUSE = LoadShaderFromConst(VERTEX_BUFFER_XYZ_DIFFUSE_GEOM);
+
+	mVertShaderModule_XYZRHW_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZRHW_TEX1_VERT);
+	mVertShaderModule_XYZ_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_TEX1_VERT);
+	mFragShaderModule_XYZ_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_TEX1_FRAG);
+
+	mVertShaderModule_XYZRHW_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZRHW_TEX2_VERT);
+	mVertShaderModule_XYZ_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_TEX2_VERT);
+	mFragShaderModule_XYZ_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_TEX2_FRAG);
+
+	mVertShaderModule_XYZRHW_DIFFUSE_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZRHW_DIFFUSE_TEX1_VERT);
+	mVertShaderModule_XYZ_DIFFUSE_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_DIFFUSE_TEX1_VERT);
+	mFragShaderModule_XYZ_DIFFUSE_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_DIFFUSE_TEX1_FRAG);
+
+	mVertShaderModule_XYZRHW_DIFFUSE_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZRHW_DIFFUSE_TEX2_VERT);
+	mVertShaderModule_XYZ_DIFFUSE_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_DIFFUSE_TEX2_VERT);
+	mFragShaderModule_XYZ_DIFFUSE_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_DIFFUSE_TEX2_FRAG);
+
+	mVertShaderModule_XYZ_NORMAL = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_VERT);
+	mFragShaderModule_XYZ_NORMAL = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_FRAG);
+
+	mVertShaderModule_XYZ_NORMAL_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_TEX1_VERT);
+	mFragShaderModule_XYZ_NORMAL_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_TEX1_FRAG);
+
+	mVertShaderModule_XYZ_NORMAL_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_TEX2_VERT);
+	mFragShaderModule_XYZ_NORMAL_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_TEX2_FRAG);
+
+	mVertShaderModule_XYZ_NORMAL_DIFFUSE = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_VERT);
+	mFragShaderModule_XYZ_NORMAL_DIFFUSE = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_FRAG);
+
+	mVertShaderModule_XYZ_NORMAL_DIFFUSE_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX1_VERT);
+	mFragShaderModule_XYZ_NORMAL_DIFFUSE_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX1_FRAG);
+
+	mVertShaderModule_XYZ_NORMAL_DIFFUSE_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX2_VERT);
+	mFragShaderModule_XYZ_NORMAL_DIFFUSE_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX2_FRAG);
+
+	mFragShaderModule_Passthrough = LoadShaderFromConst(PIXEL_PASSTHROUGH_FRAG);
 
 	//Add implicit swap chain.
 	CSwapChain9* ptr = nullptr;
@@ -162,7 +488,7 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 
 CDevice9::~CDevice9()
 {
-
+	mDevice->waitIdle();
 }
 
 ULONG CDevice9::PrivateAddRef(void)

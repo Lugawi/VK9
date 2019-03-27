@@ -71,13 +71,92 @@ public:
 	vk::UniqueCommandPool mCommandPool;
 	vk::UniqueDescriptorPool mDescriptorPool;
 	vk::Queue mQueue;
+	vk::UniqueDescriptorSetLayout mDescriptorLayout;
+	vk::UniquePipelineLayout mPipelineLayout;
 
+	//FF Buffers
+	vk::UniqueBuffer mRenderStateBuffer;
+	vk::UniqueDeviceMemory mRenderStateBufferMemory;
+
+	vk::UniqueBuffer mTextureStageBuffer;
+	vk::UniqueDeviceMemory mTextureStageBufferMemory;
+
+	vk::UniqueBuffer mLightBuffer;
+	vk::UniqueDeviceMemory mLightBufferMemory;
+
+	vk::UniqueBuffer mMaterialBuffer;
+	vk::UniqueDeviceMemory mMaterialBufferMemory;
+
+	vk::UniqueBuffer mTransformationBuffer;
+	vk::UniqueDeviceMemory mTransformationBufferMemory;
+
+	//Shader Constant Buffers
+	vk::UniqueBuffer mVertexConstantBuffer;
+	vk::UniqueDeviceMemory mVertexConstantBufferMemory;
+
+	vk::UniqueBuffer mPixelConstantBuffer;
+	vk::UniqueDeviceMemory mPixelConstantBufferMemory;
+
+	//Up Buffers
 	vk::UniqueBuffer mUpVertexBuffer;
 	vk::UniqueBuffer mUpIndexBuffer;
 	vk::UniqueDeviceMemory mUpVertexBufferMemory;	
 	vk::UniqueDeviceMemory mUpIndexBufferMemory;
 
+	//Fixed Function Shaders
+	vk::UniqueShaderModule mVertShaderModule_XYZRHW;
+	vk::UniqueShaderModule mVertShaderModule_XYZ;
+	vk::UniqueShaderModule mFragShaderModule_XYZ;
+
+	vk::UniqueShaderModule mVertShaderModule_XYZRHW_DIFFUSE;
+	vk::UniqueShaderModule mVertShaderModule_XYZ_DIFFUSE;
+	vk::UniqueShaderModule mFragShaderModule_XYZ_DIFFUSE;
+	vk::UniqueShaderModule mGeomShaderModule_XYZ_DIFFUSE;
+
+	vk::UniqueShaderModule mVertShaderModule_XYZRHW_TEX1;
+	vk::UniqueShaderModule mVertShaderModule_XYZ_TEX1;
+	vk::UniqueShaderModule mFragShaderModule_XYZ_TEX1;
+
+	vk::UniqueShaderModule mVertShaderModule_XYZRHW_TEX2;
+	vk::UniqueShaderModule mVertShaderModule_XYZ_TEX2;
+	vk::UniqueShaderModule mFragShaderModule_XYZ_TEX2;
+
+	vk::UniqueShaderModule mVertShaderModule_XYZRHW_DIFFUSE_TEX1;
+	vk::UniqueShaderModule mVertShaderModule_XYZ_DIFFUSE_TEX1;
+	vk::UniqueShaderModule mFragShaderModule_XYZ_DIFFUSE_TEX1;
+
+	vk::UniqueShaderModule mVertShaderModule_XYZRHW_DIFFUSE_TEX2;
+	vk::UniqueShaderModule mVertShaderModule_XYZ_DIFFUSE_TEX2;
+	vk::UniqueShaderModule mFragShaderModule_XYZ_DIFFUSE_TEX2;
+
+	vk::UniqueShaderModule mVertShaderModule_XYZ_NORMAL;
+	vk::UniqueShaderModule mFragShaderModule_XYZ_NORMAL;
+
+	vk::UniqueShaderModule  mVertShaderModule_XYZ_NORMAL_TEX1;
+	vk::UniqueShaderModule mFragShaderModule_XYZ_NORMAL_TEX1;
+
+	vk::UniqueShaderModule mVertShaderModule_XYZ_NORMAL_TEX2;
+	vk::UniqueShaderModule mFragShaderModule_XYZ_NORMAL_TEX2;
+
+	vk::UniqueShaderModule mVertShaderModule_XYZ_NORMAL_DIFFUSE;
+	vk::UniqueShaderModule mFragShaderModule_XYZ_NORMAL_DIFFUSE;
+
+	vk::UniqueShaderModule mVertShaderModule_XYZ_NORMAL_DIFFUSE_TEX1;
+	vk::UniqueShaderModule mFragShaderModule_XYZ_NORMAL_DIFFUSE_TEX1;
+
+	vk::UniqueShaderModule mVertShaderModule_XYZ_NORMAL_DIFFUSE_TEX2;
+	vk::UniqueShaderModule mFragShaderModule_XYZ_NORMAL_DIFFUSE_TEX2;
+					
+	vk::UniqueShaderModule mFragShaderModule_Passthrough;
+
 	bool FindMemoryTypeFromProperties(uint32_t typeBits, vk::MemoryPropertyFlags requirements_mask, uint32_t* typeIndex);
+
+	template < typename T, size_t arraySize>
+	vk::UniqueShaderModule LoadShaderFromConst(const T(&data)[arraySize])
+	{
+		const vk::ShaderModuleCreateInfo moduleCreateInfo(vk::ShaderModuleCreateFlags(), arraySize * sizeof(T), (const uint32_t*)data);
+		return mDevice->createShaderModuleUnique(moduleCreateInfo);
+	}
 
 	//D3D9 State
 	DeviceState mDeviceState;
