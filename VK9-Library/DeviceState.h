@@ -26,6 +26,11 @@ misrepresented as being the original software.
 
 #include<vector>
 
+//On my test hardware this was 32.
+#define MAX_VERTEX_INPUTS 32
+#define MAX_PIXEL_SHADER_CONST 256
+#define MAX_VERTEX_SHADER_CONST 256
+
 class CSurface9;
 class CIndexBuffer9;
 class CVertexBuffer9;
@@ -36,16 +41,79 @@ class CSwapChain9;
 
 struct DeviceState
 {
-	CSurface9* mDepthStencilSurface = nullptr;
-	CIndexBuffer9* mIndexBuffer = nullptr;
-	CPixelShader9* mPixelShader = nullptr;
-	CVertexShader9* mVertexShader = nullptr;
-	CVertexBuffer9* mVertexBuffer = nullptr;
-	IDirect3DBaseTexture9* mTextures[16] = {};
+	bool mCapturedVertexDeclaration = false;
 	CVertexDeclaration9* mVertexDeclaration = nullptr;
-	CSurface9* mRenderTargets[4] = {};
-	UINT mMaxLatency = 0;
-	INT mPriority = 0;
-	UINT mAvailableTextureMemory = 0;
-	std::vector<CSwapChain9*> mSwapChains;
+
+	bool mCapturedFVF = false;
+	long mFVF = 0;
+
+	bool mCapturedIndexBuffer = false;
+	CIndexBuffer9* mIndexBuffer = nullptr;
+
+	bool mCapturedRenderState[D3DRS_BLENDOPALPHA + 1] = {};
+	unsigned long mRenderState[D3DRS_BLENDOPALPHA + 1] = {};
+
+	bool mCapturedNPatchMode = false;
+	float mNPatchMode = 0.0f;
+
+	//A device can have only 8 textures.
+	//https://docs.microsoft.com/en-us/windows/desktop/api/d3d9helper/nf-d3d9helper-idirect3ddevice9-settexturestagestate
+	bool mCapturedTextureStageState[8][D3DTSS_CONSTANT + 1];
+	unsigned long mTextureStageState[8][D3DTSS_CONSTANT + 1];
+
+	bool mCapturedSamplerState[16 + 4][D3DSAMP_DMAPOFFSET + 1];
+	unsigned long mSamplerState[16 + 4][D3DSAMP_DMAPOFFSET + 1];
+
+	bool mCapturedStreamSource[MAX_VERTEX_INPUTS] = {};
+	struct StreamSource
+	{
+		CVertexBuffer9* vertexBuffer;
+		unsigned int offset;
+		unsigned int stride;
+	};
+	StreamSource mStreamSource[MAX_VERTEX_INPUTS] = {};
+
+	bool mCapturedStreamSourceFrequency[MAX_VERTEX_INPUTS] = {};
+	unsigned int mStreamSourceFrequency[MAX_VERTEX_INPUTS] = {};
+
+	bool mCapturedTexture[16 + 4] = {};
+	IDirect3DBaseTexture9* mTexture[16 + 4] = {};
+
+	bool mCapturedTransform[512] = {};
+	D3DMATRIX mTransform[512] = {};
+
+	bool mCapturedMaterial = false;
+	D3DMATERIAL9 mMaterial = {};
+
+	bool mCapturedLight[8] = {};
+	D3DLIGHT9 mLight[8] = {};
+
+	bool mCapturedLightEnable[8] = {};
+	int mLightEnableState[8] = {};
+
+	bool mCapturedPixelShader = false;
+	CPixelShader9* mPixelShader = nullptr;
+
+	bool mCapturedVertexShader = false;
+	CVertexShader9* mVertexShader = nullptr;
+
+	bool mCapturedViewport;
+	D3DVIEWPORT9 mViewport;
+
+	float mPixelShaderConstantF[MAX_PIXEL_SHADER_CONST][4] = {};
+	int mPixelShaderConstantI[16][4] = {};
+	int mPixelShaderConstantB[16] = {};
+
+	float mVertexShaderConstantF[MAX_VERTEX_SHADER_CONST][4] = {};
+	int mVertexShaderConstantI[16][4] = {};
+	int mVertexShaderConstantB[16] = {};
+
+	bool mClipPlaneCaptured[6] = {};
+	float mClipPlane[6][4] = {};
+
+	bool mCapturedScissorRect = false;
+	RECT mScissorRect = {};
+
+	bool mCapturedPaletteNumber;
+	unsigned int mPaletteNumber;
 };

@@ -474,7 +474,7 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 	//Add implicit swap chain.
 	CSwapChain9* ptr = nullptr;
 	CreateAdditionalSwapChain(&mPresentationParameters, (IDirect3DSwapChain9**)&ptr);
-	mDeviceState.mSwapChains.push_back(ptr);
+	mSwapChains.push_back(ptr);
 
 	//Add implicit render target
 	SetRenderTarget(0, ptr->mBackBuffer);
@@ -1107,12 +1107,12 @@ UINT STDMETHODCALLTYPE CDevice9::GetAvailableTextureMem()
 {
 
 
-	return mDeviceState.mAvailableTextureMemory;
+	return mAvailableTextureMemory;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetBackBuffer(UINT  iSwapChain, UINT BackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9 **ppBackBuffer)
 {
-	return mDeviceState.mSwapChains[iSwapChain]->GetBackBuffer(BackBuffer, Type, ppBackBuffer);
+	return mSwapChains[iSwapChain]->GetBackBuffer(BackBuffer, Type, ppBackBuffer);
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetClipPlane(DWORD Index, float *pPlane)
@@ -1154,11 +1154,11 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetCurrentTexturePalette(UINT *pPaletteNumbe
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetDepthStencilSurface(IDirect3DSurface9 **ppZStencilSurface)
 {
-	(*ppZStencilSurface) = mDeviceState.mDepthStencilSurface;
+	(*ppZStencilSurface) = mDepthStencilSurface;
 
-	if (mDeviceState.mDepthStencilSurface != nullptr)
+	if (mDepthStencilSurface != nullptr)
 	{
-		mDeviceState.mDepthStencilSurface->AddRef();
+		mDepthStencilSurface->AddRef();
 	}
 
 	return S_OK;
@@ -1189,7 +1189,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetDisplayMode(UINT  iSwapChain, D3DDISPLAYM
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetFrontBufferData(UINT  iSwapChain, IDirect3DSurface9 *pDestSurface)
 {
-	return mDeviceState.mSwapChains[iSwapChain]->GetFrontBufferData(pDestSurface);
+	return mSwapChains[iSwapChain]->GetFrontBufferData(pDestSurface);
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetFVF(DWORD *pFVF)
@@ -1201,7 +1201,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetFVF(DWORD *pFVF)
 
 void STDMETHODCALLTYPE CDevice9::GetGammaRamp(UINT  iSwapChain, D3DGAMMARAMP *pRamp)
 {
-	auto& swapChain = mDeviceState.mSwapChains[iSwapChain];
+	auto& swapChain = mSwapChains[iSwapChain];
 
 	HDC windowHdc = GetDC(swapChain->mPresentationParameters->hDeviceWindow);
 
@@ -1305,7 +1305,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetPixelShaderConstantI(UINT StartRegister, 
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetRasterStatus(UINT  iSwapChain, D3DRASTER_STATUS *pRasterStatus)
 {
-	return mDeviceState.mSwapChains[iSwapChain]->GetRasterStatus(pRasterStatus);
+	return mSwapChains[iSwapChain]->GetRasterStatus(pRasterStatus);
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetRenderState(D3DRENDERSTATETYPE State, DWORD* pValue)
@@ -1317,9 +1317,9 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetRenderState(D3DRENDERSTATETYPE State, DWO
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetRenderTarget(DWORD RenderTargetIndex, IDirect3DSurface9** ppRenderTarget)
 {
-	mDeviceState.mRenderTargets[RenderTargetIndex]->AddRef();
+	mRenderTargets[RenderTargetIndex]->AddRef();
 
-	(*ppRenderTarget) = mDeviceState.mRenderTargets[RenderTargetIndex];
+	(*ppRenderTarget) = mRenderTargets[RenderTargetIndex];
 
 	return S_OK;
 }
@@ -1374,7 +1374,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetStreamSourceFreq(UINT StreamNumber, UINT 
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetSwapChain(UINT iSwapChain, IDirect3DSwapChain9** ppSwapChain)
 {
-	(*ppSwapChain) = (IDirect3DSwapChain9*)mDeviceState.mSwapChains[iSwapChain];
+	(*ppSwapChain) = (IDirect3DSwapChain9*)mSwapChains[iSwapChain];
 
 	if ((*ppSwapChain) != nullptr)
 	{
@@ -1561,12 +1561,12 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetDepthStencilSurface(IDirect3DSurface9* pN
 
 	((CSurface9*)pNewZStencil)->PrivateAddRef();
 
-	if (mDeviceState.mDepthStencilSurface != nullptr)
+	if (mDepthStencilSurface != nullptr)
 	{
-		mDeviceState.mDepthStencilSurface->PrivateRelease();
+		mDepthStencilSurface->PrivateRelease();
 	}
 
-	mDeviceState.mDepthStencilSurface = (CSurface9*)pNewZStencil;
+	mDepthStencilSurface = (CSurface9*)pNewZStencil;
 
 
 
@@ -1591,7 +1591,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetFVF(DWORD FVF)
 
 void STDMETHODCALLTYPE CDevice9::SetGammaRamp(UINT  iSwapChain, DWORD Flags, const D3DGAMMARAMP *pRamp)
 {
-	auto& swapChain = mDeviceState.mSwapChains[iSwapChain];
+	auto& swapChain = mSwapChains[iSwapChain];
 
 	HDC windowHdc = GetDC(swapChain->mPresentationParameters->hDeviceWindow);
 	SetDeviceGammaRamp(windowHdc, (LPVOID)pRamp);
@@ -1697,14 +1697,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetRenderState(D3DRENDERSTATETYPE State, DWO
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetRenderTarget(DWORD RenderTargetIndex, IDirect3DSurface9* pRenderTarget)
 {
-	if (mDeviceState.mRenderTargets[RenderTargetIndex] != nullptr)
+	if (mRenderTargets[RenderTargetIndex] != nullptr)
 	{
-		mDeviceState.mRenderTargets[RenderTargetIndex]->PrivateRelease();
+		mRenderTargets[RenderTargetIndex]->PrivateRelease();
 	}
-	mDeviceState.mRenderTargets[RenderTargetIndex] = (CSurface9*)pRenderTarget;
-	if (mDeviceState.mRenderTargets[RenderTargetIndex] != nullptr)
+	mRenderTargets[RenderTargetIndex] = (CSurface9*)pRenderTarget;
+	if (mRenderTargets[RenderTargetIndex] != nullptr)
 	{
-		mDeviceState.mRenderTargets[RenderTargetIndex]->PrivateAddRef();
+		mRenderTargets[RenderTargetIndex]->PrivateAddRef();
 	}
 
 
@@ -1737,17 +1737,19 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetSoftwareVertexProcessing(BOOL bSoftware)
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetStreamSource(UINT StreamNumber, IDirect3DVertexBuffer9* pStreamData, UINT OffsetInBytes, UINT Stride)
 {
+	auto& streamSource = mDeviceState.mStreamSource[StreamNumber];
+
 
 
 	if (pStreamData != nullptr)
 	{
 		((CVertexBuffer9*)pStreamData)->PrivateAddRef();
 	}
-	if (mDeviceState.mVertexBuffer != nullptr)
+	if (streamSource.vertexBuffer != nullptr)
 	{
-		mDeviceState.mVertexBuffer->PrivateRelease();
+		streamSource.vertexBuffer->PrivateRelease();
 	}
-	mDeviceState.mVertexBuffer = (CVertexBuffer9*)pStreamData;
+	streamSource.vertexBuffer = (CVertexBuffer9*)pStreamData;
 
 	return S_OK;
 }
@@ -1782,24 +1784,24 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTexture(DWORD Sampler, IDirect3DBaseTextu
 			break;
 		}	
 	}
-	if (mDeviceState.mTextures[Sampler] != nullptr)
+	if (mDeviceState.mTexture[Sampler] != nullptr)
 	{
-		switch (mDeviceState.mTextures[Sampler]->GetType())
+		switch (mDeviceState.mTexture[Sampler]->GetType())
 		{
 		case D3DRTYPE_VOLUMETEXTURE:
-			((CVolumeTexture9*)mDeviceState.mTextures[Sampler])->PrivateRelease();
+			((CVolumeTexture9*)mDeviceState.mTexture[Sampler])->PrivateRelease();
 			break;
 		case D3DRTYPE_CUBETEXTURE:
-			((CCubeTexture9*)mDeviceState.mTextures[Sampler])->PrivateRelease();
+			((CCubeTexture9*)mDeviceState.mTexture[Sampler])->PrivateRelease();
 			break;
 		case D3DRTYPE_TEXTURE:
-			((CTexture9*)mDeviceState.mTextures[Sampler])->PrivateRelease();
+			((CTexture9*)mDeviceState.mTexture[Sampler])->PrivateRelease();
 			break;
 		default:
 			break;
 		}
 	}
-	mDeviceState.mTextures[Sampler] = pTexture;
+	mDeviceState.mTexture[Sampler] = pTexture;
 
 	return S_OK;
 }
@@ -1957,14 +1959,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::PresentEx(const RECT *pSourceRect, const REC
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetGPUThreadPriority(INT *pPriority)
 {
-	(*pPriority) = mDeviceState.mPriority;
+	(*pPriority) = mPriority;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetGPUThreadPriority(INT Priority)
 {
-	mDeviceState.mPriority = Priority;
+	mPriority = Priority;
 
 	return S_OK;
 }
@@ -1989,14 +1991,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::CheckResourceResidency(IDirect3DResource9 **
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetMaximumFrameLatency(UINT MaxLatency)
 {
-	mDeviceState.mMaxLatency = MaxLatency;
+	mMaxLatency = MaxLatency;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetMaximumFrameLatency(UINT *pMaxLatency)
 {
-	(*pMaxLatency) = mDeviceState.mMaxLatency;
+	(*pMaxLatency) = mMaxLatency;
 
 	return S_OK;
 }

@@ -164,6 +164,12 @@ public:
 	//Misc
 	PAINTSTRUCT* mPaintInformation = {};
 
+	CSurface9* mDepthStencilSurface = nullptr;
+	CSurface9* mRenderTargets[4] = {};
+	UINT mMaxLatency = 0;
+	INT mPriority = 0;
+	UINT mAvailableTextureMemory = 0;
+	std::vector<CSwapChain9*> mSwapChains;
 
 public:
 
