@@ -45,7 +45,7 @@ struct DeviceState
 	CVertexDeclaration9* mVertexDeclaration = nullptr;
 
 	bool mCapturedFVF = false;
-	long mFVF = 0;
+	DWORD mFVF = 0;
 
 	bool mCapturedIndexBuffer = false;
 	CIndexBuffer9* mIndexBuffer = nullptr;
@@ -108,7 +108,7 @@ struct DeviceState
 	int mVertexShaderConstantI[16][4] = {};
 	int mVertexShaderConstantB[16] = {};
 
-	bool mClipPlaneCaptured[6] = {};
+	bool mCapturedClipPlane[6] = {};
 	float mClipPlane[6][4] = {};
 
 	bool mCapturedScissorRect = false;
