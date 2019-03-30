@@ -173,6 +173,8 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 {
 	Log(info) << "CDevice9::CDevice9" << std::endl;
 
+	mC9->AddRef();
+
 	if (pPresentationParameters != nullptr)
 	{
 		if (pPresentationParameters->BackBufferFormat == D3DFMT_UNKNOWN)
@@ -209,6 +211,159 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 		InvalidateRect(mFocusWindow, 0, true);
 	}
 
+	//Setup Vulkan objects
+	ResetVulkanDevice();
+
+	//Set Default State
+
+	/*
+	The point here is to set the correct defaults and mark everything as dirty.
+	The default value still need to be pushed into the buffers, pipelines, descriptors, etc.
+	This block allows that to be handled by the normal logic that handles state changes.
+	*/
+	mInternalDeviceState.SetPixelShader(nullptr);
+	mInternalDeviceState.SetVertexShader(nullptr);
+
+	{
+		D3DLIGHT9 light = {};
+		for (size_t i = 0; i < 8; i++)
+		{
+			mInternalDeviceState.SetLight(i, &light);
+		}
+	}
+
+	for (int i = 0; i < MAX_VERTEX_INPUTS; i++)
+	{
+		mInternalDeviceState.SetStreamSource(i, nullptr, 0, 0);
+		mInternalDeviceState.SetStreamSourceFreq(i, 1);
+	}
+
+	mInternalDeviceState.SetIndices(nullptr);
+	mInternalDeviceState.SetVertexDeclaration(nullptr);
+
+	{
+		D3DMATERIAL9 material;
+
+		material.Diffuse.r = 1.0f;
+		material.Diffuse.g = 1.0f;
+		material.Diffuse.b = 1.0f;
+		material.Diffuse.a = 0.0f;
+		material.Ambient.r = 0.0f;
+		material.Ambient.g = 0.0f;
+		material.Ambient.b = 0.0f;
+		material.Ambient.a = 0.0f;
+		material.Emissive.r = 0.0f;
+		material.Emissive.g = 0.0f;
+		material.Emissive.b = 0.0f;
+		material.Emissive.a = 0.0f;
+		material.Specular.r = 0.0f;
+		material.Specular.g = 0.0f;
+		material.Specular.b = 0.0f;
+		material.Specular.a = 0.0f;
+		material.Power = 0.0f;
+
+		mInternalDeviceState.SetMaterial(&material);
+	}
+
+	{
+		D3DMATRIX identity = { 1, 0, 0, 0,
+							   0, 1, 0, 0,
+							   0, 0, 1, 0,
+							   0, 0, 0, 1 };
+
+		SetTransform(D3DTS_VIEW, &identity);
+		SetTransform(D3DTS_PROJECTION, &identity);
+		SetTransform(D3DTS_TEXTURE0, &identity);
+		SetTransform(D3DTS_TEXTURE1, &identity);
+		SetTransform(D3DTS_TEXTURE2, &identity);
+		SetTransform(D3DTS_TEXTURE3, &identity);
+		SetTransform(D3DTS_TEXTURE4, &identity);
+		SetTransform(D3DTS_TEXTURE5, &identity);
+		SetTransform(D3DTS_TEXTURE6, &identity);
+		SetTransform(D3DTS_TEXTURE7, &identity);
+
+		for (int i = 0; i < 12; i++)
+		{
+			SetTransform(D3DTS_WORLDMATRIX(i), &identity);
+		}
+	}
+
+	for (int i = 0; i < MAX_PIXEL_SHADER_CONST; i++)
+	{
+		const float zero[4] = { 0, 0, 0, 0 };
+
+		SetPixelShaderConstantF(i, zero, 1);
+	}
+
+	for (int i = 0; i < MAX_VERTEX_SHADER_CONST; i++)
+	{
+		const float zero[4] = { 0, 0, 0, 0 };
+
+		SetVertexShaderConstantF(i, zero, 1);
+	}
+
+	for (int i = 0; i < 16; i++)
+	{
+		const int zero[4] = { 0, 0, 0, 0 };
+
+		SetPixelShaderConstantI(i, zero, 1);
+		SetVertexShaderConstantI(i, zero, 1);
+		SetPixelShaderConstantB(i, &zero[0], 1);
+		SetVertexShaderConstantB(i, &zero[0], 1);
+	}
+
+	//TODO: add default render state.
+
+	//TODO: add default sampler state.
+}
+
+CDevice9::~CDevice9()
+{
+	mDevice->waitIdle();
+
+	mC9->Release();
+}
+
+ULONG CDevice9::PrivateAddRef(void)
+{
+	return InterlockedIncrement(&mPrivateReferenceCount);
+}
+
+ULONG CDevice9::PrivateRelease(void)
+{
+	ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
+
+	if (ref == 0 && mReferenceCount == 0)
+	{
+		delete this;
+	}
+
+	return ref;
+}
+
+bool CDevice9::FindMemoryTypeFromProperties(uint32_t typeBits, vk::MemoryPropertyFlags requirements_mask, uint32_t* typeIndex)
+{
+	// Search memtypes to find first index with those properties
+	for (uint32_t i = 0; i < VK_MAX_MEMORY_TYPES; i++)
+	{
+		if ((typeBits & 1) == 1)
+		{
+			// Type is available, does it match user properties?
+			if ((mC9->mPhysicalDeviceMemoryProperties.memoryTypes[i].propertyFlags & requirements_mask) == requirements_mask)
+			{
+				*typeIndex = i;
+				return true;
+			}
+		}
+		typeBits >>= 1;
+	}
+
+	// No memory types matched, return failure
+	return false;
+}
+
+void CDevice9::ResetVulkanDevice()
+{
 	//Create a device and command pool (unique device will auto destroy)
 	{
 		float queuePriority = 0.0f;
@@ -264,7 +419,7 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 
 	//RenderState
 	{
-		auto const renderStateBufferInfo = vk::BufferCreateInfo().setSize(sizeof(uint32_t) /*FIX!*/).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		auto const renderStateBufferInfo = vk::BufferCreateInfo().setSize(sizeof(mInternalDeviceState.mDeviceState.mRenderState)).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
 		mRenderStateBuffer = mDevice->createBufferUnique(renderStateBufferInfo);
 		vk::MemoryRequirements renderStateMemoryRequirements;
 		mDevice->getBufferMemoryRequirements(mRenderStateBuffer.get(), &renderStateMemoryRequirements);
@@ -276,7 +431,7 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 
 	//TextureStage
 	{
-		auto const textureStageBufferInfo = vk::BufferCreateInfo().setSize(sizeof(uint32_t) /*FIX!*/).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		auto const textureStageBufferInfo = vk::BufferCreateInfo().setSize(sizeof(mInternalDeviceState.mDeviceState.mTextureStageState)).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
 		mTextureStageBuffer = mDevice->createBufferUnique(textureStageBufferInfo);
 		vk::MemoryRequirements textureStageMemoryRequirements;
 		mDevice->getBufferMemoryRequirements(mTextureStageBuffer.get(), &textureStageMemoryRequirements);
@@ -288,7 +443,7 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 
 	//Light
 	{
-		auto const lightBufferInfo = vk::BufferCreateInfo().setSize(sizeof(uint32_t) /*FIX!*/).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		auto const lightBufferInfo = vk::BufferCreateInfo().setSize(sizeof(mInternalDeviceState.mDeviceState.mLight)).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
 		mLightBuffer = mDevice->createBufferUnique(lightBufferInfo);
 		vk::MemoryRequirements lightMemoryRequirements;
 		mDevice->getBufferMemoryRequirements(mLightBuffer.get(), &lightMemoryRequirements);
@@ -298,9 +453,11 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 		mDevice->bindBufferMemory(mLightBuffer.get(), mLightBufferMemory.get(), 0);
 	}
 
+	//Handle light enable with constants to reduce branching.
+
 	//Material
 	{
-		auto const materialBufferInfo = vk::BufferCreateInfo().setSize(sizeof(D3DMATERIAL9)).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		auto const materialBufferInfo = vk::BufferCreateInfo().setSize(sizeof(mInternalDeviceState.mDeviceState.mMaterial)).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
 		mMaterialBuffer = mDevice->createBufferUnique(materialBufferInfo);
 		vk::MemoryRequirements materialMemoryRequirements;
 		mDevice->getBufferMemoryRequirements(mMaterialBuffer.get(), &materialMemoryRequirements);
@@ -312,7 +469,7 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 
 	//Transformation
 	{
-		auto const transformationBufferInfo = vk::BufferCreateInfo().setSize(sizeof(uint32_t) /*FIX!*/).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		auto const transformationBufferInfo = vk::BufferCreateInfo().setSize(sizeof(mInternalDeviceState.mDeviceState.mTransform)).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
 		mTransformationBuffer = mDevice->createBufferUnique(transformationBufferInfo);
 		vk::MemoryRequirements transformationMemoryRequirements;
 		mDevice->getBufferMemoryRequirements(mTransformationBuffer.get(), &transformationMemoryRequirements);
@@ -326,7 +483,7 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 
 	//VertexConstant
 	{
-		auto const vertexConstantBufferInfo = vk::BufferCreateInfo().setSize(sizeof(uint32_t) /*FIX!*/).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		auto const vertexConstantBufferInfo = vk::BufferCreateInfo().setSize(sizeof(mInternalDeviceState.mDeviceState.mVertexShaderConstantF)).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
 		mVertexConstantBuffer = mDevice->createBufferUnique(vertexConstantBufferInfo);
 		vk::MemoryRequirements vertexConstantMemoryRequirements;
 		mDevice->getBufferMemoryRequirements(mVertexConstantBuffer.get(), &vertexConstantMemoryRequirements);
@@ -336,9 +493,11 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 		mDevice->bindBufferMemory(mVertexConstantBuffer.get(), mVertexConstantBufferMemory.get(), 0);
 	}
 
+	//Handle B and I with constants maybe
+
 	//PixelConstant
 	{
-		auto const pixelConstantBufferInfo = vk::BufferCreateInfo().setSize(sizeof(uint32_t) /*FIX!*/).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		auto const pixelConstantBufferInfo = vk::BufferCreateInfo().setSize(sizeof(mInternalDeviceState.mDeviceState.mPixelShaderConstantF)).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
 		mPixelConstantBuffer = mDevice->createBufferUnique(pixelConstantBufferInfo);
 		vk::MemoryRequirements pixelConstantMemoryRequirements;
 		mDevice->getBufferMemoryRequirements(mPixelConstantBuffer.get(), &pixelConstantMemoryRequirements);
@@ -347,6 +506,8 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 		mPixelConstantBufferMemory = mDevice->allocateMemoryUnique(pixelConstantMemoryAllocateInfo);
 		mDevice->bindBufferMemory(mPixelConstantBuffer.get(), mPixelConstantBufferMemory.get(), 0);
 	}
+
+	//Handle B and I with constants maybe
 
 	//Create Descriptor layout.
 	{
@@ -387,7 +548,7 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 				.setBinding(5)
 				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
 				.setDescriptorCount(1)
-				.setStageFlags(vk::ShaderStageFlagBits::eFragment)
+				.setStageFlags(vk::ShaderStageFlagBits::eVertex)
 				.setPImmutableSamplers(nullptr),
 			vk::DescriptorSetLayoutBinding() /*Pixel Shader Const*/
 				.setBinding(6)
@@ -417,6 +578,8 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 				sizeof(uint32_t) * 4
 			}
 		};
+
+		//TODO: adjust push constant range to handle light enable, I, and B values.
 
 		auto const pipelineLayoutCreateInfo = vk::PipelineLayoutCreateInfo()
 			.setSetLayoutCount(1)
@@ -473,6 +636,7 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 	mFragShaderModule_Passthrough = LoadShaderFromConst(PIXEL_PASSTHROUGH_FRAG);
 
 	//Add implicit swap chain.
+	mSwapChains.clear();
 	CSwapChain9* ptr = nullptr;
 	CreateAdditionalSwapChain(&mPresentationParameters, (IDirect3DSwapChain9**)&ptr);
 	mSwapChains.push_back(ptr);
@@ -487,53 +651,10 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 	depth->Release();
 }
 
-CDevice9::~CDevice9()
-{
-	mDevice->waitIdle();
-}
-
-ULONG CDevice9::PrivateAddRef(void)
-{
-	return InterlockedIncrement(&mPrivateReferenceCount);
-}
-
-ULONG CDevice9::PrivateRelease(void)
-{
-	ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
-
-	if (ref == 0 && mReferenceCount == 0)
-	{
-		delete this;
-	}
-
-	return ref;
-}
-
-bool CDevice9::FindMemoryTypeFromProperties(uint32_t typeBits, vk::MemoryPropertyFlags requirements_mask, uint32_t* typeIndex)
-{
-	// Search memtypes to find first index with those properties
-	for (uint32_t i = 0; i < VK_MAX_MEMORY_TYPES; i++)
-	{
-		if ((typeBits & 1) == 1)
-		{
-			// Type is available, does it match user properties?
-			if ((mC9->mPhysicalDeviceMemoryProperties.memoryTypes[i].propertyFlags & requirements_mask) == requirements_mask)
-			{
-				*typeIndex = i;
-				return true;
-			}
-		}
-		typeBits >>= 1;
-	}
-
-	// No memory types matched, return failure
-	return false;
-}
-
 HRESULT STDMETHODCALLTYPE CDevice9::Clear(DWORD Count, const D3DRECT *pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
 {
 	//Flags |= D3DCLEAR_TARGET;
-
+	Log(warning) << "CDevice9::Clear is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -554,7 +675,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::EndScene()
 
 HRESULT STDMETHODCALLTYPE CDevice9::Present(const RECT *pSourceRect, const RECT *pDestRect, HWND hDestWindowOverride, const RGNDATA *pDirtyRegion)
 {
-
+	Log(warning) << "CDevice9::Present is not implemented!" << std::endl;
 	//if (mCommandStreamManager->mResult == vk::Result::eErrorDeviceLost) { return D3DERR_DEVICELOST; }
 
 	return D3D_OK;
@@ -601,7 +722,6 @@ ULONG STDMETHODCALLTYPE CDevice9::Release(void)
 	return ref;
 }
 
-
 HRESULT STDMETHODCALLTYPE CDevice9::BeginStateBlock()
 {
 	mRecordedDeviceState = new CStateBlock9(this, (D3DSTATEBLOCKTYPE)0);
@@ -610,8 +730,6 @@ HRESULT STDMETHODCALLTYPE CDevice9::BeginStateBlock()
 
 	return S_OK;
 }
-
-
 
 HRESULT STDMETHODCALLTYPE CDevice9::ColorFill(IDirect3DSurface9 *pSurface, const RECT *pRect, D3DCOLOR color)
 {
@@ -697,8 +815,6 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreatePixelShader(const DWORD *pFunction, ID
 
 	CPixelShader9* obj = new CPixelShader9(this, pFunction);
 
-
-
 	//The application is allowed to dispose of the shader data it passes in after this call returns but can request it later so we need to make a copy.
 	obj->mFunction = (DWORD*)malloc(obj->mSize);
 	if (obj->mFunction != nullptr)
@@ -732,15 +848,11 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateQuery(D3DQUERYTYPE Type, IDirect3DQuer
 
 	if (Type == D3DQUERYTYPE_OCCLUSION || Type == D3DQUERYTYPE_TIMESTAMP || Type == D3DQUERYTYPE_TIMESTAMPDISJOINT || Type == D3DQUERYTYPE_TIMESTAMPFREQ)
 	{
-		HRESULT result = S_OK;
-
 		CQuery9* obj = new CQuery9(this, Type);
 
 		(*ppQuery) = (IDirect3DQuery9*)obj;
 
-
-
-		return result;
+		return S_OK;
 	}
 	else
 	{
@@ -836,20 +948,11 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateVertexShader(const DWORD *pFunction, I
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreateVolumeTexture(UINT Width, UINT Height, UINT Depth, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DVolumeTexture9 **ppVolumeTexture, HANDLE *pSharedHandle)
 {
-	HRESULT result = S_OK;
-
 	CVolumeTexture9* obj = new CVolumeTexture9(this, Width, Height, Depth, Levels, Usage, Format, Pool, pSharedHandle);
-
-
-
-	for (size_t i = 0; i < obj->mLevels; i++)
-	{
-		obj->mVolumes[i]->Init();
-	}
 
 	(*ppVolumeTexture) = (IDirect3DVolumeTexture9*)obj;
 
-	return result;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::DeletePatch(UINT Handle)
@@ -863,12 +966,15 @@ HRESULT STDMETHODCALLTYPE CDevice9::DeletePatch(UINT Handle)
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitive(D3DPRIMITIVETYPE Type, INT BaseVertexIndex, UINT MinIndex, UINT NumVertices, UINT StartIndex, UINT PrimitiveCount)
 {
+	Log(warning) << "CDevice9::DrawIndexedPrimitive is not implemented!" << std::endl;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, const void *pIndexData, D3DFORMAT IndexDataFormat, const void *pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
+	Log(warning) << "CDevice9::DrawIndexedPrimitiveUP is not implemented!" << std::endl;
+
 	////Figure out the current buffer setup.
 	//IDirect3DIndexBuffer9* oldIndexBuffer = nullptr;
 
@@ -972,13 +1078,15 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE Prim
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
 {
-
+	Log(warning) << "CDevice9::DrawPrimitive is not implemented!" << std::endl;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, const void *pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
+	Log(warning) << "CDevice9::DrawPrimitiveUP is not implemented!" << std::endl;
+
 	////Figure out the current buffer setup.
 	//IDirect3DVertexBuffer9* oldVertexBuffer = nullptr;
 	//UINT oldOffsetInBytes = 0;
@@ -1072,7 +1180,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawRectPatch(UINT Handle, const float *pNum
 
 	Log(warning) << "CDevice9::DrawRectPatch is not implemented!" << std::endl;
 
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawTriPatch(UINT Handle, const float *pNumSegs, const D3DTRIPATCH_INFO *pTriPatchInfo)
@@ -1086,7 +1194,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawTriPatch(UINT Handle, const float *pNumS
 
 	Log(warning) << "CDevice9::DrawTriPatch is not implemented!" << std::endl;
 
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::EndStateBlock(IDirect3DStateBlock9** ppSB)
@@ -1111,7 +1219,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::EvictManagedResources()
 
 UINT STDMETHODCALLTYPE CDevice9::GetAvailableTextureMem()
 {
-
+	Log(warning) << "CDevice9::GetAvailableTextureMem is not implemented!" << std::endl;
 
 	return mAvailableTextureMemory;
 }
@@ -1121,13 +1229,11 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetBackBuffer(UINT  iSwapChain, UINT BackBuf
 	return mSwapChains[iSwapChain]->GetBackBuffer(BackBuffer, Type, ppBackBuffer);
 }
 
-HRESULT STDMETHODCALLTYPE CDevice9::GetClipPlane(DWORD Index, float *pPlane)
+HRESULT STDMETHODCALLTYPE CDevice9::GetClipPlane(DWORD Index, float* pPlane)
 {
-	//TODO: Implement.
+	memcpy(pPlane, &mInternalDeviceState.mDeviceState.mClipPlane[Index], 4 * sizeof(float));
 
-	Log(warning) << "CDevice9::GetClipPlane is not implemented!" << std::endl;
-
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetClipStatus(D3DCLIPSTATUS9 *pClipStatus)
@@ -1186,7 +1292,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetDirect3D(IDirect3D9 **ppD3D9)
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetDisplayMode(UINT  iSwapChain, D3DDISPLAYMODE *pMode)
 {
-
+	Log(warning) << "CDevice9::GetDisplayMode is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -1217,7 +1323,7 @@ void STDMETHODCALLTYPE CDevice9::GetGammaRamp(UINT  iSwapChain, D3DGAMMARAMP *pR
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetIndices(IDirect3DIndexBuffer9 **ppIndexData) //,UINT *pBaseVertexIndex ?
 {
-
+	(*ppIndexData) = mInternalDeviceState.mDeviceState.mIndexBuffer;
 
 	if ((*ppIndexData) != nullptr)
 	{
@@ -1229,32 +1335,28 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetIndices(IDirect3DIndexBuffer9 **ppIndexDa
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetLight(DWORD Index, D3DLIGHT9 *pLight)
 {
-
+	(*pLight) = mInternalDeviceState.mDeviceState.mLight[Index];
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetLightEnable(DWORD Index, BOOL *pEnable)
 {
-
+	(*pEnable) = mInternalDeviceState.mDeviceState.mLightEnableState[Index];
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetMaterial(D3DMATERIAL9 *pMaterial)
 {
-
+	(*pMaterial) = mInternalDeviceState.mDeviceState.mMaterial;
 
 	return S_OK;
 }
 
 FLOAT STDMETHODCALLTYPE CDevice9::GetNPatchMode()
 {
-	FLOAT output = {};
-
-
-
-	return output;
+	return mInternalDeviceState.mDeviceState.mNPatchMode;
 }
 
 UINT STDMETHODCALLTYPE CDevice9::GetNumberOfSwapChains()
@@ -1277,7 +1379,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetPaletteEntries(UINT PaletteNumber, PALETT
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetPixelShader(IDirect3DPixelShader9 **ppShader)
 {
-
+	(*ppShader) = mInternalDeviceState.mDeviceState.mPixelShader;
 
 	if ((*ppShader) != nullptr)
 	{
@@ -1288,21 +1390,21 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetPixelShader(IDirect3DPixelShader9 **ppSha
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetPixelShaderConstantB(UINT StartRegister, BOOL *pConstantData, UINT BoolCount)
 {
-
+	memcpy(pConstantData, &mInternalDeviceState.mDeviceState.mPixelShaderConstantB[StartRegister], BoolCount * sizeof(int));
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetPixelShaderConstantF(UINT StartRegister, float *pConstantData, UINT Vector4fCount)
 {
-
+	memcpy(pConstantData, &mInternalDeviceState.mDeviceState.mPixelShaderConstantF[StartRegister], Vector4fCount * sizeof(float[4]));
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetPixelShaderConstantI(UINT StartRegister, int *pConstantData, UINT Vector4iCount)
 {
-
+	memcpy(pConstantData, &mInternalDeviceState.mDeviceState.mPixelShaderConstantI[StartRegister], Vector4iCount * sizeof(int[4]));
 
 	return S_OK;
 }
@@ -1314,7 +1416,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetRasterStatus(UINT  iSwapChain, D3DRASTER_
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetRenderState(D3DRENDERSTATETYPE State, DWORD* pValue)
 {
-
+	(*pValue) = mInternalDeviceState.mDeviceState.mRenderState[State];
 
 	return S_OK;
 }
@@ -1339,14 +1441,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetRenderTargetData(IDirect3DSurface9 *pRend
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD* pValue)
 {
-
+	(*pValue) = mInternalDeviceState.mDeviceState.mSamplerState[Sampler][Type];
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetScissorRect(RECT* pRect)
 {
-
+	(*pRect) = mInternalDeviceState.mDeviceState.mScissorRect;
 
 	return S_OK;
 }
@@ -1362,18 +1464,20 @@ BOOL STDMETHODCALLTYPE CDevice9::GetSoftwareVertexProcessing()
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetStreamSource(UINT StreamNumber, IDirect3DVertexBuffer9** ppStreamData, UINT* pOffsetInBytes, UINT* pStride)
 {
+	auto& entry = mInternalDeviceState.mDeviceState.mStreamSource[StreamNumber];
 
+	(*ppStreamData) = entry.vertexBuffer;
+	(*pOffsetInBytes) = entry.offset;
+	(*pStride) = entry.stride;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetStreamSourceFreq(UINT StreamNumber, UINT *pDivider)
 {
-	//TODO: Implement.
+	(*pDivider) = mInternalDeviceState.mDeviceState.mStreamSourceFrequency[StreamNumber];
 
-	Log(warning) << "CDevice9::GetStreamSourceFreq is not implemented!" << std::endl;
-
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetSwapChain(UINT iSwapChain, IDirect3DSwapChain9** ppSwapChain)
@@ -1389,7 +1493,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetSwapChain(UINT iSwapChain, IDirect3DSwapC
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetTexture(DWORD Stage, IDirect3DBaseTexture9** ppTexture)
 {
-
+	(*ppTexture) = mInternalDeviceState.mDeviceState.mTexture[Stage];
 
 	if ((*ppTexture) != nullptr)
 	{
@@ -1401,21 +1505,21 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetTexture(DWORD Stage, IDirect3DBaseTexture
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetTextureStageState(DWORD Stage, D3DTEXTURESTAGESTATETYPE Type, DWORD* pValue)
 {
-
+	(*pValue) = mInternalDeviceState.mDeviceState.mTextureStageState[Stage][Type];
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetTransform(D3DTRANSFORMSTATETYPE State, D3DMATRIX* pMatrix)
 {
-
+	(*pMatrix) = mInternalDeviceState.mDeviceState.mTransform[State];
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetVertexDeclaration(IDirect3DVertexDeclaration9** ppDecl)
 {
-
+	(*ppDecl) = mInternalDeviceState.mDeviceState.mVertexDeclaration;
 
 	if ((*ppDecl) != nullptr)
 	{
@@ -1427,7 +1531,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetVertexDeclaration(IDirect3DVertexDeclarat
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetVertexShader(IDirect3DVertexShader9** ppShader)
 {
-
+	(*ppShader) = mInternalDeviceState.mDeviceState.mVertexShader;
 
 	if ((*ppShader) != nullptr)
 	{
@@ -1438,35 +1542,42 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetVertexShader(IDirect3DVertexShader9** ppS
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetVertexShaderConstantB(UINT StartRegister, BOOL* pConstantData, UINT BoolCount)
 {
-
+	memcpy(pConstantData, &mInternalDeviceState.mDeviceState.mVertexShaderConstantB[StartRegister], BoolCount * sizeof(int));
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetVertexShaderConstantF(UINT StartRegister, float* pConstantData, UINT Vector4fCount)
 {
-
+	memcpy(pConstantData, &mInternalDeviceState.mDeviceState.mVertexShaderConstantF[StartRegister], Vector4fCount * sizeof(float[4]));
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetVertexShaderConstantI(UINT StartRegister, int* pConstantData, UINT Vector4iCount)
 {
-
+	memcpy(pConstantData, &mInternalDeviceState.mDeviceState.mVertexShaderConstantI[StartRegister], Vector4iCount * sizeof(int[4]));
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetViewport(D3DVIEWPORT9* pViewport)
 {
-
+	(*pViewport) = mInternalDeviceState.mDeviceState.mViewport;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::LightEnable(DWORD LightIndex, BOOL bEnable)
 {
-
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->LightEnable(LightIndex, bEnable);
+	}
+	else
+	{
+		mInternalDeviceState.LightEnable(LightIndex, bEnable);
+	}
 
 	return S_OK;
 }
@@ -1491,30 +1602,31 @@ HRESULT STDMETHODCALLTYPE CDevice9::ProcessVertices(UINT SrcStartIndex, UINT Des
 
 HRESULT STDMETHODCALLTYPE CDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationParameters)
 {
-	//if (mCommandStreamManager->mResult == vk::Result::eErrorDeviceLost)
-	//{
-	//	/*
-	//	All of the the d3d9 "device state" is attached to the RealDevice object so just destroy the current one and make a new one.
-	//	The application is responsible for destroying any handles it has before calling Reset but I doubt games really do that.
-	//	*/
-	//	memcpy(&mPresentationParameters, pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS));
+	if (pPresentationParameters != nullptr)
+	{
+		if (pPresentationParameters->BackBufferFormat == D3DFMT_UNKNOWN)
+		{
+			pPresentationParameters->BackBufferFormat = D3DFMT_X8R8G8B8;
+		}
+		memcpy(&mPresentationParameters, pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS));
+	}
 
-	//	Destroy();
-	//	Init();
-	//}
-	//else
-	//{
-
-	//}
+	mDevice->waitIdle();
+	ResetVulkanDevice();
 
 	return S_OK;
 }
 
 HRESULT CDevice9::SetClipPlane(DWORD Index, const float *pPlane)
 {
-	//TODO: Implement.
-
-	Log(warning) << "CDevice9::SetClipPlane is not implemented!" << std::endl;
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetClipPlane(Index, pPlane);
+	}
+	else
+	{
+		mInternalDeviceState.SetClipPlane(Index, pPlane);
+	}
 
 	return S_OK;
 }
@@ -1530,9 +1642,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetClipStatus(const D3DCLIPSTATUS9 *pClipSta
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetCurrentTexturePalette(UINT PaletteNumber)
 {
-	//TODO: Implement.
-
-	Log(warning) << "CDevice9::SetCurrentTexturePalette is not implemented!" << std::endl;
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetCurrentTexturePalette(PaletteNumber);
+	}
+	else
+	{
+		mInternalDeviceState.SetCurrentTexturePalette(PaletteNumber);
+	}
 
 	return S_OK;
 }
@@ -1572,8 +1689,6 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetDepthStencilSurface(IDirect3DSurface9* pN
 
 	mDepthStencilSurface = (CSurface9*)pNewZStencil;
 
-
-
 	return S_OK;
 }
 
@@ -1588,7 +1703,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetDialogBoxMode(BOOL bEnableDialogs)
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetFVF(DWORD FVF)
 {
-
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetFVF(FVF);
+	}
+	else
+	{
+		mInternalDeviceState.SetFVF(FVF);
+	}
 
 	return S_OK;
 }
@@ -1609,38 +1731,56 @@ void STDMETHODCALLTYPE CDevice9::SetGammaRamp(UINT  iSwapChain, DWORD Flags, con
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetIndices(IDirect3DIndexBuffer9* pIndexData)
 {
-
-
-	if (pIndexData != nullptr)
+	if (mRecordedDeviceState)
 	{
-		((CIndexBuffer9*)pIndexData)->PrivateAddRef();
+		mRecordedDeviceState->SetIndices(pIndexData);
 	}
-	if (mDeviceState.mIndexBuffer != nullptr)
+	else
 	{
-		mDeviceState.mIndexBuffer->PrivateRelease();
+		mInternalDeviceState.SetIndices(pIndexData);
 	}
-	mDeviceState.mIndexBuffer = (CIndexBuffer9*)pIndexData;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetLight(DWORD Index, const D3DLIGHT9* pLight)
 {
-
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetLight(Index, pLight);
+	}
+	else
+	{
+		mInternalDeviceState.SetLight(Index, pLight);
+	}
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetMaterial(const D3DMATERIAL9* pMaterial)
 {
-
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetMaterial(pMaterial);
+	}
+	else
+	{
+		mInternalDeviceState.SetMaterial(pMaterial);
+	}
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetNPatchMode(float nSegments)
 {
-
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetNPatchMode(nSegments);
+	}
+	else
+	{
+		mInternalDeviceState.SetNPatchMode(nSegments);
+	}
 
 	return S_OK;
 }
@@ -1656,45 +1796,70 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPaletteEntries(UINT PaletteNumber, const 
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShader(IDirect3DPixelShader9* pShader)
 {
-
-
-	if (pShader != nullptr)
+	if (mRecordedDeviceState)
 	{
-		((CPixelShader9*)pShader)->PrivateAddRef();
+		mRecordedDeviceState->SetPixelShader(pShader);
 	}
-	if (mDeviceState.mPixelShader != nullptr)
+	else
 	{
-		mDeviceState.mPixelShader->PrivateRelease();
+		mInternalDeviceState.SetPixelShader(pShader);
 	}
-	mDeviceState.mPixelShader = (CPixelShader9*)pShader;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantB(UINT StartRegister, const BOOL* pConstantData, UINT BoolCount)
 {
-
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetPixelShaderConstantB(StartRegister, pConstantData, BoolCount);
+	}
+	else
+	{
+		mInternalDeviceState.SetPixelShaderConstantB(StartRegister, pConstantData, BoolCount);
+	}
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantF(UINT StartRegister, const float *pConstantData, UINT Vector4fCount)
 {
-
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetPixelShaderConstantF(StartRegister, pConstantData, Vector4fCount);
+	}
+	else
+	{
+		mInternalDeviceState.SetPixelShaderConstantF(StartRegister, pConstantData, Vector4fCount);
+	}
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantI(UINT StartRegister, const int *pConstantData, UINT Vector4iCount)
 {
-
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetPixelShaderConstantI(StartRegister, pConstantData, Vector4iCount);
+	}
+	else
+	{
+		mInternalDeviceState.SetPixelShaderConstantI(StartRegister, pConstantData, Vector4iCount);
+	}
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetRenderState(D3DRENDERSTATETYPE State, DWORD Value)
 {
-
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetRenderState(State, Value);
+	}
+	else
+	{
+		mInternalDeviceState.SetRenderState(State, Value);
+	}
 
 	return S_OK;
 }
@@ -1711,21 +1876,33 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetRenderTarget(DWORD RenderTargetIndex, IDi
 		mRenderTargets[RenderTargetIndex]->PrivateAddRef();
 	}
 
-
-
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value)
 {
-
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetSamplerState(Sampler, Type, Value);
+	}
+	else
+	{
+		mInternalDeviceState.SetSamplerState(Sampler, Type, Value);
+	}
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetScissorRect(const RECT* pRect)
 {
-
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetScissorRect(pRect);
+	}
+	else
+	{
+		mInternalDeviceState.SetScissorRect(pRect);
+	}
 
 	return S_OK;
 }
@@ -1741,147 +1918,154 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetSoftwareVertexProcessing(BOOL bSoftware)
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetStreamSource(UINT StreamNumber, IDirect3DVertexBuffer9* pStreamData, UINT OffsetInBytes, UINT Stride)
 {
-	auto& streamSource = mDeviceState.mStreamSource[StreamNumber];
-
-
-
-	if (pStreamData != nullptr)
+	if (mRecordedDeviceState)
 	{
-		((CVertexBuffer9*)pStreamData)->PrivateAddRef();
+		mRecordedDeviceState->SetStreamSource(StreamNumber, pStreamData, OffsetInBytes, Stride);
 	}
-	if (streamSource.vertexBuffer != nullptr)
+	else
 	{
-		streamSource.vertexBuffer->PrivateRelease();
+		mInternalDeviceState.SetStreamSource(StreamNumber, pStreamData, OffsetInBytes, Stride);
 	}
-	streamSource.vertexBuffer = (CVertexBuffer9*)pStreamData;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetStreamSourceFreq(UINT StreamNumber, UINT FrequencyParameter)
 {
-	//TODO: Implement.
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetStreamSourceFreq(StreamNumber, FrequencyParameter);
+	}
+	else
+	{
+		mInternalDeviceState.SetStreamSourceFreq(StreamNumber, FrequencyParameter);
+	}
 
-	Log(warning) << "CDevice9::SetStreamSourceFreq is not implemented!" << std::endl;
-
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetTexture(DWORD Sampler, IDirect3DBaseTexture9* pTexture)
 {
-
-
-	if (pTexture != nullptr)
+	if (mRecordedDeviceState)
 	{
-		switch (pTexture->GetType())
-		{
-		case D3DRTYPE_VOLUMETEXTURE:
-			((CVolumeTexture9*)pTexture)->PrivateAddRef();
-			break;
-		case D3DRTYPE_CUBETEXTURE:
-			((CCubeTexture9*)pTexture)->PrivateAddRef();
-			break;
-		case D3DRTYPE_TEXTURE:
-			((CTexture9*)pTexture)->PrivateAddRef();
-			break;
-		default:
-			break;
-		}
+		mRecordedDeviceState->SetTexture(Sampler, pTexture);
 	}
-	if (mDeviceState.mTexture[Sampler] != nullptr)
+	else
 	{
-		switch (mDeviceState.mTexture[Sampler]->GetType())
-		{
-		case D3DRTYPE_VOLUMETEXTURE:
-			((CVolumeTexture9*)mDeviceState.mTexture[Sampler])->PrivateRelease();
-			break;
-		case D3DRTYPE_CUBETEXTURE:
-			((CCubeTexture9*)mDeviceState.mTexture[Sampler])->PrivateRelease();
-			break;
-		case D3DRTYPE_TEXTURE:
-			((CTexture9*)mDeviceState.mTexture[Sampler])->PrivateRelease();
-			break;
-		default:
-			break;
-		}
+		mInternalDeviceState.SetTexture(Sampler, pTexture);
 	}
-	mDeviceState.mTexture[Sampler] = pTexture;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetTextureStageState(DWORD Stage, D3DTEXTURESTAGESTATETYPE Type, DWORD Value)
 {
-
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetTextureStageState(Stage, Type, Value);
+	}
+	else
+	{
+		mInternalDeviceState.SetTextureStageState(Stage, Type, Value);
+	}
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, const D3DMATRIX* pMatrix)
 {
-
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetTransform(State, pMatrix);
+	}
+	else
+	{
+		mInternalDeviceState.SetTransform(State, pMatrix);
+	}
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetVertexDeclaration(IDirect3DVertexDeclaration9* pDecl)
 {
-
-
-	if (pDecl != nullptr)
+	if (mRecordedDeviceState)
 	{
-		((CVertexDeclaration9*)pDecl)->PrivateAddRef();
+		mRecordedDeviceState->SetVertexDeclaration(pDecl);
 	}
-	if (mDeviceState.mVertexDeclaration != nullptr)
+	else
 	{
-		mDeviceState.mVertexDeclaration->PrivateRelease();
+		mInternalDeviceState.SetVertexDeclaration(pDecl);
 	}
-	mDeviceState.mVertexDeclaration = (CVertexDeclaration9*)pDecl;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShader(IDirect3DVertexShader9* pShader)
 {
-
-
-	if (pShader != nullptr)
+	if (mRecordedDeviceState)
 	{
-		((CVertexShader9*)pShader)->PrivateAddRef();
+		mRecordedDeviceState->SetVertexShader(pShader);
 	}
-	if (mDeviceState.mVertexShader != nullptr)
+	else
 	{
-		mDeviceState.mVertexShader->PrivateRelease();
+		mInternalDeviceState.SetVertexShader(pShader);
 	}
-	mDeviceState.mVertexShader = (CVertexShader9*)pShader;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantB(UINT StartRegister, const BOOL* pConstantData, UINT BoolCount)
 {
-
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetVertexShaderConstantB(StartRegister, pConstantData, BoolCount);
+	}
+	else
+	{
+		mInternalDeviceState.SetVertexShaderConstantB(StartRegister, pConstantData, BoolCount);
+	}
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantF(UINT StartRegister, const float* pConstantData, UINT Vector4fCount)
 {
-
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetVertexShaderConstantF(StartRegister, pConstantData, Vector4fCount);
+	}
+	else
+	{
+		mInternalDeviceState.SetVertexShaderConstantF(StartRegister, pConstantData, Vector4fCount);
+	}
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantI(UINT StartRegister, const int* pConstantData, UINT Vector4iCount)
 {
-
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetVertexShaderConstantI(StartRegister, pConstantData, Vector4iCount);
+	}
+	else
+	{
+		mInternalDeviceState.SetVertexShaderConstantI(StartRegister, pConstantData, Vector4iCount);
+	}
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetViewport(const D3DVIEWPORT9* pViewport)
 {
-
+	if (mRecordedDeviceState)
+	{
+		mRecordedDeviceState->SetViewport(pViewport);
+	}
+	else
+	{
+		mInternalDeviceState.SetViewport(pViewport);
+	}
 
 	return S_OK;
 }
@@ -1897,13 +2081,15 @@ BOOL STDMETHODCALLTYPE CDevice9::ShowCursor(BOOL bShow)
 
 HRESULT STDMETHODCALLTYPE CDevice9::StretchRect(IDirect3DSurface9 *pSourceSurface, const RECT *pSourceRect, IDirect3DSurface9 *pDestSurface, const RECT *pDestRect, D3DTEXTUREFILTERTYPE Filter)
 {
-
+	Log(warning) << "CDevice9::StretchRect is not implemented!" << std::endl;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::TestCooperativeLevel()
 {
+	Log(warning) << "CDevice9::TestCooperativeLevel is not implemented!" << std::endl;
+
 	//if (mCommandStreamManager->mResult == vk::Result::eErrorDeviceLost) { return D3DERR_DEVICELOST; }
 
 	return S_OK;
@@ -1911,14 +2097,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::TestCooperativeLevel()
 
 HRESULT STDMETHODCALLTYPE CDevice9::UpdateSurface(IDirect3DSurface9* pSourceSurface, const RECT* pSourceRect, IDirect3DSurface9* pDestinationSurface, const POINT* pDestinationPoint)
 {
-
+	Log(warning) << "CDevice9::UpdateSurface is not implemented!" << std::endl;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::UpdateTexture(IDirect3DBaseTexture9* pSourceTexture, IDirect3DBaseTexture9* pDestinationTexture)
 {
-
+	Log(warning) << "CDevice9::UpdateTexture is not implemented!" << std::endl;
 
 	return S_OK;
 }
@@ -1954,7 +2140,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::PresentEx(const RECT *pSourceRect, const REC
 {
 
 
-
+	Log(warning) << "CDevice9::PresentEx is not implemented!" << std::endl;
 
 
 
@@ -2056,28 +2242,26 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateDepthStencilSurfaceEx(UINT Width, UINT
 
 HRESULT STDMETHODCALLTYPE CDevice9::ResetEx(D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode)
 {
-	//if (mCommandStreamManager->mResult == vk::Result::eErrorDeviceLost)
-	//{
-	//	/*
-	//	All of the the d3d9 "device state" is attached to the RealDevice object so just destroy the current one and make a new one.
-	//	The application is responsible for destroying any handles it has before calling Reset but I doubt games really do that.
-	//	*/
-	//	memcpy(&mPresentationParameters, pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS));
+	if (pPresentationParameters != nullptr)
+	{
+		if (pPresentationParameters->BackBufferFormat == D3DFMT_UNKNOWN)
+		{
+			pPresentationParameters->BackBufferFormat = D3DFMT_X8R8G8B8;
+		}
+		memcpy(&mPresentationParameters, pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS));
+	}
 
-	//	Destroy();
-	//	Init();
-	//}
-	//else
-	//{
+	mDevice->waitIdle();
+	ResetVulkanDevice();
 
-	//}
+	Log(warning) << "CDevice9::ResetEx does not handle D3DDISPLAYMODEEX!" << std::endl;
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetDisplayModeEx(UINT iSwapChain, D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation)
 {
-
+	Log(warning) << "CDevice9::GetDisplayModeEx is not implemented!" << std::endl;
 
 	(*pRotation) = D3DDISPLAYROTATION_IDENTITY;
 

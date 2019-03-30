@@ -158,9 +158,9 @@ public:
 		return mDevice->createShaderModuleUnique(moduleCreateInfo);
 	}
 
-	//D3D9 State
-	DeviceState mDeviceState;
+	void ResetVulkanDevice();
 
+	//D3D9 State
 	CStateBlock9 mInternalDeviceState;
 	CStateBlock9* mRecordedDeviceState = nullptr;
 

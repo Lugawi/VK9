@@ -47,8 +47,6 @@ public:
 	//Device State
 	DeviceState mDeviceState;
 	D3DSTATEBLOCKTYPE mType = D3DSBT_FORCE_DWORD;
-private:
-	CDevice9* mDevice = nullptr;
 
 	//Set methods
 	void LightEnable(unsigned long index, int enable);
@@ -77,6 +75,9 @@ private:
 	void SetVertexShaderConstantB(unsigned int startRegister, const int* constantData, unsigned int count);
 	void SetVertexShaderConstantF(unsigned int startRegister, const float* constantData, unsigned int count);
 	void SetVertexShaderConstantI(unsigned int startRegister, const int* constantData, unsigned int count);
+
+private:
+	CDevice9* mDevice = nullptr;
 
 	//Capture Individual states
 	void CaptureRenderState(D3DRENDERSTATETYPE state);
