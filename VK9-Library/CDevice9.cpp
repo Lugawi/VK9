@@ -168,7 +168,8 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 	mAdapter(Adapter),
 	mDeviceType(DeviceType),
 	mFocusWindow(hFocusWindow),
-	mBehaviorFlags(BehaviorFlags)
+	mBehaviorFlags(BehaviorFlags),
+	mInternalDeviceState(this, D3DSBT_ALL)
 {
 	Log(info) << "CDevice9::CDevice9" << std::endl;
 
@@ -603,8 +604,9 @@ ULONG STDMETHODCALLTYPE CDevice9::Release(void)
 
 HRESULT STDMETHODCALLTYPE CDevice9::BeginStateBlock()
 {
+	mRecordedDeviceState = new CStateBlock9(this, (D3DSTATEBLOCKTYPE)0);
 
-
+	mRecordedDeviceState->PrivateAddRef();
 
 	return S_OK;
 }
@@ -764,9 +766,9 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateStateBlock(D3DSTATEBLOCKTYPE Type, IDi
 
 	CStateBlock9* obj = new CStateBlock9(this, Type);
 
-
-
 	(*ppSB) = (IDirect3DStateBlock9*)obj;
+
+	obj->AddRef();
 
 	return result;
 }
@@ -1089,7 +1091,11 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawTriPatch(UINT Handle, const float *pNumS
 
 HRESULT STDMETHODCALLTYPE CDevice9::EndStateBlock(IDirect3DStateBlock9** ppSB)
 {
+	(*ppSB) = mRecordedDeviceState;
 
+	mRecordedDeviceState->AddRef();
+	mRecordedDeviceState->PrivateRelease();
+	mRecordedDeviceState = nullptr;
 
 	return S_OK;
 }
@@ -1145,11 +1151,9 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetCreationParameters(D3DDEVICE_CREATION_PAR
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetCurrentTexturePalette(UINT *pPaletteNumber)
 {
-	//TODO: Implement.
+	(*pPaletteNumber) = mInternalDeviceState.mDeviceState.mPaletteNumber;
 
-	Log(warning) << "CDevice9::GetCurrentTexturePalette is not implemented!" << std::endl;
-
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetDepthStencilSurface(IDirect3DSurface9 **ppZStencilSurface)
@@ -1166,7 +1170,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetDepthStencilSurface(IDirect3DSurface9 **p
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetDeviceCaps(D3DCAPS9 *pCaps)
 {
-
+	mC9->GetDeviceCaps(mAdapter, mDeviceType, pCaps);
 
 	return S_OK;
 }
@@ -1194,7 +1198,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetFrontBufferData(UINT  iSwapChain, IDirect
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetFVF(DWORD *pFVF)
 {
-
+	(*pFVF) = mInternalDeviceState.mDeviceState.mFVF;
 
 	return S_OK;
 }
@@ -1782,7 +1786,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTexture(DWORD Sampler, IDirect3DBaseTextu
 			break;
 		default:
 			break;
-		}	
+		}
 	}
 	if (mDeviceState.mTexture[Sampler] != nullptr)
 	{

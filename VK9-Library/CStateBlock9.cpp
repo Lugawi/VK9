@@ -42,6 +42,39 @@ CStateBlock9::CStateBlock9(CDevice9* device, D3DSTATEBLOCKTYPE Type)
 	: mDevice(device),
 	mType(Type)
 {
+	for (int i = 0; i < MAX_PIXEL_SHADER_CONST; i++)
+	{
+		(int&)mDeviceState.mPixelShaderConstantF[i][0] = 0x80000000;
+		(int&)mDeviceState.mPixelShaderConstantF[i][1] = 0x80000000;
+		(int&)mDeviceState.mPixelShaderConstantF[i][2] = 0x80000000;
+		(int&)mDeviceState.mPixelShaderConstantF[i][3] = 0x80000000;
+	}
+
+	for (int i = 0; i < MAX_VERTEX_SHADER_CONST; i++)
+	{
+		(int&)mDeviceState.mVertexShaderConstantF[i][0] = 0x80000000;
+		(int&)mDeviceState.mVertexShaderConstantF[i][1] = 0x80000000;
+		(int&)mDeviceState.mVertexShaderConstantF[i][2] = 0x80000000;
+		(int&)mDeviceState.mVertexShaderConstantF[i][3] = 0x80000000;
+	}
+
+	for (int i = 0; i < 16; i++)
+	{
+		mDeviceState.mPixelShaderConstantI[i][0] = 0x80000000;
+		mDeviceState.mPixelShaderConstantI[i][1] = 0x80000000;
+		mDeviceState.mPixelShaderConstantI[i][2] = 0x80000000;
+		mDeviceState.mPixelShaderConstantI[i][3] = 0x80000000;
+
+		mDeviceState.mPixelShaderConstantB[i] = 0x80000000;
+
+		mDeviceState.mVertexShaderConstantI[i][0] = 0x80000000;
+		mDeviceState.mVertexShaderConstantI[i][1] = 0x80000000;
+		mDeviceState.mVertexShaderConstantI[i][2] = 0x80000000;
+		mDeviceState.mVertexShaderConstantI[i][3] = 0x80000000;
+
+		mDeviceState.mVertexShaderConstantB[i] = 0x80000000;
+	}
+
 	if (mType == D3DSBT_PIXELSTATE || mType == D3DSBT_ALL)
 	{
 		CapturePixelRenderStates();
@@ -547,7 +580,7 @@ void CStateBlock9::CapturePixelShaderStates()
 
 	//if (mPixelShader)
 	//{
-	//	mPixelShader->PrivateAddRef();
+	//	mPixelShader->PrivateRelease();
 	//}
 
 	mDevice->GetPixelShaderConstantF(0, mDeviceState.mPixelShaderConstantF[0], 32);
@@ -650,7 +683,7 @@ void CStateBlock9::CaptureVertexShaderStates()
 
 	//if (mVertexShader)
 	//{
-	//	vertexShader->PrivateAddRef();
+	//	vertexShader->PrivateRelease();
 	//}
 
 	mDevice->GetVertexShaderConstantF(0, mDeviceState.mVertexShaderConstantF[0], MAX_VERTEX_SHADER_CONST);
@@ -826,14 +859,476 @@ ULONG STDMETHODCALLTYPE CStateBlock9::Release(void)
 
 HRESULT STDMETHODCALLTYPE CStateBlock9::Capture()
 {
+	if (mDeviceState.mCapturedFVF)
+	{
+		mDevice->GetFVF(&mDeviceState.mFVF);
+	}
 
+	if (mDeviceState.mCapturedVertexDeclaration)
+	{
+		CVertexDeclaration9* vertexDeclaration;
+		mDevice->GetVertexDeclaration(reinterpret_cast<IDirect3DVertexDeclaration9**>(&vertexDeclaration));
+
+		if (vertexDeclaration)
+		{
+			vertexDeclaration->PrivateAddRef();
+		}
+
+		if (mDeviceState.mVertexDeclaration)
+		{
+			mDeviceState.mVertexDeclaration->PrivateRelease();
+		}
+
+		mDeviceState.mVertexDeclaration = vertexDeclaration;
+	}
+
+	if (mDeviceState.mCapturedIndexBuffer)
+	{
+		CIndexBuffer9* indexBuffer;
+		mDevice->GetIndices(reinterpret_cast<IDirect3DIndexBuffer9**>(&indexBuffer));
+
+		if (indexBuffer)
+		{
+			indexBuffer->PrivateAddRef();
+		}
+
+		if (mDeviceState.mIndexBuffer)
+		{
+			mDeviceState.mIndexBuffer->PrivateRelease();
+		}
+
+		mDeviceState.mIndexBuffer = indexBuffer;
+	}
+
+	for (int state = 0; state < D3DRS_BLENDOPALPHA + 1; state++)
+	{
+		if (mDeviceState.mCapturedRenderState[state])
+		{
+			mDevice->GetRenderState((D3DRENDERSTATETYPE)state, &mDeviceState.mRenderState[state]);
+		}
+	}
+
+	if (mDeviceState.mCapturedNPatchMode)
+	{
+		mDeviceState.mNPatchMode = mDevice->GetNPatchMode();
+	}
+
+	for (int stage = 0; stage < 8; stage++)
+	{
+		for (int state = 0; state < D3DTSS_CONSTANT + 1; state++)
+		{
+			if (mDeviceState.mCapturedTextureStageState[stage][state])
+			{
+				mDevice->GetTextureStageState(stage, (D3DTEXTURESTAGESTATETYPE)state, &mDeviceState.mTextureStageState[stage][state]);
+			}
+		}
+	}
+
+	for (int sampler = 0; sampler < 16 + 4; sampler++)
+	{
+		for (int state = 0; state < D3DSAMP_DMAPOFFSET + 1; state++)
+		{
+			if (mDeviceState.mCapturedSamplerState[sampler][state])
+			{
+				int index = sampler < 16 ? sampler : D3DVERTEXTEXTURESAMPLER0 + (sampler - 16);
+				mDevice->GetSamplerState(index, (D3DSAMPLERSTATETYPE)state, &mDeviceState.mSamplerState[sampler][state]);
+			}
+		}
+	}
+
+	for (int stream = 0; stream < MAX_VERTEX_INPUTS; stream++)
+	{
+		if (mDeviceState.mCapturedStreamSource[stream])
+		{
+			CVertexBuffer9* vertexBuffer;
+			mDevice->GetStreamSource(stream, reinterpret_cast<IDirect3DVertexBuffer9**>(&vertexBuffer), &mDeviceState.mStreamSource[stream].offset, &mDeviceState.mStreamSource[stream].stride);
+
+			if (vertexBuffer)
+			{
+				vertexBuffer->PrivateAddRef();
+			}
+
+			if (mDeviceState.mStreamSource[stream].vertexBuffer)
+			{
+				mDeviceState.mStreamSource[stream].vertexBuffer->PrivateRelease();
+			}
+
+			mDeviceState.mStreamSource[stream].vertexBuffer = vertexBuffer;
+		}
+
+		if (mDeviceState.mCapturedStreamSourceFrequency[stream])
+		{
+			mDevice->GetStreamSourceFreq(stream, &mDeviceState.mStreamSourceFrequency[stream]);
+		}
+	}
+
+	for (int sampler = 0; sampler < 16 + 4; sampler++)
+	{
+		if (mDeviceState.mCapturedTexture[sampler])
+		{
+			IDirect3DBaseTexture9* texture;
+			int index = sampler < 16 ? sampler : D3DVERTEXTEXTURESAMPLER0 + (sampler - 16);
+			mDevice->GetTexture(index, &texture);
+
+			if (texture)
+			{
+				switch (texture->GetType())
+				{
+				case D3DRTYPE_TEXTURE:
+					reinterpret_cast <CTexture9*>(texture)->PrivateAddRef();
+					break;
+				case D3DRTYPE_VOLUMETEXTURE:
+					reinterpret_cast <CVolumeTexture9*>(texture)->PrivateAddRef();
+					break;
+				case D3DRTYPE_CUBETEXTURE:
+					reinterpret_cast <CCubeTexture9*>(texture)->PrivateAddRef();
+					break;
+				}
+			}
+			if (mDeviceState.mTexture[sampler])
+			{
+				switch (mDeviceState.mTexture[sampler]->GetType())
+				{
+				case D3DRTYPE_TEXTURE:
+					reinterpret_cast <CTexture9*>(mDeviceState.mTexture[sampler])->PrivateRelease();
+					break;
+				case D3DRTYPE_VOLUMETEXTURE:
+					reinterpret_cast <CVolumeTexture9*>(mDeviceState.mTexture[sampler])->PrivateRelease();
+					break;
+				case D3DRTYPE_CUBETEXTURE:
+					reinterpret_cast <CCubeTexture9*>(mDeviceState.mTexture[sampler])->PrivateRelease();
+					break;
+				}
+			}
+
+			mDeviceState.mTexture[sampler] = texture;
+		}
+	}
+
+	for (int state = 0; state < 512; state++)
+	{
+		if (mDeviceState.mCapturedTransform[state])
+		{
+			mDevice->GetTransform((D3DTRANSFORMSTATETYPE)state, &mDeviceState.mTransform[state]);
+		}
+	}
+
+	if (mDeviceState.mCapturedMaterial)
+	{
+		mDevice->GetMaterial(&mDeviceState.mMaterial);
+	}
+
+	for (int index = 0; index < 8; index++)   // FIXME: Support unlimited index
+	{
+		if (mDeviceState.mCapturedLight[index])
+		{
+			mDevice->GetLight(index, &mDeviceState.mLight[index]);
+		}
+	}
+
+	for (int index = 0; index < 8; index++)   // FIXME: Support unlimited index
+	{
+		if (mDeviceState.mCapturedLightEnable[index])
+		{
+			mDeviceState.mLightEnableState[index] = false;
+			mDevice->GetLightEnable(index, &mDeviceState.mLightEnableState[index]);
+		}
+	}
+
+	if (mDeviceState.mCapturedPixelShader)
+	{
+		CPixelShader9* pixelShader;
+		mDevice->GetPixelShader(reinterpret_cast<IDirect3DPixelShader9**>(&pixelShader));
+
+		if (pixelShader)
+		{
+			pixelShader->PrivateAddRef();
+		}
+
+		if (mDeviceState.mPixelShader)
+		{
+			mDeviceState.mPixelShader->PrivateRelease();
+		}
+
+		mDeviceState.mPixelShader = pixelShader;
+	}
+
+	if (mDeviceState.mCapturedVertexShader)
+	{
+		CVertexShader9* vertexShader;
+		mDevice->GetVertexShader(reinterpret_cast<IDirect3DVertexShader9**>(&vertexShader));
+
+		if (vertexShader)
+		{
+			vertexShader->PrivateAddRef();
+		}
+
+		if (mDeviceState.mVertexShader)
+		{
+			mDeviceState.mVertexShader->PrivateRelease();
+		}
+
+		mDeviceState.mVertexShader = vertexShader;
+	}
+
+	if (mDeviceState.mCapturedViewport)
+	{
+		mDevice->GetViewport(&mDeviceState.mViewport);
+	}
+
+	for (int i = 0; i < MAX_PIXEL_SHADER_CONST; i++)
+	{
+		if (*(int*)mDeviceState.mPixelShaderConstantF[i] != 0x80000000)
+		{
+			mDevice->GetPixelShaderConstantF(i, mDeviceState.mPixelShaderConstantF[i], 1);
+		}
+	}
+
+	for (int i = 0; i < 16; i++)
+	{
+		if (mDeviceState.mPixelShaderConstantI[i][0] != 0x80000000)
+		{
+			mDevice->GetPixelShaderConstantI(i, mDeviceState.mPixelShaderConstantI[i], 1);
+		}
+	}
+
+	for (int i = 0; i < 16; i++)
+	{
+		if (mDeviceState.mPixelShaderConstantB[i] != 0x80000000)
+		{
+			mDevice->GetPixelShaderConstantB(i, &mDeviceState.mPixelShaderConstantB[i], 1);
+		}
+	}
+
+	for (int i = 0; i < MAX_VERTEX_SHADER_CONST; i++)
+	{
+		if (*(int*)mDeviceState.mVertexShaderConstantF[i] != 0x80000000)
+		{
+			mDevice->GetVertexShaderConstantF(i, mDeviceState.mVertexShaderConstantF[i], 1);
+		}
+	}
+
+	for (int i = 0; i < 16; i++)
+	{
+		if (mDeviceState.mVertexShaderConstantI[i][0] != 0x80000000)
+		{
+			mDevice->GetVertexShaderConstantI(i, mDeviceState.mVertexShaderConstantI[i], 1);
+		}
+	}
+
+	for (int i = 0; i < 16; i++)
+	{
+		if (mDeviceState.mVertexShaderConstantB[i] != 0x80000000)
+		{
+			mDevice->GetVertexShaderConstantB(i, &mDeviceState.mVertexShaderConstantB[i], 1);
+		}
+	}
+
+	for (int index = 0; index < 6; index++)
+	{
+		if (mDeviceState.mCapturedClipPlane[index])
+		{
+			mDevice->GetClipPlane(index, mDeviceState.mClipPlane[index]);
+		}
+	}
+
+	if (mDeviceState.mCapturedScissorRect)
+	{
+		mDevice->GetScissorRect(&mDeviceState.mScissorRect);
+	}
+
+	if (mDeviceState.mCapturedPaletteNumber)
+	{
+		mDevice->GetCurrentTexturePalette(&mDeviceState.mPaletteNumber);
+	}
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CStateBlock9::Apply()
 {
+	if (mDeviceState.mCapturedFVF)
+	{
+		mDevice->SetFVF(mDeviceState.mFVF);
+	}
 
+	if (mDeviceState.mCapturedVertexDeclaration)
+	{
+		mDevice->SetVertexDeclaration(mDeviceState.mVertexDeclaration);
+	}
+
+	if (mDeviceState.mCapturedIndexBuffer)
+	{
+		mDevice->SetIndices(mDeviceState.mIndexBuffer);
+	}
+
+	for (int state = D3DRS_ZENABLE; state <= D3DRS_BLENDOPALPHA; state++)
+	{
+		if (mDeviceState.mCapturedRenderState[state])
+		{
+			mDevice->SetRenderState((D3DRENDERSTATETYPE)state, mDeviceState.mRenderState[state]);
+		}
+	}
+
+	if (mDeviceState.mCapturedNPatchMode)
+	{
+		mDevice->SetNPatchMode(mDeviceState.mNPatchMode);
+	}
+
+	for (int stage = 0; stage < 8; stage++)
+	{
+		for (int state = D3DTSS_COLOROP; state <= D3DTSS_CONSTANT; state++)
+		{
+			if (mDeviceState.mCapturedTextureStageState[stage][state])
+			{
+				mDevice->SetTextureStageState(stage, (D3DTEXTURESTAGESTATETYPE)state, mDeviceState.mTextureStageState[stage][state]);
+			}
+		}
+	}
+
+	for (int sampler = 0; sampler < 16 + 4; sampler++)
+	{
+		for (int state = D3DSAMP_ADDRESSU; state <= D3DSAMP_DMAPOFFSET; state++)
+		{
+			if (mDeviceState.mCapturedSamplerState[sampler][state])
+			{
+				int index = sampler < 16 ? sampler : D3DVERTEXTEXTURESAMPLER0 + (sampler - 16);
+				mDevice->SetSamplerState(index, (D3DSAMPLERSTATETYPE)state, mDeviceState.mSamplerState[sampler][state]);
+			}
+		}
+	}
+
+	for (int stream = 0; stream < MAX_VERTEX_INPUTS; stream++)
+	{
+		if (mDeviceState.mCapturedStreamSource[stream])
+		{
+			mDevice->SetStreamSource(stream, mDeviceState.mStreamSource[stream].vertexBuffer, mDeviceState.mStreamSource[stream].offset, mDeviceState.mStreamSource[stream].stride);
+		}
+
+		if (mDeviceState.mCapturedStreamSourceFrequency[stream])
+		{
+			mDevice->SetStreamSourceFreq(stream, mDeviceState.mStreamSourceFrequency[stream]);
+		}
+	}
+
+	for (int sampler = 0; sampler < 16 + 4; sampler++)
+	{
+		if (mDeviceState.mCapturedTexture[sampler])
+		{
+			int index = sampler < 16 ? sampler : D3DVERTEXTEXTURESAMPLER0 + (sampler - 16);
+			mDevice->SetTexture(index, mDeviceState.mTexture[sampler]);
+		}
+	}
+
+	for (int state = 0; state < 512; state++)
+	{
+		if (mDeviceState.mCapturedTransform[state])
+		{
+			mDevice->SetTransform((D3DTRANSFORMSTATETYPE)state, &mDeviceState.mTransform[state]);
+		}
+	}
+
+	if (mDeviceState.mCapturedMaterial)
+	{
+		mDevice->SetMaterial(&mDeviceState.mMaterial);
+	}
+
+	for (int index = 0; index < 8; index++)
+	{
+		if (mDeviceState.mCapturedLight[index])
+		{
+			mDevice->SetLight(index, &mDeviceState.mLight[index]);
+		}
+	}
+
+	for (int index = 0; index < 8; index++)
+	{
+		if (mDeviceState.mCapturedLightEnable[index])
+		{
+			mDevice->LightEnable(index, mDeviceState.mLightEnableState[index]);
+		}
+	}
+
+	if (mDeviceState.mCapturedPixelShader)
+	{
+		mDevice->SetPixelShader(mDeviceState.mPixelShader);
+	}
+
+	if (mDeviceState.mCapturedVertexShader)
+	{
+		mDevice->SetVertexShader(mDeviceState.mVertexShader);
+	}
+
+	if (mDeviceState.mCapturedViewport)
+	{
+		mDevice->SetViewport(&mDeviceState.mViewport);
+	}
+
+	for (int i = 0; i < MAX_PIXEL_SHADER_CONST; i++)
+	{
+		if (*(int*)mDeviceState.mPixelShaderConstantF[i] != 0x80000000)
+		{
+			mDevice->SetPixelShaderConstantF(i, mDeviceState.mPixelShaderConstantF[i], 1);
+		}
+	}
+
+	for (int i = 0; i < 16; i++)
+	{
+		if (mDeviceState.mPixelShaderConstantI[i][0] != 0x80000000)
+		{
+			mDevice->SetPixelShaderConstantI(i, mDeviceState.mPixelShaderConstantI[i], 1);
+		}
+	}
+
+	for (int i = 0; i < 16; i++)
+	{
+		if (mDeviceState.mPixelShaderConstantB[i] != 0x80000000)
+		{
+			mDevice->SetPixelShaderConstantB(i, &mDeviceState.mPixelShaderConstantB[i], 1);
+		}
+	}
+
+	for (int i = 0; i < MAX_VERTEX_SHADER_CONST; i++)
+	{
+		if (*(int*)mDeviceState.mVertexShaderConstantF[i] != 0x80000000)
+		{
+			mDevice->SetVertexShaderConstantF(i, mDeviceState.mVertexShaderConstantF[i], 1);
+		}
+	}
+
+	for (int i = 0; i < 16; i++)
+	{
+		if (mDeviceState.mVertexShaderConstantI[i][0] != 0x80000000)
+		{
+			mDevice->SetVertexShaderConstantI(i, mDeviceState.mVertexShaderConstantI[i], 1);
+		}
+	}
+
+	for (int i = 0; i < 16; i++)
+	{
+		if (mDeviceState.mVertexShaderConstantB[i] != 0x80000000)
+		{
+			mDevice->SetVertexShaderConstantB(i, &mDeviceState.mVertexShaderConstantB[i], 1);
+		}
+	}
+
+	for (int index = 0; index < 6; index++)
+	{
+		if (mDeviceState.mCapturedClipPlane[index])
+		{
+			mDevice->SetClipPlane(index, mDeviceState.mClipPlane[index]);
+		}
+	}
+
+	if (mDeviceState.mCapturedScissorRect)
+	{
+		mDevice->SetScissorRect(&mDeviceState.mScissorRect);
+	}
+
+	if (mDeviceState.mCapturedPaletteNumber)
+	{
+		mDevice->SetCurrentTexturePalette(mDeviceState.mPaletteNumber);
+	}
 
 	return S_OK;
 }

@@ -24,7 +24,7 @@ misrepresented as being the original software.
 #include <vulkan/vk_sdk_platform.h>
 #include "d3d9.h"
 
-#include "DeviceState.h"
+#include "CStateBlock9.h"
 
 #include<vector>
 
@@ -160,6 +160,9 @@ public:
 
 	//D3D9 State
 	DeviceState mDeviceState;
+
+	CStateBlock9 mInternalDeviceState;
+	CStateBlock9* mRecordedDeviceState = nullptr;
 
 	//Misc
 	PAINTSTRUCT* mPaintInformation = {};
