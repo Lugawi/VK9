@@ -168,3 +168,9 @@ misrepresented as being the original software.
 #define D3DDEGREE_QUINTIC 5
 
 #define PI 3.14
+
+layout(push_constant) uniform ShaderStateBlockPush {
+    uint screenWidth;
+	uint screenHeight;
+	uint textureCount;
+} pushConstants;

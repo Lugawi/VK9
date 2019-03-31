@@ -23,6 +23,40 @@ layout(std140,binding = 2) uniform ShaderStateBlock2
 	Light lights[8];
 };
 
+layout (constant_id = 0) const int LightEnable0 = 0;
+layout (constant_id = 1) const int LightEnable1 = 0;
+layout (constant_id = 2) const int LightEnable2 = 0;
+layout (constant_id = 3) const int LightEnable3 = 0;
+layout (constant_id = 4) const int LightEnable4 = 0;
+layout (constant_id = 5) const int LightEnable5 = 0;
+layout (constant_id = 6) const int LightEnable6 = 0;
+layout (constant_id = 7) const int LightEnable7 = 0;
+
+int GetLightEnable(int index)
+{
+	switch(index)
+	{
+		case 0:
+			return LightEnable0;
+		case 1:
+			return LightEnable1;
+		case 2:
+			return LightEnable2;
+		case 3:
+			return LightEnable3;
+		case 4:
+			return LightEnable4;
+		case 5:
+			return LightEnable5;
+		case 6:
+			return LightEnable6;
+		case 7:
+			return LightEnable7;
+		default:
+			return 0;
+	}
+}
+
 layout(std140,binding = 3) uniform ShaderStateBlock3
 {
 	Material material;
@@ -85,7 +119,7 @@ vec4 GetGlobalIllumination(vec4 inNormal, vec4 inPosition)
 	//https://msdn.microsoft.com/en-us/library/windows/desktop/bb172279(v=vs.85).aspx
 	for( int i=0; i<8; ++i )
 	{		
-		if(lights[i].IsEnabled==1)
+		if(GetLightEnable(i)==1)
 		{		
 			lightPosition = vec4(lights[i].Position.xyz,1); 
 			lightPosition *= vec4(1.0,-1.0,1.0,1.0);

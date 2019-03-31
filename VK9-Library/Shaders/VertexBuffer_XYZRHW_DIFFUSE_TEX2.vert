@@ -51,7 +51,7 @@ void main()
 	
 	if(position.x > 0)
 	{
-		x = (position.x / (renderState.screenWidth/2));
+		x = (position.x / (pushConstants.screenWidth/2));
 	}
 	else
 	{
@@ -60,7 +60,7 @@ void main()
 	
 	if(position.y > 0)
 	{
-		y = (position.y / (renderState.screenHeight/2));
+		y = (position.y / (pushConstants.screenHeight/2));
 	}
 	else
 	{

@@ -74,6 +74,22 @@ public:
 	vk::UniqueDescriptorSetLayout mDescriptorLayout;
 	vk::UniquePipelineLayout mPipelineLayout;
 
+	std::vector<vk::UniqueSemaphore> mImageAvailableSemaphores;
+	std::vector<vk::UniqueSemaphore> mRenderFinishedSemaphores;
+	std::vector<vk::UniqueCommandBuffer> mDrawCommandBuffers;
+	std::vector<vk::UniqueFence> mDrawFences;
+
+	std::vector<vk::UniqueCommandBuffer> mUtilityCommandBuffers;
+	std::vector<vk::UniqueFence> mUtilityFences;
+
+	/*
+	The idea with this one is to set this to one of the draw command buffers from the vector.
+	The unique handle will be cleaned up on shutdown but we can access this guy after render start without dereference and array lookup everywhere.
+	*/
+	vk::CommandBuffer mCurrentDrawCommandBuffer;
+	uint32_t mFrameIndex = 0;
+	bool mIsRecording = false;
+
 	//FF Buffers
 	vk::UniqueBuffer mRenderStateBuffer;
 	vk::UniqueDeviceMemory mRenderStateBufferMemory;
@@ -159,6 +175,8 @@ public:
 	}
 
 	void ResetVulkanDevice();
+	void BeginRecordingCommands();
+	void StopRecordingCommands();
 
 	//D3D9 State
 	CStateBlock9 mInternalDeviceState;

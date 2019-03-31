@@ -55,7 +55,7 @@ void main()
 	vec4 temp = vec4(1.0,1.0,1.0,1.0);
 	vec4 result = diffuseColor; //On stage 0 CURRENT is the same as DIFFUSE
 	
-	for(int i = 0; i < max(1,renderState.textureCount); i++) 
+	for(int i = 0; i < max(1,pushConstants.textureCount); i++) 
 	{
 		processStage(textures[i],textureStages[i].texureCoordinateIndex, textureStages[i].Constant, textureStages[i].Result,
 		result, temp, result, temp,

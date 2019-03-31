@@ -62,7 +62,7 @@ struct DeviceState
 	unsigned long mTextureStageState[8][D3DTSS_CONSTANT + 1];
 
 	bool mCapturedSamplerState[16 + 4][D3DSAMP_DMAPOFFSET + 1];
-	unsigned long mSamplerState[16 + 4][D3DSAMP_DMAPOFFSET + 1];
+	DWORD mSamplerState[16 + 4][D3DSAMP_DMAPOFFSET + 1];
 
 	bool mCapturedStreamSource[MAX_VERTEX_INPUTS] = {};
 	struct StreamSource

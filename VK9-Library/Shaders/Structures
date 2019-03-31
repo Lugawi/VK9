@@ -20,12 +20,12 @@ misrepresented as being the original software.
 
 struct Light
 {
+	uint       Type;            /* Type of light source */
 	vec4       Diffuse;         /* Diffuse color of light */
 	vec4       Specular;        /* Specular color of light */
 	vec4       Ambient;         /* Ambient color of light */
 	vec4       Position;        /* Position in world space */
 	vec4       Direction;       /* Direction in world space */
-	uint       Type;            /* Type of light source */
 	float      Range;           /* Cutoff range */
 	float      Falloff;         /* Falloff */
 	float      Attenuation0;    /* Constant attenuation */
@@ -33,12 +33,8 @@ struct Light
 	float      Attenuation2;    /* Quadratic attenuation */
 	float      Theta;           /* Inner angle of spotlight cone */
 	float      Phi;             /* Outer angle of spotlight cone */
-	uint       IsEnabled;
-	uint       filler1;
-	uint       filler2;
-	uint       filler3;	
 };
- 
+
 struct Material
 {
 	vec4   Diffuse;        /* Diffuse color RGBA */
@@ -57,52 +53,44 @@ struct ShaderConstantSlots
 
 struct TextureStage
 {
-	mat4 textureTransformationMatrix;
-	uint Constant;
-	uint Result;
-	uint textureTransformationFlags;	
-	uint texureCoordinateIndex;
-	uint colorOperation;
-	uint colorArgument0;
-	uint colorArgument1;
-	uint colorArgument2;
-	uint alphaOperation;
-	uint alphaArgument0;
-	uint alphaArgument1;
-	uint alphaArgument2;
-	float bumpMapMatrix00;
-	float bumpMapMatrix01;
-	float bumpMapMatrix10;
-	float bumpMapMatrix11;
-	float bumpMapScale;
-	float bumpMapOffset;
-	float filler1;
-	float filler2;
+	uint colorOperation; //1
+	uint colorArgument1; //2
+	uint colorArgument2; //3
+	uint alphaOperation; //4	
+	uint alphaArgument1; //5
+	uint alphaArgument2; //6
+	float bumpMapMatrix00; //7
+	float bumpMapMatrix01; //8
+	float bumpMapMatrix10; //9
+	float bumpMapMatrix11; //10
+	uint texureCoordinateIndex; //11
+	uint filler12;
+	uint filler13;
+	uint filler14;
+	uint filler15;
+	uint filler16;
+	uint filler17;
+	uint filler18;
+	uint filler19;
+	uint filler20;
+	uint filler21;
+	float bumpMapScale; //22
+	float bumpMapOffset; //23
+	uint textureTransformationFlags; //24
+	float filler25;
+	uint colorArgument0; //26
+	uint alphaArgument0; //27
+	uint Result; //28
+	uint filler29;
+	uint filler30;
+	uint filler31;
+	uint Constant; //32
 };
+
+//mat4 textureTransformationMatrix;
 
 struct RenderState
 {
-	float fogStart;
-	float fogEnd;
-	float fogDensity;
-	float pointSize;
-	float pointSizeMinimum;
-	float pointScaleA;
-	float pointScaleB;
-	float pointScaleC;
-	float pointSizeMaximum;
-	float tweenFactor;
-	float slopeScaleDepthBias;
-	float minimumTessellationLevel;
-	float maximumTessellationLevel;
-	float adaptivetessX;
-	float adaptivetessY;
-	float adaptivetessZ;
-	float adaptivetessW;
-	float depthBias;
-
-	uint textureCount;
-
 	//Render State
 	uint zEnable;
 	uint fillMode;
@@ -122,6 +110,9 @@ struct RenderState
 	uint specularEnable;
 	uint fogColor;
 	uint fogTableMode;
+	float fogStart;
+	float fogEnd;
+	float fogDensity;
 	uint rangeFogEnable;
 	uint stencilEnable;
 	uint stencilFail;
@@ -153,19 +144,33 @@ struct RenderState
 	uint emissiveMaterialSource;
 	uint vertexBlend;
 	uint clipPlaneEnable;
+	float pointSize;
+	float pointSizeMinimum;
 	uint pointSpriteEnable;
 	uint pointScaleEnable;
+	float pointScaleA;
+	float pointScaleB;
+	float pointScaleC;
 	uint multisampleAntiAlias;
 	uint multisampleMask;
 	uint patchEdgeStyle;
 	uint debugMonitorToken;
+	float pointSizeMaximum;
 	uint indexedVertexBlendEnable;
 	uint colorWriteEnable;	
+	float tweenFactor;
 	uint blendOperation;
 	uint positionDegree;
 	uint normalDegree;
 	uint scissorTestEnable;
+	float slopeScaleDepthBias;
 	uint antiAliasedLineEnable;
+	float minimumTessellationLevel;
+	float maximumTessellationLevel;
+	float adaptivetessX;
+	float adaptivetessY;
+	float adaptivetessZ;
+	float adaptivetessW;
 	uint enableAdaptiveTessellation;
 	uint twoSidedStencilMode;
 	uint ccwStencilFail;
@@ -177,6 +182,7 @@ struct RenderState
 	uint colorWriteEnable3;
 	uint blendFactor;
 	uint srgbWriteEnable;	
+	float depthBias;
 	uint wrap8;
 	uint wrap9;
 	uint wrap10;
@@ -188,11 +194,7 @@ struct RenderState
 	uint separateAlphaBlendEnable;
 	uint sourceBlendAlpha;
 	uint destinationBlendAlpha;
-	uint blendOperationAlpha;
-	uint screenWidth;
-	uint screenHeight;
-	uint filler1;
-	uint filler2;
+	uint blendOperationAlpha;	
 };
 
 struct ShaderState

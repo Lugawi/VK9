@@ -635,6 +635,24 @@ void CDevice9::ResetVulkanDevice()
 
 	mFragShaderModule_Passthrough = LoadShaderFromConst(PIXEL_PASSTHROUGH_FRAG);
 
+	//Create Command Buffers, Fences, and semaphores
+	vk::SemaphoreCreateInfo semaphoreCreateInfo;
+	vk::FenceCreateInfo fenceCreateInfo(vk::FenceCreateFlagBits::eSignaled);
+
+	mDrawCommandBuffers = mDevice->allocateCommandBuffersUnique(vk::CommandBufferAllocateInfo(mCommandPool.get(), vk::CommandBufferLevel::ePrimary, 3));
+	for (size_t i = 0; i < mDrawCommandBuffers.size(); i++)
+	{
+		mDrawFences.push_back(mDevice->createFenceUnique(fenceCreateInfo));
+		mImageAvailableSemaphores.push_back(mDevice->createSemaphoreUnique(semaphoreCreateInfo));
+		mRenderFinishedSemaphores.push_back(mDevice->createSemaphoreUnique(semaphoreCreateInfo));
+	}
+
+	mUtilityCommandBuffers = mDevice->allocateCommandBuffersUnique(vk::CommandBufferAllocateInfo(mCommandPool.get(), vk::CommandBufferLevel::ePrimary, 7));
+	for (size_t i = 0; i < mUtilityCommandBuffers.size(); i++)
+	{
+		mUtilityFences.push_back(mDevice->createFenceUnique(fenceCreateInfo));
+	}
+
 	//Add implicit swap chain.
 	mSwapChains.clear();
 	CSwapChain9* ptr = nullptr;
@@ -651,8 +669,67 @@ void CDevice9::ResetVulkanDevice()
 	depth->Release();
 }
 
+void CDevice9::BeginRecordingCommands()
+{
+	if (mIsRecording)
+	{
+		return;
+	}
+
+	mFrameIndex = (mFrameIndex++) % mDrawCommandBuffers.size();
+
+	mDevice->waitForFences(1, &mDrawFences[mFrameIndex].get(), VK_TRUE, UINT64_MAX);
+	mDevice->resetFences(1, &mDrawFences[mFrameIndex].get());
+
+	mCurrentDrawCommandBuffer = mDrawCommandBuffers[mFrameIndex].get();
+
+	vk::CommandBufferBeginInfo beginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+	mCurrentDrawCommandBuffer.begin(&beginInfo);
+
+	//Set Scissor because we don't know if the user will set a new one this frame.
+	const vk::Rect2D scissor(vk::Offset2D(mInternalDeviceState.mDeviceState.mScissorRect.right, mInternalDeviceState.mDeviceState.mScissorRect.bottom), vk::Extent2D(mInternalDeviceState.mDeviceState.mScissorRect.left, mInternalDeviceState.mDeviceState.mScissorRect.top));
+	mCurrentDrawCommandBuffer.setScissor(0, 1, &scissor);
+
+	//Set the view because we don't know if the user will set a new one this frame.
+	const auto viewport = vk::Viewport()
+		.setX(((float)mInternalDeviceState.mDeviceState.mViewport.X) - 0.5f)
+		.setY(((float)mInternalDeviceState.mDeviceState.mViewport.Y) - 0.5f)
+		.setWidth(((float)mInternalDeviceState.mDeviceState.mViewport.Width) - 0.5f)
+		.setHeight(((float)mInternalDeviceState.mDeviceState.mViewport.Height) - 0.5f)
+		.setMinDepth((float)mInternalDeviceState.mDeviceState.mViewport.MinZ)
+		.setMaxDepth((float)mInternalDeviceState.mDeviceState.mViewport.MaxZ);
+	mCurrentDrawCommandBuffer.setViewport(0, 1, &viewport);
+
+	mIsRecording = true;
+}
+
+void CDevice9::StopRecordingCommands()
+{
+	if (!mIsRecording)
+	{
+		return;
+	}
+
+	mCurrentDrawCommandBuffer.end();
+
+	vk::PipelineStageFlags pipelineFlag[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+	vk::SubmitInfo submitInfo;
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pWaitSemaphores = &mImageAvailableSemaphores[mFrameIndex].get();
+	submitInfo.pWaitDstStageMask = pipelineFlag;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &mCurrentDrawCommandBuffer;
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = &mRenderFinishedSemaphores[mFrameIndex].get();
+	mQueue.submit(1, &submitInfo, mDrawFences[mFrameIndex].get());
+
+	mIsRecording = false;
+}
+
 HRESULT STDMETHODCALLTYPE CDevice9::Clear(DWORD Count, const D3DRECT *pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
 {
+	BeginRecordingCommands();
+
 	//Flags |= D3DCLEAR_TARGET;
 	Log(warning) << "CDevice9::Clear is not implemented!" << std::endl;
 
@@ -661,6 +738,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::Clear(DWORD Count, const D3DRECT *pRects, DW
 
 HRESULT STDMETHODCALLTYPE CDevice9::BeginScene() //
 {
+	BeginRecordingCommands();
+
 	//According to a tip from the Nine team games don't always use the begin/end scene functions correctly.
 
 	return D3D_OK;
@@ -733,6 +812,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::BeginStateBlock()
 
 HRESULT STDMETHODCALLTYPE CDevice9::ColorFill(IDirect3DSurface9 *pSurface, const RECT *pRect, D3DCOLOR color)
 {
+	BeginRecordingCommands();
+
 	//TODO: Implement.
 
 	Log(warning) << "CDevice9::ColorFill is not implemented!" << std::endl;
@@ -966,6 +1047,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::DeletePatch(UINT Handle)
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitive(D3DPRIMITIVETYPE Type, INT BaseVertexIndex, UINT MinIndex, UINT NumVertices, UINT StartIndex, UINT PrimitiveCount)
 {
+	BeginRecordingCommands();
+
 	Log(warning) << "CDevice9::DrawIndexedPrimitive is not implemented!" << std::endl;
 
 	return S_OK;
@@ -973,6 +1056,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitive(D3DPRIMITIVETYPE Type, 
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, const void *pIndexData, D3DFORMAT IndexDataFormat, const void *pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
+	BeginRecordingCommands();
+
 	Log(warning) << "CDevice9::DrawIndexedPrimitiveUP is not implemented!" << std::endl;
 
 	////Figure out the current buffer setup.
@@ -1078,6 +1163,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE Prim
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
 {
+	BeginRecordingCommands();
+
 	Log(warning) << "CDevice9::DrawPrimitive is not implemented!" << std::endl;
 
 	return S_OK;
@@ -1085,6 +1172,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, const void *pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
+	BeginRecordingCommands();
+
 	Log(warning) << "CDevice9::DrawPrimitiveUP is not implemented!" << std::endl;
 
 	////Figure out the current buffer setup.
@@ -1171,6 +1260,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveTy
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawRectPatch(UINT Handle, const float *pNumSegs, const D3DRECTPATCH_INFO *pRectPatchInfo)
 {
+	BeginRecordingCommands();
+
 	//if (!mIsSceneStarted)
 	//{
 	//	this->StartScene();
@@ -1185,6 +1276,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawRectPatch(UINT Handle, const float *pNum
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawTriPatch(UINT Handle, const float *pNumSegs, const D3DTRIPATCH_INFO *pTriPatchInfo)
 {
+	BeginRecordingCommands();
+
 	//if (!mIsSceneStarted)
 	//{
 	//	this->StartScene();
@@ -1576,6 +1669,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::LightEnable(DWORD LightIndex, BOOL bEnable)
 	}
 	else
 	{
+		//BeginRecordingCommands();
+
 		mInternalDeviceState.LightEnable(LightIndex, bEnable);
 	}
 
@@ -1611,6 +1706,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationPa
 		memcpy(&mPresentationParameters, pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS));
 	}
 
+	StopRecordingCommands();
 	mDevice->waitIdle();
 	ResetVulkanDevice();
 
@@ -1625,6 +1721,8 @@ HRESULT CDevice9::SetClipPlane(DWORD Index, const float *pPlane)
 	}
 	else
 	{
+		//BeginRecordingCommands();
+
 		mInternalDeviceState.SetClipPlane(Index, pPlane);
 	}
 
@@ -1648,6 +1746,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetCurrentTexturePalette(UINT PaletteNumber)
 	}
 	else
 	{
+		//BeginRecordingCommands();
+
 		mInternalDeviceState.SetCurrentTexturePalette(PaletteNumber);
 	}
 
@@ -1709,6 +1809,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetFVF(DWORD FVF)
 	}
 	else
 	{
+		//BeginRecordingCommands();
+
 		mInternalDeviceState.SetFVF(FVF);
 	}
 
@@ -1737,6 +1839,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetIndices(IDirect3DIndexBuffer9* pIndexData
 	}
 	else
 	{
+		//BeginRecordingCommands();
+
 		mInternalDeviceState.SetIndices(pIndexData);
 	}
 
@@ -1751,6 +1855,10 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetLight(DWORD Index, const D3DLIGHT9* pLigh
 	}
 	else
 	{
+		BeginRecordingCommands();
+
+		mCurrentDrawCommandBuffer.updateBuffer(mLightBuffer.get(), Index * sizeof(D3DLIGHT9), sizeof(D3DLIGHT9), pLight);
+
 		mInternalDeviceState.SetLight(Index, pLight);
 	}
 
@@ -1765,6 +1873,10 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetMaterial(const D3DMATERIAL9* pMaterial)
 	}
 	else
 	{
+		BeginRecordingCommands();
+
+		mCurrentDrawCommandBuffer.updateBuffer(mMaterialBuffer.get(), 0, sizeof(D3DMATERIAL9), pMaterial);
+
 		mInternalDeviceState.SetMaterial(pMaterial);
 	}
 
@@ -1779,6 +1891,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetNPatchMode(float nSegments)
 	}
 	else
 	{
+		//BeginRecordingCommands();
+
 		mInternalDeviceState.SetNPatchMode(nSegments);
 	}
 
@@ -1802,6 +1916,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShader(IDirect3DPixelShader9* pShade
 	}
 	else
 	{
+		//BeginRecordingCommands();
+
 		mInternalDeviceState.SetPixelShader(pShader);
 	}
 
@@ -1816,6 +1932,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantB(UINT StartRegister, 
 	}
 	else
 	{
+		//BeginRecordingCommands();
+
 		mInternalDeviceState.SetPixelShaderConstantB(StartRegister, pConstantData, BoolCount);
 	}
 
@@ -1830,6 +1948,10 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantF(UINT StartRegister, 
 	}
 	else
 	{
+		BeginRecordingCommands();
+
+		mCurrentDrawCommandBuffer.updateBuffer(mPixelConstantBuffer.get(), StartRegister * sizeof(float[4]), Vector4fCount * sizeof(float[4]), pConstantData);
+
 		mInternalDeviceState.SetPixelShaderConstantF(StartRegister, pConstantData, Vector4fCount);
 	}
 
@@ -1844,6 +1966,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantI(UINT StartRegister, 
 	}
 	else
 	{
+		//BeginRecordingCommands();
+
 		mInternalDeviceState.SetPixelShaderConstantI(StartRegister, pConstantData, Vector4iCount);
 	}
 
@@ -1858,6 +1982,10 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetRenderState(D3DRENDERSTATETYPE State, DWO
 	}
 	else
 	{
+		BeginRecordingCommands();
+
+		mCurrentDrawCommandBuffer.updateBuffer(mRenderStateBuffer.get(), State * sizeof(DWORD), sizeof(DWORD), &Value);
+
 		mInternalDeviceState.SetRenderState(State, Value);
 	}
 
@@ -1887,6 +2015,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetSamplerState(DWORD Sampler, D3DSAMPLERSTA
 	}
 	else
 	{
+		//BeginRecordingCommands();
+
 		mInternalDeviceState.SetSamplerState(Sampler, Type, Value);
 	}
 
@@ -1901,6 +2031,11 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetScissorRect(const RECT* pRect)
 	}
 	else
 	{
+		BeginRecordingCommands();
+
+		const vk::Rect2D scissor(vk::Offset2D(pRect->right, pRect->bottom), vk::Extent2D(pRect->left, pRect->top));
+		mCurrentDrawCommandBuffer.setScissor(0, 1, &scissor);
+
 		mInternalDeviceState.SetScissorRect(pRect);
 	}
 
@@ -1924,6 +2059,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetStreamSource(UINT StreamNumber, IDirect3D
 	}
 	else
 	{
+		BeginRecordingCommands();
+
 		mInternalDeviceState.SetStreamSource(StreamNumber, pStreamData, OffsetInBytes, Stride);
 	}
 
@@ -1938,6 +2075,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetStreamSourceFreq(UINT StreamNumber, UINT 
 	}
 	else
 	{
+		//BeginRecordingCommands();
+
 		mInternalDeviceState.SetStreamSourceFreq(StreamNumber, FrequencyParameter);
 	}
 
@@ -1952,6 +2091,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTexture(DWORD Sampler, IDirect3DBaseTextu
 	}
 	else
 	{
+		//BeginRecordingCommands();
+
 		mInternalDeviceState.SetTexture(Sampler, pTexture);
 	}
 
@@ -1966,6 +2107,10 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTextureStageState(DWORD Stage, D3DTEXTURE
 	}
 	else
 	{
+		BeginRecordingCommands();
+
+		mCurrentDrawCommandBuffer.updateBuffer(mTextureStageBuffer.get(), Stage * Type * sizeof(DWORD), sizeof(DWORD), &Value);
+
 		mInternalDeviceState.SetTextureStageState(Stage, Type, Value);
 	}
 
@@ -1980,6 +2125,10 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, co
 	}
 	else
 	{
+		BeginRecordingCommands();
+
+		mCurrentDrawCommandBuffer.updateBuffer(mTransformationBuffer.get(), State * sizeof(D3DMATRIX), sizeof(D3DMATRIX), pMatrix);
+
 		mInternalDeviceState.SetTransform(State, pMatrix);
 	}
 
@@ -1994,6 +2143,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexDeclaration(IDirect3DVertexDeclarat
 	}
 	else
 	{
+		//BeginRecordingCommands();
+
 		mInternalDeviceState.SetVertexDeclaration(pDecl);
 	}
 
@@ -2008,6 +2159,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShader(IDirect3DVertexShader9* pSha
 	}
 	else
 	{
+		//BeginRecordingCommands();
+
 		mInternalDeviceState.SetVertexShader(pShader);
 	}
 
@@ -2022,6 +2175,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantB(UINT StartRegister,
 	}
 	else
 	{
+		//BeginRecordingCommands();
+
 		mInternalDeviceState.SetVertexShaderConstantB(StartRegister, pConstantData, BoolCount);
 	}
 
@@ -2036,6 +2191,10 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantF(UINT StartRegister,
 	}
 	else
 	{
+		BeginRecordingCommands();
+
+		mCurrentDrawCommandBuffer.updateBuffer(mVertexConstantBuffer.get(), StartRegister * sizeof(float[4]), Vector4fCount * sizeof(float[4]), pConstantData);
+
 		mInternalDeviceState.SetVertexShaderConstantF(StartRegister, pConstantData, Vector4fCount);
 	}
 
@@ -2050,6 +2209,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantI(UINT StartRegister,
 	}
 	else
 	{
+		//BeginRecordingCommands();
+
 		mInternalDeviceState.SetVertexShaderConstantI(StartRegister, pConstantData, Vector4iCount);
 	}
 
@@ -2064,6 +2225,22 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetViewport(const D3DVIEWPORT9* pViewport)
 	}
 	else
 	{
+		BeginRecordingCommands();
+
+		/*
+		We need to shift by 0.5 because D3D9 is offset by half a pixel.
+		It's the difference between measuring from the center versus measuring from the edge.
+		https://docs.microsoft.com/en-us/windows/desktop/direct3d9/directly-mapping-texels-to-pixels
+		*/
+		const auto viewport = vk::Viewport()
+			.setX(((float)pViewport->X) - 0.5f)
+			.setY(((float)pViewport->Y) - 0.5f)
+			.setWidth(((float)pViewport->Width) - 0.5f)
+			.setHeight(((float)pViewport->Height) - 0.5f)
+			.setMinDepth((float)pViewport->MinZ)
+			.setMaxDepth((float)pViewport->MaxZ);
+		mCurrentDrawCommandBuffer.setViewport(0, 1, &viewport);
+
 		mInternalDeviceState.SetViewport(pViewport);
 	}
 
@@ -2138,7 +2315,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::ComposeRects(IDirect3DSurface9 *pSrc, IDirec
 
 HRESULT STDMETHODCALLTYPE CDevice9::PresentEx(const RECT *pSourceRect, const RECT *pDestRect, HWND hDestWindowOverride, const RGNDATA *pDirtyRegion, DWORD dwFlags)
 {
-
+	StopRecordingCommands();
 
 	Log(warning) << "CDevice9::PresentEx is not implemented!" << std::endl;
 
@@ -2251,6 +2428,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::ResetEx(D3DPRESENT_PARAMETERS *pPresentation
 		memcpy(&mPresentationParameters, pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS));
 	}
 
+	StopRecordingCommands();
 	mDevice->waitIdle();
 	ResetVulkanDevice();
 
