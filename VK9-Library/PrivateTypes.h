@@ -1,3 +1,5 @@
+#pragma once
+
 /*
 Copyright(c) 2016-2019 Christopher Joseph Dean Schaefer
 This software is provided 'as-is', without any express or implied
@@ -14,9 +16,6 @@ appreciated but is not required.
 misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
-
-#ifndef CPRIVATETYPES_H
-#define CPRIVATETYPES_H
 
 //Based on information from Nine.
 const GUID IID_IUnknown = { 0x00000000, 0x0000, 0x0000,{ 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 } };
@@ -44,5 +43,3 @@ const GUID IID_IDirect3DVertexDeclaration9 = { 0xDD13C59C, 0x36FA, 0x4098,{ 0xA8
 const GUID IID_IDirect3DVertexShader9 = { 0xEFC5557E, 0x6265, 0x4613,{ 0x8A, 0x94, 0x43, 0x85, 0x78, 0x89, 0xEB, 0x36 } };
 const GUID IID_IDirect3DVolume9 = { 0x24F416E6, 0x1F67, 0x4AA7,{ 0xB8, 0x8E, 0xD3, 0x3F, 0x6F, 0x31, 0x28, 0xA1 } };
 const GUID IID_IDirect3DVolumeTexture9 = { 0x2518526C, 0xE789, 0x4111,{ 0xA7, 0xB9, 0x47, 0xEF, 0x32, 0x8D, 0x13, 0xE6 } };
-
-#endif // CPRIVATETYPES_H

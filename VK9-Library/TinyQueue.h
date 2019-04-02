@@ -1,5 +1,7 @@
+#pragma once
+
 /*
-Copyright(c) 2018 Christopher Joseph Dean Schaefer
+Copyright(c) 2018-2019 Christopher Joseph Dean Schaefer
 
 This software is provided 'as-is', without any express or implied
 warranty.In no event will the authors be held liable for any damages
@@ -19,9 +21,6 @@ misrepresented as being the original software.
 */
 
 #include <atomic>
-
-#ifndef TINYQUEUE_H
-#define TINYQUEUE_H
 
 #define TINY_QUEUE_MAX_SIZE 14
 
@@ -102,5 +101,3 @@ public:
 	}
 
 };
-
-#endif // TINYQUEUE_H

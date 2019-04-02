@@ -1,5 +1,7 @@
+#pragma once
+
 /*
-Copyright(c) 2016 Christopher Joseph Dean Schaefer
+Copyright(c) 2016-2019 Christopher Joseph Dean Schaefer
 
 This software is provided 'as-is', without any express or implied
 warranty.In no event will the authors be held liable for any damages
@@ -17,9 +19,6 @@ appreciated but is not required.
 misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
-
-#ifndef CSWAPCHAIN9_H
-#define CSWAPCHAIN9_H
 
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vk_sdk_platform.h>
@@ -85,5 +84,3 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE GetPresentStats(D3DPRESENTSTATS *pPresentationStatistics);
 	virtual HRESULT STDMETHODCALLTYPE GetDisplayModeEx(D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation);
 };
-
-#endif // CSWAPCHAIN9_H

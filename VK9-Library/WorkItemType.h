@@ -1,5 +1,7 @@
+#pragma once
+
 /*
-Copyright(c) 2018 Christopher Joseph Dean Schaefer
+Copyright(c) 2018-2019 Christopher Joseph Dean Schaefer
 
 This software is provided 'as-is', without any express or implied
 warranty.In no event will the authors be held liable for any damages
@@ -17,9 +19,6 @@ appreciated but is not required.
 misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
-
-#ifndef WORKITEMTYPE_H
-#define WORKITEMTYPE_H
 
 enum WorkItemType
 {
@@ -132,5 +131,3 @@ enum WorkItemType
 	, Shader_Create
 	, Shader_Destroy
 };
-
-#endif //WORKITEMTYPE_H

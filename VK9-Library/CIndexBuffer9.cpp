@@ -1,9 +1,5 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-
 /*
-Copyright(c) 2016 Christopher Joseph Dean Schaefer
+Copyright(c) 2016-2019 Christopher Joseph Dean Schaefer
 
 This software is provided 'as-is', without any express or implied
 warranty.In no event will the authors be held liable for any damages

@@ -1,5 +1,7 @@
+#pragma once
+
 /*
-Copyright(c) 2016 Christopher Joseph Dean Schaefer
+Copyright(c) 2016-2019 Christopher Joseph Dean Schaefer
 
 This software is provided 'as-is', without any express or implied
 warranty.In no event will the authors be held liable for any damages
@@ -17,9 +19,6 @@ appreciated but is not required.
 misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
- 
-#ifndef CBaseTexture9_H
-#define CBaseTexture9_H
 
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vk_sdk_platform.h>
@@ -79,5 +78,3 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE SetAutoGenFilterType(D3DTEXTUREFILTERTYPE FilterType);
 	virtual DWORD STDMETHODCALLTYPE SetLOD(DWORD LODNew);
 };
-
-#endif // CBaseTexture9_H

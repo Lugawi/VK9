@@ -1,5 +1,7 @@
+#pragma once
+
 /*
-Copyright(c) 2018 Christopher Joseph Dean Schaefer
+Copyright(c) 2018-2019 Christopher Joseph Dean Schaefer
 
 This software is provided 'as-is', without any express or implied
 warranty.In no event will the authors be held liable for any damages
@@ -21,9 +23,6 @@ misrepresented as being the original software.
 #include <atomic>
 #include "WorkItemType.h"
 #include "d3d9.h"
-
-#ifndef WORKITEM_H
-#define WORKITEM_H
 
 struct WorkItem
 {
@@ -56,5 +55,3 @@ struct WorkItem
 		CloseHandle(WaitHandle);
 	}
 };
-
-#endif //WORKITEM_H

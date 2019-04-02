@@ -1,5 +1,7 @@
+#pragma once
+
 /*
-Copyright(c) 2016 Christopher Joseph Dean Schaefer
+Copyright(c) 2016-2019 Christopher Joseph Dean Schaefer
 
 This software is provided 'as-is', without any express or implied
 warranty.In no event will the authors be held liable for any damages
@@ -17,9 +19,6 @@ appreciated but is not required.
 misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
-
-#ifndef CVOLUME9_H
-#define CVOLUME9_H
 
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vk_sdk_platform.h>
@@ -90,5 +89,3 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE LockBox(D3DLOCKED_BOX * pLockedVolume, CONST D3DBOX* pBox, DWORD Flags);
 	virtual HRESULT STDMETHODCALLTYPE UnlockBox();
 };
-
-#endif // CVOLUME9_H

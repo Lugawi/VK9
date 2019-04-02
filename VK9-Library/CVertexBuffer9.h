@@ -1,5 +1,7 @@
+#pragma once
+
 /*
-Copyright(c) 2016 Christopher Joseph Dean Schaefer
+Copyright(c) 2016-2019 Christopher Joseph Dean Schaefer
 
 This software is provided 'as-is', without any express or implied
 warranty.In no event will the authors be held liable for any damages
@@ -18,9 +20,6 @@ misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
  
-#ifndef CVERTEXBUFFER9_H
-#define CVERTEXBUFFER9_H
-
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vk_sdk_platform.h>
 #include "d3d9.h"
@@ -98,5 +97,3 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE Lock(UINT OffsetToLock, UINT SizeToLock, VOID** ppbData, DWORD Flags);
 	virtual HRESULT STDMETHODCALLTYPE Unlock();
 };
-
-#endif // CVERTEXBUFFER9_H
