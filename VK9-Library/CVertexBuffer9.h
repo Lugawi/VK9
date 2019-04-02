@@ -32,50 +32,47 @@ public:
 	CVertexBuffer9(CDevice9* device,UINT Length, DWORD Usage, DWORD FVF, D3DPOOL Pool, HANDLE* pSharedHandle);
 	~CVertexBuffer9();
 
-	void Init();
+	//Reference Counting
+	ULONG mReferenceCount = 1;
+	ULONG mPrivateReferenceCount = 0;
 
-	CDevice9* mDevice;
+	ULONG PrivateAddRef(void);
+	ULONG PrivateRelease(void);
+
+	//Buffers (Staging and Vertex)
+	std::vector<vk::UniqueBuffer> mStagingBuffers;
+	std::vector<vk::UniqueDeviceMemory> mStagingBufferMemories;
+
+	std::vector<vk::UniqueBuffer> mVertexBuffers;
+	std::vector<vk::UniqueDeviceMemory> mVertexBufferMemories;
+
+	size_t mLastFrameIndex = 0;
+	size_t mIndex = 0;
+
+	vk::Buffer mCurrentStagingBuffer;	
+	vk::DeviceMemory mCurrentStagingBufferMemory;
+
+	vk::Buffer mCurrentVertexBuffer;
+	vk::DeviceMemory mCurrentVertexBufferMemory;
+
+	//D3D9 State
 	UINT mLength;
 	DWORD mUsage;
 	DWORD mFVF;
 	D3DPOOL mPool;
 	HANDLE* mSharedHandle;
 
-	ULONG mReferenceCount = 1;
-	ULONG mPrivateReferenceCount = 0;
-
-	ULONG PrivateAddRef(void)
-	{
-		return InterlockedIncrement(&mPrivateReferenceCount);
-	}
-
-	ULONG PrivateRelease(void)
-	{
-		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
-
-		if (ref == 0 && mReferenceCount == 0)
-		{
-			delete this;
-		}
-
-		return ref;
-	}
-
-	int32_t mSize;
-	int32_t mCapacity;
-	bool mIsDirty;
 	uint32_t mLockCount;
-
-	uint32_t mFrameBit = 0;
-	size_t mIndex = 0;
-	size_t mLastIndex = 0;
-	std::vector<size_t> mIds;
-
+	bool mIsDirty;
 	UINT mOffsetToLock = 0;
 	UINT mSizeToLock = 0;
 
-	bool mIsUsed = false; //Only used for temp buffers.
+	//Helper Functions
+	void AddStagingBuffer();
+	void AddVertexBuffer();
 
+private:
+	CDevice9* mDevice;
 public:
 	//IUnknown
 	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid,void  **ppv);

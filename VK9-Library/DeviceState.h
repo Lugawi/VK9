@@ -64,6 +64,7 @@ struct DeviceState
 	bool mCapturedSamplerState[16 + 4][D3DSAMP_DMAPOFFSET + 1];
 	DWORD mSamplerState[16 + 4][D3DSAMP_DMAPOFFSET + 1];
 
+	bool mCapturedAnyStreamSource = false;
 	bool mCapturedStreamSource[MAX_VERTEX_INPUTS] = {};
 	struct StreamSource
 	{

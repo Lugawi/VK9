@@ -31,26 +31,67 @@ CVertexBuffer9::CVertexBuffer9(CDevice9* device, UINT Length, DWORD Usage, DWORD
 	mFVF(FVF),
 	mPool(Pool),
 	mSharedHandle(pSharedHandle),
-	mSize(0),
-	mCapacity(0),
 	mIsDirty(true),
 	mLockCount(0)
 {
-
-	mSize = mLength / sizeof(float);
+	AddStagingBuffer();
+	AddVertexBuffer();
 }
 
 CVertexBuffer9::~CVertexBuffer9()
 {
-	for (size_t id : mIds)
-	{
 
-	}
 }
 
-void CVertexBuffer9::Init()
+ULONG CVertexBuffer9::PrivateAddRef(void)
 {
+	return InterlockedIncrement(&mPrivateReferenceCount);
+}
 
+ULONG CVertexBuffer9::PrivateRelease(void)
+{
+	ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
+
+	if (ref == 0 && mReferenceCount == 0)
+	{
+		delete this;
+	}
+
+	return ref;
+}
+
+void CVertexBuffer9::AddStagingBuffer()
+{
+	auto const bufferInfo = vk::BufferCreateInfo().setSize(mLength + 192 + 1024).setUsage(vk::BufferUsageFlagBits::eTransferSrc);
+
+	mStagingBuffers.push_back(mDevice->mDevice->createBufferUnique(bufferInfo));
+
+	vk::MemoryRequirements mem_reqs;
+	mDevice->mDevice->getBufferMemoryRequirements(mStagingBuffers[mStagingBuffers.size() - 1].get(), &mem_reqs);
+
+	auto mem_alloc = vk::MemoryAllocateInfo().setAllocationSize(mem_reqs.size).setMemoryTypeIndex(0);
+	mDevice->FindMemoryTypeFromProperties(mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, &mem_alloc.memoryTypeIndex);
+
+	mStagingBufferMemories.push_back(mDevice->mDevice->allocateMemoryUnique(mem_alloc));
+
+	mDevice->mDevice->bindBufferMemory(mStagingBuffers[mStagingBuffers.size() - 1].get(), mStagingBufferMemories[mStagingBufferMemories.size() - 1].get(), 0);
+}
+
+void CVertexBuffer9::AddVertexBuffer()
+{
+	auto const bufferInfo = vk::BufferCreateInfo().setSize(mLength + 192 + 1024).setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst);
+
+	mVertexBuffers.push_back(mDevice->mDevice->createBufferUnique(bufferInfo));
+
+	vk::MemoryRequirements mem_reqs;
+	mDevice->mDevice->getBufferMemoryRequirements(mVertexBuffers[mVertexBuffers.size() - 1].get(), &mem_reqs);
+
+	auto mem_alloc = vk::MemoryAllocateInfo().setAllocationSize(mem_reqs.size).setMemoryTypeIndex(0);
+	mDevice->FindMemoryTypeFromProperties(mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, &mem_alloc.memoryTypeIndex);
+
+	mVertexBufferMemories.push_back(mDevice->mDevice->allocateMemoryUnique(mem_alloc));
+
+	mDevice->mDevice->bindBufferMemory(mVertexBuffers[mVertexBuffers.size() - 1].get(), mVertexBufferMemories[mVertexBufferMemories.size() - 1].get(), 0);
 }
 
 ULONG STDMETHODCALLTYPE CVertexBuffer9::AddRef(void)
@@ -175,11 +216,14 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::SetPrivateData(REFGUID refguid, const 
 
 HRESULT STDMETHODCALLTYPE CVertexBuffer9::GetDesc(D3DVERTEXBUFFER_DESC* pDesc)
 {
-	//TODO: Implement.
+	pDesc->Format = D3DFMT_VERTEXDATA;
+	pDesc->Type = D3DRTYPE_VERTEXBUFFER;
+	pDesc->Usage = mUsage;
+	pDesc->Pool = mPool;
+	pDesc->Size = mLength;
+	pDesc->FVF = mFVF;
 
-	Log(warning) << "CVertexBuffer9::GetDesc is not implemented!" << std::endl;
-
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CVertexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLock, VOID** ppbData, DWORD Flags)
@@ -197,36 +241,47 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLoc
 	mOffsetToLock = OffsetToLock;
 	mSizeToLock = SizeToLock;
 
-	//if (mFrameBit != mCommandStreamManager->mFrameBit)
-	//{
-	//	mIndex = 0;	
-	//}
-	//else
-	//{
-	//	if ((Flags & D3DLOCK_NOOVERWRITE) != D3DLOCK_NOOVERWRITE && (Flags & D3DLOCK_READONLY) != D3DLOCK_READONLY)
-	//	{
-	//		mLastIndex = mIndex;
-	//		mIndex++;
-	//	}
-	//}
+	if (mLastFrameIndex != mDevice->mFrameIndex)
+	{
+		mIndex = 0;
+		mLastFrameIndex = mDevice->mFrameIndex;
+	}
+	else
+	{
+		if ((Flags & D3DLOCK_NOOVERWRITE) != D3DLOCK_NOOVERWRITE && (Flags & D3DLOCK_READONLY) != D3DLOCK_READONLY)
+		{
+			//mLastIndex = mIndex;
+			mIndex++;
+		}
+	}
 
-	//if (mIndex > mIds.size() - 1)
-	//{
-	//	Init();
-	//}
-	//else
-	//{
-	//	mId = mIds[mIndex];
-	//}
+	if (mIndex > mStagingBuffers.size() - 1)
+	{
+		AddStagingBuffer();
+		AddVertexBuffer();
+	}
 
+	mCurrentStagingBuffer = mStagingBuffers[mIndex].get();
+	mCurrentStagingBufferMemory = mStagingBufferMemories[mIndex].get();
 
+	mCurrentVertexBuffer = mVertexBuffers[mIndex].get();
+	mCurrentVertexBufferMemory = mVertexBufferMemories[mIndex].get();
+
+	(*ppbData) = mDevice->mDevice->mapMemory(mCurrentStagingBufferMemory, OffsetToLock, VK_WHOLE_SIZE);
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CVertexBuffer9::Unlock()
 {
+	mDevice->mDevice->unmapMemory(mCurrentStagingBufferMemory);
 
+	mDevice->BeginRecordingUtilityCommands();
+	{
+		auto const region = vk::BufferCopy().setSize(mLength + 192 + 1024);
+		mDevice->mCurrentUtilityCommandBuffer.copyBuffer(mCurrentStagingBuffer, mCurrentVertexBuffer, 1, &region);
+	}
+	mDevice->StopRecordingUtilityCommands();
 
 	InterlockedDecrement(&mLockCount);
 

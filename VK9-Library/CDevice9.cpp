@@ -738,6 +738,8 @@ void CDevice9::BeginRecordingCommands()
 	mCurrentDrawCommandBuffer.setViewport(0, 1, &viewport);
 
 	mIsRecording = true;
+
+	mInternalDeviceState.mDeviceState.mCapturedAnyStreamSource = true; //Mark vertex streams as dirty so next draw will reset them.
 }
 
 void CDevice9::StopRecordingCommands()
@@ -800,6 +802,42 @@ void CDevice9::StopRecordingUtilityCommands()
 	mQueue.submit(1, &submitInfo, mUtilityFences[mUtilityIndex].get());
 
 	mIsRecordingUtility = false;
+}
+
+void CDevice9::BeginDraw()
+{
+	if (mIsDrawing)
+	{
+		return;
+	}
+
+	//Check to see if the stream sources have been changed and if so bind the current buffers.
+	if (mInternalDeviceState.mDeviceState.mCapturedAnyStreamSource)
+	{
+		const VkDeviceSize offsetInBytes = 0;
+		std::vector<vk::Buffer> vertexBuffers;
+		vertexBuffers.reserve(MAX_VERTEX_INPUTS);
+
+		for (auto& streamSource : mInternalDeviceState.mDeviceState.mStreamSource)
+		{
+			if (streamSource.vertexBuffer)
+			{
+				vertexBuffers.push_back(streamSource.vertexBuffer->mCurrentVertexBuffer);
+			}		
+		}
+
+		mCurrentDrawCommandBuffer.bindVertexBuffers(0, vertexBuffers.size(), vertexBuffers.data(), &offsetInBytes);
+	}
+}
+
+void CDevice9::StopDraw()
+{
+	if (!mIsDrawing)
+	{
+		return;
+	}
+
+
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::Clear(DWORD Count, const D3DRECT *pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
@@ -1066,8 +1104,6 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateVertexBuffer(UINT Length, DWORD Usage,
 
 	CVertexBuffer9* obj = new CVertexBuffer9(this, Length, Usage, FVF, Pool, pSharedHandle);
 
-	obj->Init();
-
 	(*ppVertexBuffer) = (IDirect3DVertexBuffer9*)obj;
 
 	return result;
@@ -1124,8 +1160,11 @@ HRESULT STDMETHODCALLTYPE CDevice9::DeletePatch(UINT Handle)
 HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitive(D3DPRIMITIVETYPE Type, INT BaseVertexIndex, UINT MinIndex, UINT NumVertices, UINT StartIndex, UINT PrimitiveCount)
 {
 	BeginRecordingCommands();
+	BeginDraw();
 
 	Log(warning) << "CDevice9::DrawIndexedPrimitive is not implemented!" << std::endl;
+
+	StopDraw();
 
 	return S_OK;
 }
@@ -1133,6 +1172,9 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitive(D3DPRIMITIVETYPE Type, 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, const void *pIndexData, D3DFORMAT IndexDataFormat, const void *pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
 	BeginRecordingCommands();
+	BeginDraw();
+
+	mInternalDeviceState.mDeviceState.mCapturedAnyStreamSource = true; //Mark vertex streams as dirty so next draw will reset them.
 
 	Log(warning) << "CDevice9::DrawIndexedPrimitiveUP is not implemented!" << std::endl;
 
@@ -1234,14 +1276,19 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE Prim
 	//SetIndices(oldIndexBuffer);
 	//SetStreamSource(0, oldVertexBuffer, oldOffsetInBytes, oldStride);
 
+	StopDraw();
+
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
 {
 	BeginRecordingCommands();
+	BeginDraw();
 
 	Log(warning) << "CDevice9::DrawPrimitive is not implemented!" << std::endl;
+
+	StopDraw();
 
 	return S_OK;
 }
@@ -1249,6 +1296,9 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType
 HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, const void *pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
 	BeginRecordingCommands();
+	BeginDraw();
+
+	mInternalDeviceState.mDeviceState.mCapturedAnyStreamSource = true; //Mark vertex streams as dirty so next draw will reset them.
 
 	Log(warning) << "CDevice9::DrawPrimitiveUP is not implemented!" << std::endl;
 
@@ -1331,12 +1381,15 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveTy
 	////Switch the buffers back.
 	//SetStreamSource(0, oldVertexBuffer, oldOffsetInBytes, oldStride);
 
+	StopDraw();
+
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawRectPatch(UINT Handle, const float *pNumSegs, const D3DRECTPATCH_INFO *pRectPatchInfo)
 {
 	BeginRecordingCommands();
+	BeginDraw();
 
 	//if (!mIsSceneStarted)
 	//{
@@ -1347,12 +1400,15 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawRectPatch(UINT Handle, const float *pNum
 
 	Log(warning) << "CDevice9::DrawRectPatch is not implemented!" << std::endl;
 
+	StopDraw();
+
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawTriPatch(UINT Handle, const float *pNumSegs, const D3DTRIPATCH_INFO *pTriPatchInfo)
 {
 	BeginRecordingCommands();
+	BeginDraw();
 
 	//if (!mIsSceneStarted)
 	//{
@@ -1362,6 +1418,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawTriPatch(UINT Handle, const float *pNumS
 	//TODO: Implement.
 
 	Log(warning) << "CDevice9::DrawTriPatch is not implemented!" << std::endl;
+
+	StopDraw();
 
 	return S_OK;
 }

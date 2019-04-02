@@ -308,6 +308,8 @@ void CStateBlock9::SetStreamSource(unsigned int stream, IDirect3DVertexBuffer9* 
 		mDeviceState.mStreamSource[stream].vertexBuffer->PrivateRelease();
 	}
 
+	mDeviceState.mCapturedAnyStreamSource = true;
+
 	mDeviceState.mCapturedStreamSource[stream] = true;
 	mDeviceState.mStreamSource[stream].vertexBuffer = reinterpret_cast <CVertexBuffer9*>(vertexBuffer);
 	mDeviceState.mStreamSource[stream].offset = offset;
@@ -736,6 +738,8 @@ void CStateBlock9::CaptureTexturePalette()
 
 void CStateBlock9::CaptureVertexStreams()
 {
+	mDeviceState.mCapturedAnyStreamSource = true;
+
 	for (int stream = 0; stream < MAX_VERTEX_INPUTS; stream++)
 	{
 		mDeviceState.mCapturedStreamSource[stream] = true;

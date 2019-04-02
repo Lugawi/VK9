@@ -88,6 +88,8 @@ public:
 	uint32_t mUtilityIndex = 0;
 	bool mIsRecordingUtility = false;
 
+	bool mIsDrawing = false;
+
 	/*
 	The idea with these two is to set these to one of the command buffers from the vectors.
 	The unique handle will be cleaned up on shutdown but we can access this guy after start without dereference and array lookup everywhere.
@@ -188,6 +190,10 @@ public:
 	void StopRecordingCommands();
 	void BeginRecordingUtilityCommands();
 	void StopRecordingUtilityCommands();
+	void BeginDraw();
+	void StopDraw();
+
+	
 
 	//D3D9 State
 	CStateBlock9 mInternalDeviceState;
