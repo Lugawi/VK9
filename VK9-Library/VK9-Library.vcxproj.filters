@@ -182,61 +182,46 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="VK9.conf" />
-    <None Include="Shaders\VertexBuffer_XYZ_DIFFUSE.geom">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\VertexBuffer_XYZ_NORMAL_TEX2.frag">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\VertexBuffer_XYZ_NORMAL_TEX2.vert">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\VertexBuffer_XYZRHW_DIFFUSE.vert">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\VertexBuffer_XYZRHW_DIFFUSE_TEX1.vert">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\VertexBuffer_XYZRHW_DIFFUSE_TEX2.vert">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\VertexBuffer_XYZRHW_TEX1.vert">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\VertexBuffer_XYZRHW_TEX2.vert">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\Constants">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\FixedFunctions">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\Functions">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\GlobalIllumination">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\Structures">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\VertexBuffer_XYZ_NORMAL_DIFFUSE_TEX1.frag">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\VertexBuffer_XYZ_NORMAL_DIFFUSE_TEX1.vert">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\VertexBuffer_XYZ.frag">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\VertexBuffer_XYZ.vert">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\VertexBuffer_XYZRHW.vert">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="Shaders\PixelPassthrough.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\XYZ.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\XYZ.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\XYZ_DIFFUSE.geom">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\XYZ_NORMAL_DIFFUSE_TEX1.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\XYZ_NORMAL_DIFFUSE_TEX1.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\XYZ_NORMAL_TEX2.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\XYZ_NORMAL_TEX2.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\XYZRHW.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\XYZRHW_DIFFUSE.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\XYZRHW_DIFFUSE_TEX1.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\XYZRHW_DIFFUSE_TEX2.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\XYZRHW_TEX1.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\XYZRHW_TEX2.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
@@ -246,58 +231,58 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_NORMAL.frag">
+    <CustomBuild Include="Shaders\XYZ_DIFFUSE.frag">
       <Filter>Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_DIFFUSE.frag">
+    <CustomBuild Include="Shaders\XYZ_DIFFUSE.vert">
       <Filter>Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_DIFFUSE.vert">
+    <CustomBuild Include="Shaders\XYZ_DIFFUSE_TEX1.frag">
       <Filter>Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_DIFFUSE_TEX1.frag">
+    <CustomBuild Include="Shaders\XYZ_DIFFUSE_TEX1.vert">
       <Filter>Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_DIFFUSE_TEX1.vert">
+    <CustomBuild Include="Shaders\XYZ_DIFFUSE_TEX2.frag">
       <Filter>Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_DIFFUSE_TEX2.frag">
+    <CustomBuild Include="Shaders\XYZ_DIFFUSE_TEX2.vert">
       <Filter>Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_DIFFUSE_TEX2.vert">
+    <CustomBuild Include="Shaders\XYZ_NORMAL.frag">
       <Filter>Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_NORMAL.vert">
+    <CustomBuild Include="Shaders\XYZ_NORMAL.vert">
       <Filter>Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_NORMAL_DIFFUSE_TEX2.frag">
+    <CustomBuild Include="Shaders\XYZ_NORMAL_DIFFUSE.frag">
       <Filter>Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_NORMAL_DIFFUSE_TEX2.vert">
+    <CustomBuild Include="Shaders\XYZ_NORMAL_DIFFUSE.vert">
       <Filter>Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_NORMAL_TEX1.frag">
+    <CustomBuild Include="Shaders\XYZ_NORMAL_DIFFUSE_TEX2.frag">
       <Filter>Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_NORMAL_TEX1.vert">
+    <CustomBuild Include="Shaders\XYZ_NORMAL_DIFFUSE_TEX2.vert">
       <Filter>Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_TEX1.frag">
+    <CustomBuild Include="Shaders\XYZ_NORMAL_TEX1.frag">
       <Filter>Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_TEX1.vert">
+    <CustomBuild Include="Shaders\XYZ_NORMAL_TEX1.vert">
       <Filter>Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_TEX2.frag">
+    <CustomBuild Include="Shaders\XYZ_TEX1.frag">
       <Filter>Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_TEX2.vert">
+    <CustomBuild Include="Shaders\XYZ_TEX1.vert">
       <Filter>Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_NORMAL_DIFFUSE.frag">
+    <CustomBuild Include="Shaders\XYZ_TEX2.frag">
       <Filter>Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="Shaders\VertexBuffer_XYZ_NORMAL_DIFFUSE.vert">
+    <CustomBuild Include="Shaders\XYZ_TEX2.vert">
       <Filter>Shaders</Filter>
     </CustomBuild>
   </ItemGroup>
@@ -305,5 +290,16 @@
     <Image Include="VK9-Logo.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Shaders\CommonFragment">
+      <Filter>Shaders</Filter>
+    </Text>
+    <Text Include="Shaders\CommonVertex">
+      <Filter>Shaders</Filter>
+    </Text>
+    <Text Include="Shaders\CommonShader">
+      <Filter>Shaders</Filter>
+    </Text>
   </ItemGroup>
 </Project>

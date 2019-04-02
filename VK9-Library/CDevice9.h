@@ -44,6 +44,8 @@ struct Pair
 	T1 second;
 };
 
+D3DMATRIX operator* (const D3DMATRIX& m1, const D3DMATRIX& m2);
+
 class CDevice9 : public IDirect3DDevice9Ex
 {	
 public:
@@ -78,17 +80,21 @@ public:
 	std::vector<vk::UniqueSemaphore> mRenderFinishedSemaphores;
 	std::vector<vk::UniqueCommandBuffer> mDrawCommandBuffers;
 	std::vector<vk::UniqueFence> mDrawFences;
+	uint32_t mFrameIndex = 0;
+	bool mIsRecording = false;
 
 	std::vector<vk::UniqueCommandBuffer> mUtilityCommandBuffers;
 	std::vector<vk::UniqueFence> mUtilityFences;
+	uint32_t mUtilityIndex = 0;
+	bool mIsRecordingUtility = false;
 
 	/*
-	The idea with this one is to set this to one of the draw command buffers from the vector.
-	The unique handle will be cleaned up on shutdown but we can access this guy after render start without dereference and array lookup everywhere.
+	The idea with these two is to set these to one of the command buffers from the vectors.
+	The unique handle will be cleaned up on shutdown but we can access this guy after start without dereference and array lookup everywhere.
 	*/
 	vk::CommandBuffer mCurrentDrawCommandBuffer;
-	uint32_t mFrameIndex = 0;
-	bool mIsRecording = false;
+	vk::CommandBuffer mCurrentUtilityCommandBuffer;
+	
 
 	//FF Buffers
 	vk::UniqueBuffer mRenderStateBuffer;
@@ -99,6 +105,9 @@ public:
 
 	vk::UniqueBuffer mLightBuffer;
 	vk::UniqueDeviceMemory mLightBufferMemory;
+
+	vk::UniqueBuffer mLightEnableBuffer;
+	vk::UniqueDeviceMemory mLightEnableBufferMemory;
 
 	vk::UniqueBuffer mMaterialBuffer;
 	vk::UniqueDeviceMemory mMaterialBufferMemory;
@@ -177,6 +186,8 @@ public:
 	void ResetVulkanDevice();
 	void BeginRecordingCommands();
 	void StopRecordingCommands();
+	void BeginRecordingUtilityCommands();
+	void StopRecordingUtilityCommands();
 
 	//D3D9 State
 	CStateBlock9 mInternalDeviceState;

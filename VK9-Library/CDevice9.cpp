@@ -53,114 +53,135 @@ misrepresented as being the original software.
 #include "LogManager.h"
 //#include "PrivateTypes.h"
 
-const uint32_t VERTEX_BUFFER_XYZRHW_VERT[] =
-#include "VertexBuffer_XYZRHW.vert.h"
+const uint32_t XYZRHW_VERT[] =
+#include "XYZRHW.vert.h"
 ;
-const uint32_t VERTEX_BUFFER_XYZ_VERT[] =
-#include "VertexBuffer_XYZ.vert.h"
+const uint32_t XYZ_VERT[] =
+#include "XYZ.vert.h"
 ;
-const uint32_t VERTEX_BUFFER_XYZ_FRAG[] =
-#include "VertexBuffer_XYZ.frag.h"
-;
-
-const uint32_t VERTEX_BUFFER_XYZRHW_DIFFUSE_VERT[] =
-#include "VertexBuffer_XYZRHW_DIFFUSE.vert.h"
-;
-const uint32_t VERTEX_BUFFER_XYZ_DIFFUSE_VERT[] =
-#include "VertexBuffer_XYZ_DIFFUSE.vert.h"
-;
-const uint32_t VERTEX_BUFFER_XYZ_DIFFUSE_FRAG[] =
-#include "VertexBuffer_XYZ_DIFFUSE.frag.h"
-;
-const uint32_t VERTEX_BUFFER_XYZ_DIFFUSE_GEOM[] =
-#include "VertexBuffer_XYZ_DIFFUSE.geom.h"
+const uint32_t XYZ_FRAG[] =
+#include "XYZ.frag.h"
 ;
 
-const uint32_t VERTEX_BUFFER_XYZRHW_TEX1_VERT[] =
-#include "VertexBuffer_XYZRHW_TEX1.vert.h"
+const uint32_t XYZRHW_DIFFUSE_VERT[] =
+#include "XYZRHW_DIFFUSE.vert.h"
 ;
-const uint32_t VERTEX_BUFFER_XYZ_TEX1_VERT[] =
-#include "VertexBuffer_XYZ_TEX1.vert.h"
+const uint32_t XYZ_DIFFUSE_VERT[] =
+#include "XYZ_DIFFUSE.vert.h"
 ;
-const uint32_t VERTEX_BUFFER_XYZ_TEX1_FRAG[] =
-#include "VertexBuffer_XYZ_TEX1.frag.h"
+const uint32_t XYZ_DIFFUSE_FRAG[] =
+#include "XYZ_DIFFUSE.frag.h"
 ;
-
-const uint32_t VERTEX_BUFFER_XYZRHW_TEX2_VERT[] =
-#include "VertexBuffer_XYZRHW_TEX2.vert.h"
-;
-const uint32_t VERTEX_BUFFER_XYZ_TEX2_VERT[] =
-#include "VertexBuffer_XYZ_TEX2.vert.h"
-;
-const uint32_t VERTEX_BUFFER_XYZ_TEX2_FRAG[] =
-#include "VertexBuffer_XYZ_TEX2.frag.h"
+const uint32_t XYZ_DIFFUSE_GEOM[] =
+#include "XYZ_DIFFUSE.geom.h"
 ;
 
-const uint32_t VERTEX_BUFFER_XYZRHW_DIFFUSE_TEX1_VERT[] =
-#include "VertexBuffer_XYZRHW_DIFFUSE_TEX1.vert.h"
+const uint32_t XYZRHW_TEX1_VERT[] =
+#include "XYZRHW_TEX1.vert.h"
 ;
-const uint32_t VERTEX_BUFFER_XYZ_DIFFUSE_TEX1_VERT[] =
-#include "VertexBuffer_XYZ_DIFFUSE_TEX1.vert.h"
+const uint32_t XYZ_TEX1_VERT[] =
+#include "XYZ_TEX1.vert.h"
 ;
-const uint32_t VERTEX_BUFFER_XYZ_DIFFUSE_TEX1_FRAG[] =
-#include "VertexBuffer_XYZ_DIFFUSE_TEX1.frag.h"
-;
-
-const uint32_t VERTEX_BUFFER_XYZRHW_DIFFUSE_TEX2_VERT[] =
-#include "VertexBuffer_XYZRHW_DIFFUSE_TEX2.vert.h"
-;
-const uint32_t VERTEX_BUFFER_XYZ_DIFFUSE_TEX2_VERT[] =
-#include "VertexBuffer_XYZ_DIFFUSE_TEX2.vert.h"
-;
-const uint32_t VERTEX_BUFFER_XYZ_DIFFUSE_TEX2_FRAG[] =
-#include "VertexBuffer_XYZ_DIFFUSE_TEX2.frag.h"
+const uint32_t XYZ_TEX1_FRAG[] =
+#include "XYZ_TEX1.frag.h"
 ;
 
-const uint32_t VERTEX_BUFFER_XYZ_NORMAL_VERT[] =
-#include "VertexBuffer_XYZ_NORMAL.vert.h"
+const uint32_t XYZRHW_TEX2_VERT[] =
+#include "XYZRHW_TEX2.vert.h"
 ;
-const uint32_t VERTEX_BUFFER_XYZ_NORMAL_FRAG[] =
-#include "VertexBuffer_XYZ_NORMAL.frag.h"
+const uint32_t XYZ_TEX2_VERT[] =
+#include "XYZ_TEX2.vert.h"
 ;
-
-const uint32_t VERTEX_BUFFER_XYZ_NORMAL_TEX1_VERT[] =
-#include "VertexBuffer_XYZ_NORMAL_TEX1.vert.h"
-;
-const uint32_t VERTEX_BUFFER_XYZ_NORMAL_TEX1_FRAG[] =
-#include "VertexBuffer_XYZ_NORMAL_TEX1.frag.h"
+const uint32_t XYZ_TEX2_FRAG[] =
+#include "XYZ_TEX2.frag.h"
 ;
 
-const uint32_t VERTEX_BUFFER_XYZ_NORMAL_TEX2_VERT[] =
-#include "VertexBuffer_XYZ_NORMAL_TEX2.vert.h"
+const uint32_t XYZRHW_DIFFUSE_TEX1_VERT[] =
+#include "XYZRHW_DIFFUSE_TEX1.vert.h"
 ;
-const uint32_t VERTEX_BUFFER_XYZ_NORMAL_TEX2_FRAG[] =
-#include "VertexBuffer_XYZ_NORMAL_TEX2.frag.h"
+const uint32_t XYZ_DIFFUSE_TEX1_VERT[] =
+#include "XYZ_DIFFUSE_TEX1.vert.h"
 ;
-
-const uint32_t VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_VERT[] =
-#include "VertexBuffer_XYZ_NORMAL_DIFFUSE.vert.h"
-;
-const uint32_t VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_FRAG[] =
-#include "VertexBuffer_XYZ_NORMAL_DIFFUSE.frag.h"
+const uint32_t XYZ_DIFFUSE_TEX1_FRAG[] =
+#include "XYZ_DIFFUSE_TEX1.frag.h"
 ;
 
-const uint32_t VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX1_VERT[] =
-#include "VertexBuffer_XYZ_NORMAL_DIFFUSE_TEX1.vert.h"
+const uint32_t XYZRHW_DIFFUSE_TEX2_VERT[] =
+#include "XYZRHW_DIFFUSE_TEX2.vert.h"
 ;
-const uint32_t VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX1_FRAG[] =
-#include "VertexBuffer_XYZ_NORMAL_DIFFUSE_TEX1.frag.h"
+const uint32_t XYZ_DIFFUSE_TEX2_VERT[] =
+#include "XYZ_DIFFUSE_TEX2.vert.h"
+;
+const uint32_t XYZ_DIFFUSE_TEX2_FRAG[] =
+#include "XYZ_DIFFUSE_TEX2.frag.h"
 ;
 
-const uint32_t VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX2_VERT[] =
-#include "VertexBuffer_XYZ_NORMAL_DIFFUSE_TEX2.vert.h"
+const uint32_t XYZ_NORMAL_VERT[] =
+#include "XYZ_NORMAL.vert.h"
 ;
-const uint32_t VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX2_FRAG[] =
-#include "VertexBuffer_XYZ_NORMAL_DIFFUSE_TEX2.frag.h"
+const uint32_t XYZ_NORMAL_FRAG[] =
+#include "XYZ_NORMAL.frag.h"
+;
+
+const uint32_t XYZ_NORMAL_TEX1_VERT[] =
+#include "XYZ_NORMAL_TEX1.vert.h"
+;
+const uint32_t XYZ_NORMAL_TEX1_FRAG[] =
+#include "XYZ_NORMAL_TEX1.frag.h"
+;
+
+const uint32_t XYZ_NORMAL_TEX2_VERT[] =
+#include "XYZ_NORMAL_TEX2.vert.h"
+;
+const uint32_t XYZ_NORMAL_TEX2_FRAG[] =
+#include "XYZ_NORMAL_TEX2.frag.h"
+;
+
+const uint32_t XYZ_NORMAL_DIFFUSE_VERT[] =
+#include "XYZ_NORMAL_DIFFUSE.vert.h"
+;
+const uint32_t XYZ_NORMAL_DIFFUSE_FRAG[] =
+#include "XYZ_NORMAL_DIFFUSE.frag.h"
+;
+
+const uint32_t XYZ_NORMAL_DIFFUSE_TEX1_VERT[] =
+#include "XYZ_NORMAL_DIFFUSE_TEX1.vert.h"
+;
+const uint32_t XYZ_NORMAL_DIFFUSE_TEX1_FRAG[] =
+#include "XYZ_NORMAL_DIFFUSE_TEX1.frag.h"
+;
+
+const uint32_t XYZ_NORMAL_DIFFUSE_TEX2_VERT[] =
+#include "XYZ_NORMAL_DIFFUSE_TEX2.vert.h"
+;
+const uint32_t XYZ_NORMAL_DIFFUSE_TEX2_FRAG[] =
+#include "XYZ_NORMAL_DIFFUSE_TEX2.frag.h"
 ;
 
 const uint32_t PIXEL_PASSTHROUGH_FRAG[] =
 #include "PixelPassthrough.frag.h"
 ;
+
+D3DMATRIX operator* (const D3DMATRIX& m1, const D3DMATRIX& m2)
+{
+	D3DMATRIX result;
+
+	//TODO: Check to see msvc auto vectorization picks this up.
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			float num = 0;
+			for (int k = 0; k < 4; k++)
+			{
+				num += m1.m[i][k] * m2.m[k][j];
+			}
+			result.m[i][j] = num;
+		}
+	}
+
+	return result;
+}
 
 CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode)
 	:
@@ -453,7 +474,17 @@ void CDevice9::ResetVulkanDevice()
 		mDevice->bindBufferMemory(mLightBuffer.get(), mLightBufferMemory.get(), 0);
 	}
 
-	//Handle light enable with constants to reduce branching.
+	//Light Enable
+	{
+		auto const lightEnableBufferInfo = vk::BufferCreateInfo().setSize(sizeof(mInternalDeviceState.mDeviceState.mLightEnableState)).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		mLightEnableBuffer = mDevice->createBufferUnique(lightEnableBufferInfo);
+		vk::MemoryRequirements lightEnableMemoryRequirements;
+		mDevice->getBufferMemoryRequirements(mLightEnableBuffer.get(), &lightEnableMemoryRequirements);
+		auto lightEnableMemoryAllocateInfo = vk::MemoryAllocateInfo().setAllocationSize(lightEnableMemoryRequirements.size).setMemoryTypeIndex(0);
+		FindMemoryTypeFromProperties(lightEnableMemoryRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, &lightEnableMemoryAllocateInfo.memoryTypeIndex);
+		mLightEnableBufferMemory = mDevice->allocateMemoryUnique(lightEnableMemoryAllocateInfo);
+		mDevice->bindBufferMemory(mLightEnableBuffer.get(), mLightEnableBufferMemory.get(), 0);
+	}
 
 	//Material
 	{
@@ -512,7 +543,7 @@ void CDevice9::ResetVulkanDevice()
 	//Create Descriptor layout.
 	{
 		const uint32_t textureCount = 16;
-		const vk::DescriptorSetLayoutBinding layoutBindings[8] =
+		const vk::DescriptorSetLayoutBinding layoutBindings[9] =
 		{
 			vk::DescriptorSetLayoutBinding() /*Render State*/
 				.setBinding(0)
@@ -520,16 +551,16 @@ void CDevice9::ResetVulkanDevice()
 				.setDescriptorCount(1)
 				.setStageFlags(vk::ShaderStageFlagBits::eAllGraphics)
 				.setPImmutableSamplers(nullptr),
-			vk::DescriptorSetLayoutBinding() /*Texture Stages*/
+			vk::DescriptorSetLayoutBinding() /*Lights*/
 				.setBinding(1)
 				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
 				.setDescriptorCount(1)
-				.setStageFlags(vk::ShaderStageFlagBits::eFragment)
+				.setStageFlags(vk::ShaderStageFlagBits::eVertex)
 				.setPImmutableSamplers(nullptr),
-			vk::DescriptorSetLayoutBinding() /*Lights*/
+			vk::DescriptorSetLayoutBinding() /*Light Enable*/
 				.setBinding(2)
 				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-				.setDescriptorCount(1)
+				.setDescriptorCount(textureCount)
 				.setStageFlags(vk::ShaderStageFlagBits::eVertex)
 				.setPImmutableSamplers(nullptr),
 			vk::DescriptorSetLayoutBinding() /*Material*/
@@ -538,32 +569,38 @@ void CDevice9::ResetVulkanDevice()
 				.setDescriptorCount(1)
 				.setStageFlags(vk::ShaderStageFlagBits::eVertex)
 				.setPImmutableSamplers(nullptr),
-			vk::DescriptorSetLayoutBinding() /*Matrix*/
+			vk::DescriptorSetLayoutBinding() /*Matrix/Transformation*/
 				.setBinding(4)
 				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
 				.setDescriptorCount(1)
 				.setStageFlags(vk::ShaderStageFlagBits::eVertex)
 				.setPImmutableSamplers(nullptr),
-			vk::DescriptorSetLayoutBinding() /*Vertex Shader Const*/
+			vk::DescriptorSetLayoutBinding() /*Texture Stages*/
 				.setBinding(5)
-				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-				.setDescriptorCount(1)
-				.setStageFlags(vk::ShaderStageFlagBits::eVertex)
-				.setPImmutableSamplers(nullptr),
-			vk::DescriptorSetLayoutBinding() /*Pixel Shader Const*/
-				.setBinding(6)
 				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
 				.setDescriptorCount(1)
 				.setStageFlags(vk::ShaderStageFlagBits::eFragment)
 				.setPImmutableSamplers(nullptr),
 			vk::DescriptorSetLayoutBinding() /*Image/Sampler*/
-				.setBinding(7)
+				.setBinding(6)
 				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
 				.setDescriptorCount(textureCount)
 				.setStageFlags(vk::ShaderStageFlagBits::eFragment)
-				.setPImmutableSamplers(nullptr)
+				.setPImmutableSamplers(nullptr),
+			vk::DescriptorSetLayoutBinding() /*Vertex Shader Const*/
+				.setBinding(7)
+				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+				.setDescriptorCount(1)
+				.setStageFlags(vk::ShaderStageFlagBits::eVertex)
+				.setPImmutableSamplers(nullptr),
+			vk::DescriptorSetLayoutBinding() /*Pixel Shader Const*/
+				.setBinding(8)
+				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+				.setDescriptorCount(1)
+				.setStageFlags(vk::ShaderStageFlagBits::eFragment)
+				.setPImmutableSamplers(nullptr),
 		};
-		auto const descriptorLayout = vk::DescriptorSetLayoutCreateInfo().setBindingCount(8).setPBindings(layoutBindings);
+		auto const descriptorLayout = vk::DescriptorSetLayoutCreateInfo().setBindingCount(9).setPBindings(layoutBindings);
 		mDescriptorLayout = mDevice->createDescriptorSetLayoutUnique(descriptorLayout);
 	}
 
@@ -590,48 +627,48 @@ void CDevice9::ResetVulkanDevice()
 	}
 
 	//Load fixed function shaders.
-	mVertShaderModule_XYZRHW = LoadShaderFromConst(VERTEX_BUFFER_XYZRHW_VERT);
-	mVertShaderModule_XYZ = LoadShaderFromConst(VERTEX_BUFFER_XYZ_VERT);
-	mFragShaderModule_XYZ = LoadShaderFromConst(VERTEX_BUFFER_XYZ_FRAG);
+	mVertShaderModule_XYZRHW = LoadShaderFromConst(XYZRHW_VERT);
+	mVertShaderModule_XYZ = LoadShaderFromConst(XYZ_VERT);
+	mFragShaderModule_XYZ = LoadShaderFromConst(XYZ_FRAG);
 
-	mVertShaderModule_XYZRHW_DIFFUSE = LoadShaderFromConst(VERTEX_BUFFER_XYZRHW_DIFFUSE_VERT);
-	mVertShaderModule_XYZ_DIFFUSE = LoadShaderFromConst(VERTEX_BUFFER_XYZ_DIFFUSE_VERT);
-	mFragShaderModule_XYZ_DIFFUSE = LoadShaderFromConst(VERTEX_BUFFER_XYZ_DIFFUSE_FRAG);
-	mGeomShaderModule_XYZ_DIFFUSE = LoadShaderFromConst(VERTEX_BUFFER_XYZ_DIFFUSE_GEOM);
+	mVertShaderModule_XYZRHW_DIFFUSE = LoadShaderFromConst(XYZRHW_DIFFUSE_VERT);
+	mVertShaderModule_XYZ_DIFFUSE = LoadShaderFromConst(XYZ_DIFFUSE_VERT);
+	mFragShaderModule_XYZ_DIFFUSE = LoadShaderFromConst(XYZ_DIFFUSE_FRAG);
+	mGeomShaderModule_XYZ_DIFFUSE = LoadShaderFromConst(XYZ_DIFFUSE_GEOM);
 
-	mVertShaderModule_XYZRHW_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZRHW_TEX1_VERT);
-	mVertShaderModule_XYZ_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_TEX1_VERT);
-	mFragShaderModule_XYZ_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_TEX1_FRAG);
+	mVertShaderModule_XYZRHW_TEX1 = LoadShaderFromConst(XYZRHW_TEX1_VERT);
+	mVertShaderModule_XYZ_TEX1 = LoadShaderFromConst(XYZ_TEX1_VERT);
+	mFragShaderModule_XYZ_TEX1 = LoadShaderFromConst(XYZ_TEX1_FRAG);
 
-	mVertShaderModule_XYZRHW_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZRHW_TEX2_VERT);
-	mVertShaderModule_XYZ_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_TEX2_VERT);
-	mFragShaderModule_XYZ_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_TEX2_FRAG);
+	mVertShaderModule_XYZRHW_TEX2 = LoadShaderFromConst(XYZRHW_TEX2_VERT);
+	mVertShaderModule_XYZ_TEX2 = LoadShaderFromConst(XYZ_TEX2_VERT);
+	mFragShaderModule_XYZ_TEX2 = LoadShaderFromConst(XYZ_TEX2_FRAG);
 
-	mVertShaderModule_XYZRHW_DIFFUSE_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZRHW_DIFFUSE_TEX1_VERT);
-	mVertShaderModule_XYZ_DIFFUSE_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_DIFFUSE_TEX1_VERT);
-	mFragShaderModule_XYZ_DIFFUSE_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_DIFFUSE_TEX1_FRAG);
+	mVertShaderModule_XYZRHW_DIFFUSE_TEX1 = LoadShaderFromConst(XYZRHW_DIFFUSE_TEX1_VERT);
+	mVertShaderModule_XYZ_DIFFUSE_TEX1 = LoadShaderFromConst(XYZ_DIFFUSE_TEX1_VERT);
+	mFragShaderModule_XYZ_DIFFUSE_TEX1 = LoadShaderFromConst(XYZ_DIFFUSE_TEX1_FRAG);
 
-	mVertShaderModule_XYZRHW_DIFFUSE_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZRHW_DIFFUSE_TEX2_VERT);
-	mVertShaderModule_XYZ_DIFFUSE_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_DIFFUSE_TEX2_VERT);
-	mFragShaderModule_XYZ_DIFFUSE_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_DIFFUSE_TEX2_FRAG);
+	mVertShaderModule_XYZRHW_DIFFUSE_TEX2 = LoadShaderFromConst(XYZRHW_DIFFUSE_TEX2_VERT);
+	mVertShaderModule_XYZ_DIFFUSE_TEX2 = LoadShaderFromConst(XYZ_DIFFUSE_TEX2_VERT);
+	mFragShaderModule_XYZ_DIFFUSE_TEX2 = LoadShaderFromConst(XYZ_DIFFUSE_TEX2_FRAG);
 
-	mVertShaderModule_XYZ_NORMAL = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_VERT);
-	mFragShaderModule_XYZ_NORMAL = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_FRAG);
+	mVertShaderModule_XYZ_NORMAL = LoadShaderFromConst(XYZ_NORMAL_VERT);
+	mFragShaderModule_XYZ_NORMAL = LoadShaderFromConst(XYZ_NORMAL_FRAG);
 
-	mVertShaderModule_XYZ_NORMAL_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_TEX1_VERT);
-	mFragShaderModule_XYZ_NORMAL_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_TEX1_FRAG);
+	mVertShaderModule_XYZ_NORMAL_TEX1 = LoadShaderFromConst(XYZ_NORMAL_TEX1_VERT);
+	mFragShaderModule_XYZ_NORMAL_TEX1 = LoadShaderFromConst(XYZ_NORMAL_TEX1_FRAG);
 
-	mVertShaderModule_XYZ_NORMAL_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_TEX2_VERT);
-	mFragShaderModule_XYZ_NORMAL_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_TEX2_FRAG);
+	mVertShaderModule_XYZ_NORMAL_TEX2 = LoadShaderFromConst(XYZ_NORMAL_TEX2_VERT);
+	mFragShaderModule_XYZ_NORMAL_TEX2 = LoadShaderFromConst(XYZ_NORMAL_TEX2_FRAG);
 
-	mVertShaderModule_XYZ_NORMAL_DIFFUSE = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_VERT);
-	mFragShaderModule_XYZ_NORMAL_DIFFUSE = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_FRAG);
+	mVertShaderModule_XYZ_NORMAL_DIFFUSE = LoadShaderFromConst(XYZ_NORMAL_DIFFUSE_VERT);
+	mFragShaderModule_XYZ_NORMAL_DIFFUSE = LoadShaderFromConst(XYZ_NORMAL_DIFFUSE_FRAG);
 
-	mVertShaderModule_XYZ_NORMAL_DIFFUSE_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX1_VERT);
-	mFragShaderModule_XYZ_NORMAL_DIFFUSE_TEX1 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX1_FRAG);
+	mVertShaderModule_XYZ_NORMAL_DIFFUSE_TEX1 = LoadShaderFromConst(XYZ_NORMAL_DIFFUSE_TEX1_VERT);
+	mFragShaderModule_XYZ_NORMAL_DIFFUSE_TEX1 = LoadShaderFromConst(XYZ_NORMAL_DIFFUSE_TEX1_FRAG);
 
-	mVertShaderModule_XYZ_NORMAL_DIFFUSE_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX2_VERT);
-	mFragShaderModule_XYZ_NORMAL_DIFFUSE_TEX2 = LoadShaderFromConst(VERTEX_BUFFER_XYZ_NORMAL_DIFFUSE_TEX2_FRAG);
+	mVertShaderModule_XYZ_NORMAL_DIFFUSE_TEX2 = LoadShaderFromConst(XYZ_NORMAL_DIFFUSE_TEX2_VERT);
+	mFragShaderModule_XYZ_NORMAL_DIFFUSE_TEX2 = LoadShaderFromConst(XYZ_NORMAL_DIFFUSE_TEX2_FRAG);
 
 	mFragShaderModule_Passthrough = LoadShaderFromConst(PIXEL_PASSTHROUGH_FRAG);
 
@@ -724,6 +761,45 @@ void CDevice9::StopRecordingCommands()
 	mQueue.submit(1, &submitInfo, mDrawFences[mFrameIndex].get());
 
 	mIsRecording = false;
+}
+
+void CDevice9::BeginRecordingUtilityCommands()
+{
+	if (mIsRecordingUtility)
+	{
+		return;
+	}
+
+	mUtilityIndex = (mUtilityIndex++) % mUtilityCommandBuffers.size();
+
+	mDevice->waitForFences(1, &mUtilityFences[mUtilityIndex].get(), VK_TRUE, UINT64_MAX);
+	mDevice->resetFences(1, &mUtilityFences[mUtilityIndex].get());
+
+	mCurrentUtilityCommandBuffer = mUtilityCommandBuffers[mUtilityIndex].get();
+
+	vk::CommandBufferBeginInfo beginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+	mCurrentUtilityCommandBuffer.begin(&beginInfo);
+
+	mIsRecordingUtility = true;
+}
+
+void CDevice9::StopRecordingUtilityCommands()
+{
+	if (!mIsRecordingUtility)
+	{
+		return;
+	}
+
+	mCurrentUtilityCommandBuffer.end();
+
+	vk::PipelineStageFlags pipelineFlag[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput }; //eAllCommands
+	vk::SubmitInfo submitInfo;
+	submitInfo.pWaitDstStageMask = pipelineFlag;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &mCurrentUtilityCommandBuffer;
+	mQueue.submit(1, &submitInfo, mUtilityFences[mUtilityIndex].get());
+
+	mIsRecordingUtility = false;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::Clear(DWORD Count, const D3DRECT *pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
@@ -1669,7 +1745,9 @@ HRESULT STDMETHODCALLTYPE CDevice9::LightEnable(DWORD LightIndex, BOOL bEnable)
 	}
 	else
 	{
-		//BeginRecordingCommands();
+		BeginRecordingCommands();
+
+		mCurrentDrawCommandBuffer.updateBuffer(mLightEnableBuffer.get(), 0, sizeof(BOOL), &bEnable);
 
 		mInternalDeviceState.LightEnable(LightIndex, bEnable);
 	}
@@ -2127,9 +2205,35 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, co
 	{
 		BeginRecordingCommands();
 
-		mCurrentDrawCommandBuffer.updateBuffer(mTransformationBuffer.get(), State * sizeof(D3DMATRIX), sizeof(D3DMATRIX), pMatrix);
+		if (pMatrix)
+		{
+			mCurrentDrawCommandBuffer.updateBuffer(mTransformationBuffer.get(), State * sizeof(D3DMATRIX), sizeof(D3DMATRIX), pMatrix);
+			mInternalDeviceState.SetTransform(State, pMatrix);
+		}
+		else
+		{
+			//For d3d9 NULL really means identity so send that instead.
+			const D3DMATRIX identity = { 1, 0, 0, 0,
+										 0, 1, 0, 0,
+										 0, 0, 1, 0,
+										 0, 0, 0, 1 };
+			mCurrentDrawCommandBuffer.updateBuffer(mTransformationBuffer.get(), State * sizeof(D3DMATRIX), sizeof(D3DMATRIX), &identity);
+			mInternalDeviceState.SetTransform(State, &identity);
+		}
 
-		mInternalDeviceState.SetTransform(State, pMatrix);
+		//Update mvp matrix
+		//TODO: find out if 0 and 1 are really un-used or just undocumented.
+		//TODO: limit matrix multiply to when needs to happen. (Unless branch cost more than savings.)
+		const D3DMATRIX mvp = 
+			mInternalDeviceState.mDeviceState.mTransform[D3DTS_PROJECTION] * 
+			mInternalDeviceState.mDeviceState.mTransform[D3DTS_VIEW] * 
+			mInternalDeviceState.mDeviceState.mTransform[D3DTS_WORLD];
+		mCurrentDrawCommandBuffer.updateBuffer(mTransformationBuffer.get(), 0, sizeof(D3DMATRIX), &mvp);
+
+		const D3DMATRIX mv =
+			mInternalDeviceState.mDeviceState.mTransform[D3DTS_VIEW] *
+			mInternalDeviceState.mDeviceState.mTransform[D3DTS_WORLD];
+		mCurrentDrawCommandBuffer.updateBuffer(mTransformationBuffer.get(), sizeof(D3DMATRIX), sizeof(D3DMATRIX), &mv);
 	}
 
 	return S_OK;

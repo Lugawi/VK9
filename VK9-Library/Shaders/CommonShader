@@ -1,0 +1,351 @@
+/*
+Copyright(c) 2019 Christopher Joseph Dean Schaefer
+
+This software is provided 'as-is', without any express or implied
+warranty.In no event will the authors be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions :
+
+1. The origin of this software must not be misrepresented; you must not
+claim that you wrote the original software.If you use this software
+in a product, an acknowledgment in the product documentation would be
+appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and must not be
+misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
+*/
+
+#define D3DSHADE_FLAT 1
+#define D3DSHADE_GOURAUD 2
+#define D3DSHADE_PHONG 3
+
+#define D3DLIGHT_POINT 1
+#define D3DLIGHT_SPOT 2
+#define D3DLIGHT_DIRECTIONAL 3
+
+#define D3DTOP_DISABLE 1
+#define D3DTOP_SELECTARG1 2
+#define D3DTOP_SELECTARG2 3
+#define D3DTOP_MODULATE 4
+#define D3DTOP_MODULATE2X 5
+#define D3DTOP_MODULATE4X 6
+#define D3DTOP_ADD 7
+#define D3DTOP_ADDSIGNED 8
+#define D3DTOP_ADDSIGNED2X 9
+#define D3DTOP_SUBTRACT 10
+#define D3DTOP_ADDSMOOTH 11
+#define D3DTOP_BLENDDIFFUSEALPHA 12
+#define D3DTOP_BLENDTEXTUREALPHA 13
+#define D3DTOP_BLENDFACTORALPHA 14
+#define D3DTOP_BLENDTEXTUREALPHAPM 15
+#define D3DTOP_BLENDCURRENTALPHA 16
+#define D3DTOP_PREMODULATE 17
+#define D3DTOP_MODULATEALPHA_ADDCOLOR 18
+#define D3DTOP_MODULATECOLOR_ADDALPHA 19
+#define D3DTOP_MODULATEINVALPHA_ADDCOLOR 20
+#define D3DTOP_MODULATEINVCOLOR_ADDALPHA 21
+#define D3DTOP_BUMPENVMAP 22
+#define D3DTOP_BUMPENVMAPLUMINANCE 23
+#define D3DTOP_DOTPRODUCT3 24
+#define D3DTOP_MULTIPLYADD 25
+#define D3DTOP_LERP 26
+
+#define D3DTA_SELECTMASK        0x0000000f  // mask for arg selector
+#define D3DTA_DIFFUSE           0x00000000  // select diffuse color (read only)
+#define D3DTA_CURRENT           0x00000001  // select stage destination register (read/write)
+#define D3DTA_TEXTURE           0x00000002  // select texture color (read only)
+#define D3DTA_TFACTOR           0x00000003  // select D3DRS_TEXTUREFACTOR (read only)
+#define D3DTA_SPECULAR          0x00000004  // select specular color (read only)
+#define D3DTA_TEMP              0x00000005  // select temporary register color (read/write)
+#define D3DTA_CONSTANT          0x00000006  // select texture stage constant
+#define D3DTA_COMPLEMENT        0x00000010  // take 1.0 - x (read modifier)
+#define D3DTA_ALPHAREPLICATE    0x00000020  // replicate alpha to color components (read modifier)
+
+#define D3DTTFF_DISABLE 0     // texture coordinates are passed directly
+#define D3DTTFF_COUNT1 1      // rasterizer should expect 1-D texture coords
+#define D3DTTFF_COUNT2 2      // rasterizer should expect 2-D texture coords
+#define D3DTTFF_COUNT3 3      // rasterizer should expect 3-D texture coords
+#define D3DTTFF_COUNT4 4      // rasterizer should expect 4-D texture coords
+#define D3DTTFF_PROJECTED 256 // texcoords to be divided by COUNTth element
+
+#define D3DTSS_TCI_PASSTHRU                             0x00000000
+#define D3DTSS_TCI_CAMERASPACENORMAL                    0x00010000
+#define D3DTSS_TCI_CAMERASPACEPOSITION                  0x00020000
+#define D3DTSS_TCI_CAMERASPACEREFLECTIONVECTOR          0x00030000
+#define D3DTSS_TCI_SPHEREMAP                            0x00040000
+
+#define D3DZB_FALSE 0
+#define D3DZB_TRUE 1 // Z buffering
+#define D3DZB_USEW 2 // W buffering
+
+#define D3DFILL_POINT 1
+#define D3DFILL_WIREFRAME 2
+#define D3DFILL_SOLID 3
+
+#define D3DBLEND_ZERO 1
+#define D3DBLEND_ONE 2
+#define D3DBLEND_SRCCOLOR 3
+#define D3DBLEND_INVSRCCOLOR 4
+#define D3DBLEND_SRCALPHA 5
+#define D3DBLEND_INVSRCALPHA 6
+#define D3DBLEND_DESTALPHA 7
+#define D3DBLEND_INVDESTALPHA 8
+#define D3DBLEND_DESTCOLOR 9
+#define D3DBLEND_INVDESTCOLOR 10
+#define D3DBLEND_SRCALPHASAT 11
+#define D3DBLEND_BOTHSRCALPHA 12
+#define D3DBLEND_BOTHINVSRCALPHA 13
+#define D3DBLEND_BLENDFACTOR 14
+#define D3DBLEND_INVBLENDFACTOR 15
+#define D3DBLEND_SRCCOLOR2 16
+#define D3DBLEND_INVSRCCOLOR2 17
+
+#define D3DCULL_NONE 1
+#define D3DCULL_CW 2
+#define D3DCULL_CCW 3
+
+#define D3DCMP_NEVER 1
+#define D3DCMP_LESS 2
+#define D3DCMP_EQUAL 3
+#define D3DCMP_LESSEQUAL 4
+#define D3DCMP_GREATER 5
+#define D3DCMP_NOTEQUAL 6
+#define D3DCMP_GREATEREQUAL 7
+#define D3DCMP_ALWAYS 8
+
+#define D3DCMP_NEVER 1
+#define D3DCMP_LESS 2
+#define D3DCMP_EQUAL 3
+#define D3DCMP_LESSEQUAL 4
+#define D3DCMP_GREATER 5
+#define D3DCMP_NOTEQUAL 6
+#define D3DCMP_GREATEREQUAL 7
+#define D3DCMP_ALWAYS 8
+
+#define D3DFOG_NONE 0
+#define D3DFOG_EXP 1
+#define D3DFOG_EXP2 2
+#define D3DFOG_LINEAR 3
+
+#define D3DSTENCILOP_KEEP 1
+#define D3DSTENCILOP_ZERO 2
+#define D3DSTENCILOP_REPLACE 3
+#define D3DSTENCILOP_INCRSAT 4
+#define D3DSTENCILOP_DECRSAT 5
+#define D3DSTENCILOP_INVERT 6
+#define D3DSTENCILOP_INCR 7
+#define D3DSTENCILOP_DECR 8
+
+#define D3DMCS_MATERIAL 0
+#define D3DMCS_COLOR1 1
+#define D3DMCS_COLOR2 2
+
+#define D3DVBF_DISABLE 0
+#define D3DVBF_1WEIGHTS 1
+#define D3DVBF_2WEIGHTS 2
+#define D3DVBF_3WEIGHTS 3
+#define D3DVBF_TWEENING 255
+#define D3DVBF_0WEIGHTS 256
+
+#define D3DPATCHEDGE_DISCRETE 0
+#define D3DPATCHEDGE_CONTINUOUS 1
+
+#define D3DDMT_ENABLE 0
+#define D3DDMT_DISABLE 1
+
+#define D3DBLENDOP_ADD 1
+#define D3DBLENDOP_SUBTRACT 2
+#define D3DBLENDOP_REVSUBTRACT 3
+#define D3DBLENDOP_MIN 4
+#define D3DBLENDOP_MAX 5
+
+#define D3DDEGREE_LINEAR 1
+#define D3DDEGREE_QUADRATIC 2
+#define D3DDEGREE_CUBIC 3
+#define D3DDEGREE_QUINTIC 5
+
+#define PI 3.14
+
+#define D3DTS_VIEW 2
+#define D3DTS_PROJECTION 3
+#define D3DTS_TEXTURE0 16
+#define D3DTS_TEXTURE1 17
+#define D3DTS_TEXTURE2 18
+#define D3DTS_TEXTURE3 19
+#define D3DTS_TEXTURE4 20
+#define D3DTS_TEXTURE5 21
+#define D3DTS_TEXTURE6 22
+#define D3DTS_TEXTURE7 23
+
+#define D3DTS_WORLD	256
+
+#define D3DTS_MVP 0
+#define D3DTS_MV 1
+
+struct RenderState
+{
+	//Render State
+	uint zEnable;
+	uint fillMode;
+	uint shadeMode;
+	uint zWriteEnable;
+	uint alphaTestEnable;
+	uint lastPixel;
+	uint sourceBlend;
+	uint destinationBlend;
+	uint cullMode;
+	uint zFunction;
+	uint alphaReference;
+	uint alphaFunction;
+	uint ditherEnable;
+	uint alphaBlendEnable;
+	uint fogEnable;
+	uint specularEnable;
+	uint fogColor;
+	uint fogTableMode;
+	float fogStart;
+	float fogEnd;
+	float fogDensity;
+	uint rangeFogEnable;
+	uint stencilEnable;
+	uint stencilFail;
+	uint stencilZFail;
+	uint stencilPass;
+	uint stencilFunction;
+	uint stencilReference;
+	uint stencilMask;
+	uint stencilWriteMask;
+	uint textureFactor;
+	uint wrap0;
+	uint wrap1;
+	uint wrap2;
+	uint wrap3;
+	uint wrap4;
+	uint wrap5;
+	uint wrap6;
+	uint wrap7;
+	uint clipping;
+	uint lighting;
+	uint ambient;
+	uint fogVertexMode;
+	uint colorVertex;
+	uint localViewer;
+	uint normalizeNormals;
+	uint diffuseMaterialSource;
+	uint specularMaterialSource;
+	uint ambientMaterialSource;
+	uint emissiveMaterialSource;
+	uint vertexBlend;
+	uint clipPlaneEnable;
+	float pointSize;
+	float pointSizeMinimum;
+	uint pointSpriteEnable;
+	uint pointScaleEnable;
+	float pointScaleA;
+	float pointScaleB;
+	float pointScaleC;
+	uint multisampleAntiAlias;
+	uint multisampleMask;
+	uint patchEdgeStyle;
+	uint debugMonitorToken;
+	float pointSizeMaximum;
+	uint indexedVertexBlendEnable;
+	uint colorWriteEnable;	
+	float tweenFactor;
+	uint blendOperation;
+	uint positionDegree;
+	uint normalDegree;
+	uint scissorTestEnable;
+	float slopeScaleDepthBias;
+	uint antiAliasedLineEnable;
+	float minimumTessellationLevel;
+	float maximumTessellationLevel;
+	float adaptivetessX;
+	float adaptivetessY;
+	float adaptivetessZ;
+	float adaptivetessW;
+	uint enableAdaptiveTessellation;
+	uint twoSidedStencilMode;
+	uint ccwStencilFail;
+	uint ccwStencilZFail;
+	uint ccwStencilPass;
+	uint ccwStencilFunction;
+	uint colorWriteEnable1;
+	uint colorWriteEnable2;
+	uint colorWriteEnable3;
+	uint blendFactor;
+	uint srgbWriteEnable;	
+	float depthBias;
+	uint wrap8;
+	uint wrap9;
+	uint wrap10;
+	uint wrap11;
+	uint wrap12;
+	uint wrap13;
+	uint wrap14;
+	uint wrap15;
+	uint separateAlphaBlendEnable;
+	uint sourceBlendAlpha;
+	uint destinationBlendAlpha;
+	uint blendOperationAlpha;	
+};
+
+struct ShaderConstantSlots
+{
+	uint IntegerConstants[64];
+	uint BooleanConstants[16]; 
+	float FloatConstants[1024];
+};
+
+layout(push_constant) uniform ShaderStateBlockPush {
+    uint screenWidth;
+	uint screenHeight;
+	uint textureCount;
+} pushConstants;
+
+layout(std140,binding = 0) uniform RenderStateBlock
+{
+	RenderState renderState;
+};
+
+layout(std140,binding = 4) uniform TransformationBlock
+{
+	mat4 transformations[512];
+};
+
+vec4 Convert(uvec4 rgba)
+{
+	vec4 unpacked;
+
+	unpacked.w = float(rgba.w);
+	unpacked.z = float(rgba.z);
+	unpacked.y = float(rgba.y);
+	unpacked.x = float(rgba.x);
+
+	unpacked.x = unpacked.x / 255;
+	unpacked.y = unpacked.y / 255;
+	unpacked.z = unpacked.z / 255;
+	unpacked.w = unpacked.w / 255;	
+
+	return unpacked;
+}
+
+vec4 Convert(uint rgba)
+{
+	vec4 unpacked = vec4(0);
+
+	unpacked.a = float((rgba & uint(0xff000000)) >> 24);
+	unpacked.b = float((rgba & uint(0x00ff0000)) >> 16);
+	unpacked.g = float((rgba & uint(0x0000ff00)) >> 8);
+	unpacked.r = float((rgba & uint(0x000000ff)) >> 0);
+
+	unpacked.r = unpacked.r / 255;
+	unpacked.g = unpacked.g / 255;
+	unpacked.b = unpacked.b / 255;
+	unpacked.a = unpacked.a / 255;	
+	
+	return unpacked;
+}
