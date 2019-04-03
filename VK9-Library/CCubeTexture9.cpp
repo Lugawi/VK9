@@ -93,7 +93,7 @@ CCubeTexture9::CCubeTexture9(CDevice9* device, UINT EdgeLength, UINT Levels, DWO
 	mDevice->mDevice->bindImageMemory(mImage.get(), mImageDeviceMemory.get(), 0);
 
 	//Now transition this thing from init to shader ready.
-	//SetImageLayout(image.get(), vk::ImageAspectFlagBits::eColor, vk::ImageLayout::ePreinitialized, mSharedState.mImageLayout, vk::AccessFlagBits(), vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eFragmentShader);
+	SetImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	auto const viewInfo = vk::ImageViewCreateInfo()
 		.setImage(mImage.get())
@@ -116,6 +116,63 @@ CCubeTexture9::~CCubeTexture9()
 	}
 
 
+}
+
+void CCubeTexture9::SetImageLayout(vk::ImageLayout newLayout)
+{
+	mDevice->BeginRecordingUtilityCommands();
+	{
+		const vk::PipelineStageFlags src_stages = ((mImageLayout == vk::ImageLayout::eTransferSrcOptimal || mImageLayout == vk::ImageLayout::eTransferDstOptimal) ? vk::PipelineStageFlagBits::eTransfer : vk::PipelineStageFlagBits::eTopOfPipe);
+		const vk::PipelineStageFlags dest_stages = ((newLayout == vk::ImageLayout::eTransferSrcOptimal || newLayout == vk::ImageLayout::eTransferDstOptimal) ? vk::PipelineStageFlagBits::eTransfer : vk::PipelineStageFlagBits::eFragmentShader);
+
+		auto DstAccessMask = [](vk::ImageLayout const &layout)
+		{
+			vk::AccessFlags flags;
+
+			switch (layout) {
+			case vk::ImageLayout::eTransferDstOptimal:
+				// Make sure anything that was copying from this image has completed
+				flags = vk::AccessFlagBits::eTransferWrite;
+				break;
+			case vk::ImageLayout::eColorAttachmentOptimal:
+				flags = vk::AccessFlagBits::eColorAttachmentWrite;
+				break;
+			case vk::ImageLayout::eDepthStencilAttachmentOptimal:
+				flags = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+				break;
+			case vk::ImageLayout::eShaderReadOnlyOptimal:
+				// Make sure any Copy or CPU writes to image are flushed
+				flags = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eInputAttachmentRead;
+				break;
+			case vk::ImageLayout::eTransferSrcOptimal:
+				flags = vk::AccessFlagBits::eTransferRead;
+				break;
+			case vk::ImageLayout::ePresentSrcKHR:
+				flags = vk::AccessFlagBits::eMemoryRead;
+				break;
+			default:
+				break;
+			}
+
+			return flags;
+		};
+
+		auto const barrier = vk::ImageMemoryBarrier()
+			.setSrcAccessMask(vk::AccessFlagBits())
+			.setDstAccessMask(DstAccessMask(newLayout))
+			.setOldLayout(mImageLayout)
+			.setNewLayout(newLayout)
+			.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+			.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+			.setImage(mImage.get())
+			.setSubresourceRange(vk::ImageSubresourceRange(((mUsage == D3DUSAGE_DEPTHSTENCIL) ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor), 0, mLevels, 0, 6));
+
+		mDevice->mCurrentUtilityCommandBuffer.pipelineBarrier(src_stages, dest_stages, vk::DependencyFlagBits(), 0, nullptr, 0, nullptr, 1, &barrier);
+
+	}
+	mDevice->StopRecordingUtilityCommands();
+
+	mImageLayout = newLayout;
 }
 
 ULONG CCubeTexture9::PrivateAddRef(void)

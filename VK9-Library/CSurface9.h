@@ -29,6 +29,7 @@ class CTexture9;
 class CCubeTexture9;
 
 vk::Format ConvertFormat(D3DFORMAT format) noexcept;
+size_t SizeOf(vk::Format format) noexcept;
 
 class CSurface9 : public IDirect3DSurface9
 {
@@ -69,10 +70,16 @@ public:
 	vk::ImageLayout mImageLayout{ vk::ImageLayout::eUndefined };
 	vk::MemoryAllocateInfo mImageMemoryAllocateInfo;
 
+	vk::UniqueBuffer mStagingBuffer;
+	vk::UniqueDeviceMemory mStagingBufferMemory;
+
 	//Misc
 	uint32_t mMipIndex = 0;
 	uint32_t mTargetLayer = 0;
+	void* mData = nullptr;
 
+	//Helper Functions
+	void SetImageLayout(vk::ImageLayout newLayout);
 private:
 	CDevice9* mDevice = nullptr;
 public:

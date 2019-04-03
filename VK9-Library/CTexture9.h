@@ -65,6 +65,8 @@ public:
 
 	std::vector<CSurface9*> mSurfaces;
 
+	//Helper Functions
+	void SetImageLayout(vk::ImageLayout newLayout);
 public:
 	//IUnknown
 	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid,void  **ppv);
