@@ -740,6 +740,7 @@ void CDevice9::BeginRecordingCommands()
 	mIsRecording = true;
 
 	mInternalDeviceState.mDeviceState.mCapturedAnyStreamSource = true; //Mark vertex streams as dirty so next draw will reset them.
+	mInternalDeviceState.mDeviceState.mCapturedIndexBuffer = true; //Mark index as dirty so next draw will reset it.
 }
 
 void CDevice9::StopRecordingCommands()
@@ -823,10 +824,34 @@ void CDevice9::BeginDraw()
 			if (streamSource.vertexBuffer)
 			{
 				vertexBuffers.push_back(streamSource.vertexBuffer->mCurrentVertexBuffer);
-			}		
+			}
 		}
 
 		mCurrentDrawCommandBuffer.bindVertexBuffers(0, vertexBuffers.size(), vertexBuffers.data(), &offsetInBytes);
+
+		mInternalDeviceState.mDeviceState.mCapturedAnyStreamSource = false;
+	}
+
+	//Check to see if the index buffer has been changed and if so bind the current buffer if not null.
+	if (mInternalDeviceState.mDeviceState.mCapturedIndexBuffer)
+	{
+		if (mInternalDeviceState.mDeviceState.mIndexBuffer)
+		{
+			switch (mInternalDeviceState.mDeviceState.mIndexBuffer->mFormat)
+			{
+			case D3DFMT_INDEX16:
+				mCurrentDrawCommandBuffer.bindIndexBuffer(mInternalDeviceState.mDeviceState.mIndexBuffer->mCurrentIndexBuffer, 0, vk::IndexType::eUint16);
+				break;
+			case D3DFMT_INDEX32:
+				mCurrentDrawCommandBuffer.bindIndexBuffer(mInternalDeviceState.mDeviceState.mIndexBuffer->mCurrentIndexBuffer, 0, vk::IndexType::eUint32);
+				break;
+			default:
+				Log(warning) << "CDevice9::BeginDraw unknown index format! - " << mInternalDeviceState.mDeviceState.mIndexBuffer->mFormat << std::endl;
+				break;
+			}	
+		}
+
+		mInternalDeviceState.mDeviceState.mCapturedIndexBuffer = false;
 	}
 }
 
@@ -983,8 +1008,6 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateIndexBuffer(UINT Length, DWORD Usage, 
 	HRESULT result = S_OK;
 
 	CIndexBuffer9* obj = new CIndexBuffer9(this, Length, Usage, Format, Pool, pSharedHandle);
-
-	obj->Init();
 
 	(*ppIndexBuffer) = (IDirect3DIndexBuffer9*)obj;
 
@@ -2282,9 +2305,9 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, co
 		//Update mvp matrix
 		//TODO: find out if 0 and 1 are really un-used or just undocumented.
 		//TODO: limit matrix multiply to when needs to happen. (Unless branch cost more than savings.)
-		const D3DMATRIX mvp = 
-			mInternalDeviceState.mDeviceState.mTransform[D3DTS_PROJECTION] * 
-			mInternalDeviceState.mDeviceState.mTransform[D3DTS_VIEW] * 
+		const D3DMATRIX mvp =
+			mInternalDeviceState.mDeviceState.mTransform[D3DTS_PROJECTION] *
+			mInternalDeviceState.mDeviceState.mTransform[D3DTS_VIEW] *
 			mInternalDeviceState.mDeviceState.mTransform[D3DTS_WORLD];
 		mCurrentDrawCommandBuffer.updateBuffer(mTransformationBuffer.get(), 0, sizeof(D3DMATRIX), &mvp);
 

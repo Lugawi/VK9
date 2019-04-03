@@ -32,47 +32,47 @@ public:
 	CIndexBuffer9(CDevice9* device, UINT Length, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, HANDLE* pSharedHandle);
 	~CIndexBuffer9();
 
-	void Init();
+	//Reference Counting
+	ULONG mReferenceCount = 1;
+	ULONG mPrivateReferenceCount = 0;
 
-	CDevice9* mDevice = nullptr;
+	ULONG PrivateAddRef(void);
+	ULONG PrivateRelease(void);
+
+	//Buffers (Staging and Index)
+	std::vector<vk::UniqueBuffer> mStagingBuffers;
+	std::vector<vk::UniqueDeviceMemory> mStagingBufferMemories;
+
+	std::vector<vk::UniqueBuffer> mIndexBuffers;
+	std::vector<vk::UniqueDeviceMemory> mIndexBufferMemories;
+
+	size_t mLastFrameIndex = 0;
+	size_t mIndex = 0;
+
+	vk::Buffer mCurrentStagingBuffer;
+	vk::DeviceMemory mCurrentStagingBufferMemory;
+
+	vk::Buffer mCurrentIndexBuffer;
+	vk::DeviceMemory mCurrentIndexBufferMemory;
+
+	//D3D9 State
 	UINT mLength;
 	DWORD mUsage;
 	D3DFORMAT mFormat;
 	D3DPOOL mPool;
 	HANDLE* mSharedHandle;
 
-	ULONG mReferenceCount = 1;
-	ULONG mPrivateReferenceCount = 0;
-
-	ULONG PrivateAddRef(void)
-	{
-		return InterlockedIncrement(&mPrivateReferenceCount);
-	}
-
-	ULONG PrivateRelease(void)
-	{
-		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
-
-		if (ref == 0 && mReferenceCount == 0)
-		{
-			delete this;
-		}
-
-		return ref;
-	}
-
-	int32_t mSize;	
-	int32_t mCapacity;
-	bool mIsDirty;
 	uint32_t mLockCount;
+	bool mIsDirty;
+	UINT mOffsetToLock = 0;
+	UINT mSizeToLock = 0;
 
-	uint32_t mFrameBit = 0;
-	size_t mIndex = 0;
-	size_t mLastIndex = 0;
-	std::vector<size_t> mIds;
+	//Helper Functions
+	void AddStagingBuffer();
+	void AddIndexBuffer();
 
-	bool mIsUsed = false; //Only used for temp buffers.
-
+private: 
+	CDevice9* mDevice = nullptr;
 public:
 	//IUnknown
 	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid,void  **ppv);

@@ -31,25 +31,67 @@ CIndexBuffer9::CIndexBuffer9(CDevice9* device, UINT Length, DWORD Usage, D3DFORM
 	mFormat(Format),
 	mPool(Pool),
 	mSharedHandle(pSharedHandle),
-	mCapacity(0),
 	mIsDirty(true),
-	mLockCount(0),
-	mSize(0)
+	mLockCount(0)
 {
-	mSize = mLength / sizeof(float);
+	AddStagingBuffer();
+	AddIndexBuffer();
 }
 
 CIndexBuffer9::~CIndexBuffer9()
 {
-	for (size_t id : mIds)
-	{
 
-	}
 }
 
-void CIndexBuffer9::Init()
+ULONG CIndexBuffer9::PrivateAddRef(void)
 {
+	return InterlockedIncrement(&mPrivateReferenceCount);
+}
 
+ULONG CIndexBuffer9::PrivateRelease(void)
+{
+	ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
+
+	if (ref == 0 && mReferenceCount == 0)
+	{
+		delete this;
+	}
+
+	return ref;
+}
+
+void CIndexBuffer9::AddStagingBuffer()
+{
+	auto const bufferInfo = vk::BufferCreateInfo().setSize(mLength + 16).setUsage(vk::BufferUsageFlagBits::eTransferSrc);
+
+	mStagingBuffers.push_back(mDevice->mDevice->createBufferUnique(bufferInfo));
+
+	vk::MemoryRequirements mem_reqs;
+	mDevice->mDevice->getBufferMemoryRequirements(mStagingBuffers[mStagingBuffers.size() - 1].get(), &mem_reqs);
+
+	auto mem_alloc = vk::MemoryAllocateInfo().setAllocationSize(mem_reqs.size).setMemoryTypeIndex(0);
+	mDevice->FindMemoryTypeFromProperties(mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, &mem_alloc.memoryTypeIndex);
+
+	mStagingBufferMemories.push_back(mDevice->mDevice->allocateMemoryUnique(mem_alloc));
+
+	mDevice->mDevice->bindBufferMemory(mStagingBuffers[mStagingBuffers.size() - 1].get(), mStagingBufferMemories[mStagingBufferMemories.size() - 1].get(), 0);
+}
+
+void CIndexBuffer9::AddIndexBuffer()
+{
+	auto const bufferInfo = vk::BufferCreateInfo().setSize(mLength + 16).setUsage(vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst);
+
+	mIndexBuffers.push_back(mDevice->mDevice->createBufferUnique(bufferInfo));
+
+	vk::MemoryRequirements mem_reqs;
+	mDevice->mDevice->getBufferMemoryRequirements(mIndexBuffers[mIndexBuffers.size() - 1].get(), &mem_reqs);
+
+	auto mem_alloc = vk::MemoryAllocateInfo().setAllocationSize(mem_reqs.size).setMemoryTypeIndex(0);
+	mDevice->FindMemoryTypeFromProperties(mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, &mem_alloc.memoryTypeIndex);
+
+	mIndexBufferMemories.push_back(mDevice->mDevice->allocateMemoryUnique(mem_alloc));
+
+	mDevice->mDevice->bindBufferMemory(mIndexBuffers[mIndexBuffers.size() - 1].get(), mIndexBufferMemories[mIndexBufferMemories.size() - 1].get(), 0);
 }
 
 ULONG STDMETHODCALLTYPE CIndexBuffer9::AddRef(void)
@@ -174,11 +216,13 @@ HRESULT STDMETHODCALLTYPE CIndexBuffer9::SetPrivateData(REFGUID refguid, const v
 
 HRESULT STDMETHODCALLTYPE CIndexBuffer9::GetDesc(D3DINDEXBUFFER_DESC* pDesc)
 {
-	//TODO: Implement.
+	pDesc->Format = mFormat;
+	pDesc->Type = D3DRTYPE_INDEXBUFFER;
+	pDesc->Usage = mUsage;
+	pDesc->Pool = mPool;
+	pDesc->Size = mLength;
 
-	Log(warning) << "CIndexBuffer9::GetDesc is not implemented!" << std::endl;
-
-	return S_OK;	
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CIndexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLock, VOID** ppbData, DWORD Flags)
@@ -193,36 +237,50 @@ HRESULT STDMETHODCALLTYPE CIndexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLock
 		}
 	}
 
-	//if (mFrameBit != mCommandStreamManager->mFrameBit)
-	//{
-	//	mIndex = 0;
-	//}
-	//else
-	//{
-	//	if ((Flags & D3DLOCK_NOOVERWRITE) != D3DLOCK_NOOVERWRITE && (Flags & D3DLOCK_READONLY) != D3DLOCK_READONLY)
-	//	{
-	//		mLastIndex = mIndex;
-	//		mIndex++;
-	//	}
-	//}
+	mOffsetToLock = OffsetToLock;
+	mSizeToLock = SizeToLock;
 
-	//if (mIndex > mIds.size() - 1)
-	//{
-	//	Init();
-	//}
-	//else
-	//{
-	//	mId = mIds[mIndex];
-	//}
+	if (mLastFrameIndex != mDevice->mFrameIndex)
+	{
+		mIndex = 0;
+		mLastFrameIndex = mDevice->mFrameIndex;
+	}
+	else
+	{
+		if ((Flags & D3DLOCK_NOOVERWRITE) != D3DLOCK_NOOVERWRITE && (Flags & D3DLOCK_READONLY) != D3DLOCK_READONLY)
+		{
+			//mLastIndex = mIndex;
+			mIndex++;
+		}
+	}
 
+	if (mIndex > mStagingBuffers.size() - 1)
+	{
+		AddStagingBuffer();
+		AddIndexBuffer();
+	}
 
+	mCurrentStagingBuffer = mStagingBuffers[mIndex].get();
+	mCurrentStagingBufferMemory = mStagingBufferMemories[mIndex].get();
+
+	mCurrentIndexBuffer = mIndexBuffers[mIndex].get();
+	mCurrentIndexBufferMemory = mIndexBufferMemories[mIndex].get();
+
+	(*ppbData) = mDevice->mDevice->mapMemory(mCurrentStagingBufferMemory, OffsetToLock, VK_WHOLE_SIZE);
 
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CIndexBuffer9::Unlock()
 {
+	mDevice->mDevice->unmapMemory(mCurrentStagingBufferMemory);
 
+	mDevice->BeginRecordingUtilityCommands();
+	{
+		auto const region = vk::BufferCopy().setSize(mLength + 192 + 1024);
+		mDevice->mCurrentUtilityCommandBuffer.copyBuffer(mCurrentStagingBuffer, mCurrentIndexBuffer, 1, &region);
+	}
+	mDevice->StopRecordingUtilityCommands();
 
 	InterlockedDecrement(&mLockCount);
 
