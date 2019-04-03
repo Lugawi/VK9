@@ -183,6 +183,70 @@ D3DMATRIX operator* (const D3DMATRIX& m1, const D3DMATRIX& m2)
 	return result;
 }
 
+int32_t ConvertPrimitiveCountToVertexCount(D3DPRIMITIVETYPE primtiveType, int32_t primtiveCount) noexcept
+{
+	int32_t output;
+
+	switch (primtiveType)
+	{
+	case D3DPT_POINTLIST:
+		output = primtiveCount;
+		break;
+	case D3DPT_LINELIST:
+		output = primtiveCount * 2;
+		break;
+	case D3DPT_LINESTRIP:
+		output = primtiveCount + 1;
+		break;
+	case D3DPT_TRIANGLELIST:
+		output = primtiveCount * 3;
+		break;
+	case D3DPT_TRIANGLESTRIP:
+		output = primtiveCount + 2;
+		break;
+	case D3DPT_TRIANGLEFAN:
+		output = primtiveCount + 2;
+		break;
+	default:
+		output = primtiveCount;
+		break;
+	}
+
+	return output;
+}
+
+int32_t ConvertPrimitiveCountToBufferSize(D3DPRIMITIVETYPE primtiveType, int32_t primtiveCount, int32_t vertexStride) noexcept
+{
+	int32_t output;
+
+	switch (primtiveType)
+	{
+	case D3DPT_POINTLIST:
+		output = (primtiveCount) * vertexStride;
+		break;
+	case D3DPT_LINELIST:
+		output = (primtiveCount * 2) * vertexStride;
+		break;
+	case D3DPT_LINESTRIP:
+		output = (primtiveCount + 1) * vertexStride;
+		break;
+	case D3DPT_TRIANGLELIST:
+		output = (primtiveCount * 3) * vertexStride;
+		break;
+	case D3DPT_TRIANGLESTRIP:
+		output = (primtiveCount + 2) * vertexStride;
+		break;
+	case D3DPT_TRIANGLEFAN:
+		output = (primtiveCount + 2) * vertexStride;
+		break;
+	default:
+		output = primtiveCount * vertexStride;
+		break;
+	}
+
+	return output;
+}
+
 CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode)
 	:
 	mC9(c9),
@@ -1149,7 +1213,6 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateVertexShader(const DWORD *pFunction, I
 
 	CVertexShader9* obj = new CVertexShader9(this, pFunction);
 
-
 	//The application is allowed to dispose of the shader data it passes in after this call returns but can request it later so we need to make a copy.
 	obj->mFunction = (DWORD*)malloc(obj->mSize);
 	if (obj->mFunction != nullptr)
@@ -1183,10 +1246,11 @@ HRESULT STDMETHODCALLTYPE CDevice9::DeletePatch(UINT Handle)
 HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitive(D3DPRIMITIVETYPE Type, INT BaseVertexIndex, UINT MinIndex, UINT NumVertices, UINT StartIndex, UINT PrimitiveCount)
 {
 	BeginRecordingCommands();
+
 	BeginDraw();
-
-	Log(warning) << "CDevice9::DrawIndexedPrimitive is not implemented!" << std::endl;
-
+	{
+		mCurrentDrawCommandBuffer.drawIndexed(ConvertPrimitiveCountToVertexCount(Type, PrimitiveCount), 1, StartIndex, BaseVertexIndex, 0);
+	}
 	StopDraw();
 
 	return S_OK;
@@ -1195,110 +1259,35 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitive(D3DPRIMITIVETYPE Type, 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, const void *pIndexData, D3DFORMAT IndexDataFormat, const void *pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
 	BeginRecordingCommands();
+
+	mCurrentDrawCommandBuffer.updateBuffer(mUpVertexBuffer.get(), 0, ConvertPrimitiveCountToBufferSize(PrimitiveType, PrimitiveCount, VertexStreamZeroStride), pVertexStreamZeroData);
+	mCurrentDrawCommandBuffer.updateBuffer(mUpIndexBuffer.get(), 0, ConvertPrimitiveCountToBufferSize(PrimitiveType, PrimitiveCount, (IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4), pIndexData);
+
 	BeginDraw();
+	{
+		mInternalDeviceState.mDeviceState.mCapturedAnyStreamSource = true; //Mark vertex streams as dirty so next draw will reset them.
+		mInternalDeviceState.mDeviceState.mCapturedIndexBuffer = true;
 
-	mInternalDeviceState.mDeviceState.mCapturedAnyStreamSource = true; //Mark vertex streams as dirty so next draw will reset them.
+		//TODO: check to see if I need a new pipeline. (I probably do because I'm getting a new stride)
 
-	Log(warning) << "CDevice9::DrawIndexedPrimitiveUP is not implemented!" << std::endl;
+		const VkDeviceSize offsetInBytes = 0;
+		mCurrentDrawCommandBuffer.bindVertexBuffers(0, 1, &mUpVertexBuffer.get(), &offsetInBytes);
 
-	////Figure out the current buffer setup.
-	//IDirect3DIndexBuffer9* oldIndexBuffer = nullptr;
+		switch (IndexDataFormat)
+		{
+		case D3DFMT_INDEX16:
+			mCurrentDrawCommandBuffer.bindIndexBuffer(mUpIndexBuffer.get(), 0, vk::IndexType::eUint16);
+			break;
+		case D3DFMT_INDEX32:
+			mCurrentDrawCommandBuffer.bindIndexBuffer(mUpIndexBuffer.get(), 0, vk::IndexType::eUint32);
+			break;
+		default:
+			Log(warning) << "CDevice9::DrawIndexedPrimitiveUP unknown index format! - " << IndexDataFormat << std::endl;
+			break;
+		}
 
-	//GetIndices(&oldIndexBuffer);
-
-	//IDirect3DVertexBuffer9* oldVertexBuffer = nullptr;
-	//UINT oldOffsetInBytes = 0;
-	//UINT oldStride = 0;
-
-	//GetStreamSource(0, &oldVertexBuffer, &oldOffsetInBytes, &oldStride);
-
-	////Setup temp buffers
-	//UINT indexLength = 0;
-	//UINT vertexLength = NumVertices * VertexStreamZeroStride;
-	//DWORD Usage = 0;
-
-	//switch (PrimitiveType)
-	//{
-	//case D3DPT_POINTLIST:
-	//	indexLength = (PrimitiveCount) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
-	//	break;
-	//case D3DPT_LINELIST:
-	//	indexLength = (PrimitiveCount * 2) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
-	//	break;
-	//case D3DPT_LINESTRIP:
-	//	indexLength = (PrimitiveCount + 1) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
-	//	break;
-	//case D3DPT_TRIANGLELIST:
-	//	indexLength = (PrimitiveCount * 3) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
-	//	break;
-	//case D3DPT_TRIANGLESTRIP:
-	//	indexLength = (PrimitiveCount + 2) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
-	//	break;
-	//case D3DPT_TRIANGLEFAN:
-	//	indexLength = (PrimitiveCount + 2) * ((IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4);
-	//	break;
-	//default:
-	//	//indexLength = PrimitiveCount;
-	//	break;
-	//}
-
-	//CIndexBuffer9* indexBuffer = nullptr;
-	//CVertexBuffer9* vertexBuffer = nullptr;
-	//void* buffer = nullptr;
-
-	//for (auto& buffer : mTempIndexBuffers)
-	//{
-	//	if (!buffer->mIsUsed && buffer->mLength >= indexLength)
-	//	{
-	//		indexBuffer = buffer;
-	//		break;
-	//	}
-	//}
-	//if (indexBuffer == nullptr)
-	//{
-	//	CreateIndexBuffer(indexLength, Usage, IndexDataFormat, D3DPOOL_DEFAULT, (IDirect3DIndexBuffer9**)&indexBuffer, nullptr);
-	//	mTempIndexBuffers.push_back(indexBuffer);
-	//}
-
-	//for (auto& buffer : mTempVertexBuffers)
-	//{
-	//	if (!buffer->mIsUsed && buffer->mLength >= vertexLength)
-	//	{
-	//		vertexBuffer = buffer;
-	//		break;
-	//	}
-	//}
-	//if (vertexBuffer == nullptr)
-	//{
-	//	CreateVertexBuffer(vertexLength, Usage, D3DFVF_XYZ, D3DPOOL_DEFAULT, (IDirect3DVertexBuffer9**)&vertexBuffer, nullptr);
-	//	mTempVertexBuffers.push_back(vertexBuffer);
-	//}
-
-	//vertexBuffer->mIsUsed = true;
-	//vertexBuffer->mSize = NumVertices;
-
-
-	//vertexBuffer->Lock(0, 0, (void**)&buffer, 0);
-	//memcpy(buffer, pVertexStreamZeroData, vertexLength);
-	//vertexBuffer->Unlock();
-
-	//indexBuffer->Lock(0, 0, (void**)&buffer, 0);
-	//memcpy(buffer, pIndexData, indexLength);
-	//indexBuffer->Unlock();
-
-	//SetIndices(indexBuffer);
-	//indexBuffer->Release();
-	//SetStreamSource(0, vertexBuffer, 0, VertexStreamZeroStride);
-	//vertexBuffer->Release();
-
-	////Queue draw command
-	////DrawIndexedPrimitive(PrimitiveType, 0, MinVertexIndex, NumVertices, 0, PrimitiveCount);
-
-
-	////Switch the buffers back.
-	//SetIndices(oldIndexBuffer);
-	//SetStreamSource(0, oldVertexBuffer, oldOffsetInBytes, oldStride);
-
+		mCurrentDrawCommandBuffer.drawIndexed(ConvertPrimitiveCountToVertexCount(PrimitiveType, PrimitiveCount), 1, 0, 0, 0);
+	}
 	StopDraw();
 
 	return S_OK;
@@ -1307,10 +1296,11 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE Prim
 HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
 {
 	BeginRecordingCommands();
+
 	BeginDraw();
-
-	Log(warning) << "CDevice9::DrawPrimitive is not implemented!" << std::endl;
-
+	{
+		mCurrentDrawCommandBuffer.draw(ConvertPrimitiveCountToVertexCount(PrimitiveType, PrimitiveCount), 1, StartVertex, 0);
+	}
 	StopDraw();
 
 	return S_OK;
@@ -1319,91 +1309,20 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType
 HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, const void *pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
 	BeginRecordingCommands();
+
+	mCurrentDrawCommandBuffer.updateBuffer(mUpVertexBuffer.get(), 0, ConvertPrimitiveCountToBufferSize(PrimitiveType, PrimitiveCount, VertexStreamZeroStride), pVertexStreamZeroData);
+
 	BeginDraw();
+	{
+		mInternalDeviceState.mDeviceState.mCapturedAnyStreamSource = true; //Mark vertex streams as dirty so next draw will reset them.
 
-	mInternalDeviceState.mDeviceState.mCapturedAnyStreamSource = true; //Mark vertex streams as dirty so next draw will reset them.
+		//TODO: check to see if I need a new pipeline. (I probably do because I'm getting a new stride)
 
-	Log(warning) << "CDevice9::DrawPrimitiveUP is not implemented!" << std::endl;
+		const VkDeviceSize offsetInBytes = 0;
+		mCurrentDrawCommandBuffer.bindVertexBuffers(0, 1, &mUpVertexBuffer.get(), &offsetInBytes);
 
-	////Figure out the current buffer setup.
-	//IDirect3DVertexBuffer9* oldVertexBuffer = nullptr;
-	//UINT oldOffsetInBytes = 0;
-	//UINT oldStride = 0;
-
-	//GetStreamSource(0, &oldVertexBuffer, &oldOffsetInBytes, &oldStride);
-
-	////Setup temp buffers
-	//UINT vertexLength = 0;
-	//DWORD Usage = 0;
-	//UINT NumVertices = 0;
-
-	//switch (PrimitiveType)
-	//{
-	//case D3DPT_POINTLIST:
-	//	NumVertices = (PrimitiveCount);
-	//	vertexLength = NumVertices * VertexStreamZeroStride;
-	//	break;
-	//case D3DPT_LINELIST:
-	//	NumVertices = (PrimitiveCount * 2);
-	//	vertexLength = NumVertices * VertexStreamZeroStride;
-	//	break;
-	//case D3DPT_LINESTRIP:
-	//	NumVertices = (PrimitiveCount + 1);
-	//	vertexLength = NumVertices * VertexStreamZeroStride;
-	//	break;
-	//case D3DPT_TRIANGLELIST:
-	//	NumVertices = (PrimitiveCount * 3);
-	//	vertexLength = NumVertices * VertexStreamZeroStride;
-	//	break;
-	//case D3DPT_TRIANGLESTRIP:
-	//	NumVertices = (PrimitiveCount + 2);
-	//	vertexLength = NumVertices * VertexStreamZeroStride;
-	//	break;
-	//case D3DPT_TRIANGLEFAN:
-	//	NumVertices = (PrimitiveCount + 2);
-	//	vertexLength = NumVertices * VertexStreamZeroStride;
-	//	break;
-	//default:
-	//	//NumVertices = PrimitiveCount;
-	//	//vertexLength = NumVertices * VertexStreamZeroStride;
-	//	break;
-	//}
-
-	//CVertexBuffer9* vertexBuffer = nullptr;
-	//void* buffer = nullptr;
-
-	//for (auto& buffer : mTempVertexBuffers)
-	//{
-	//	if (!buffer->mIsUsed && buffer->mLength >= vertexLength)
-	//	{
-	//		vertexBuffer = buffer;
-	//		break;
-	//	}
-	//}
-	//if (vertexBuffer == nullptr)
-	//{
-	//	CreateVertexBuffer(vertexLength, Usage, D3DFVF_XYZ, D3DPOOL_DEFAULT, (IDirect3DVertexBuffer9**)&vertexBuffer, nullptr);
-	//	mTempVertexBuffers.push_back(vertexBuffer);
-	//}
-
-	//vertexBuffer->mIsUsed = true;
-	//vertexBuffer->mSize = NumVertices;
-
-
-	//vertexBuffer->Lock(0, 0, (void**)&buffer, 0);
-	//memcpy(buffer, pVertexStreamZeroData, vertexLength);
-	//vertexBuffer->Unlock();
-
-	//SetStreamSource(0, vertexBuffer, 0, VertexStreamZeroStride);
-	////vertexBuffer->Release();
-
-	////Queue draw command
-	////DrawPrimitive(PrimitiveType, 0, PrimitiveCount);
-
-
-	////Switch the buffers back.
-	//SetStreamSource(0, oldVertexBuffer, oldOffsetInBytes, oldStride);
-
+		mCurrentDrawCommandBuffer.draw(ConvertPrimitiveCountToVertexCount(PrimitiveType, PrimitiveCount), 1, 0, 0);
+	}
 	StopDraw();
 
 	return S_OK;
@@ -1412,17 +1331,12 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveTy
 HRESULT STDMETHODCALLTYPE CDevice9::DrawRectPatch(UINT Handle, const float *pNumSegs, const D3DRECTPATCH_INFO *pRectPatchInfo)
 {
 	BeginRecordingCommands();
+
 	BeginDraw();
-
-	//if (!mIsSceneStarted)
-	//{
-	//	this->StartScene();
-	//}
-
-	//TODO: Implement.
-
-	Log(warning) << "CDevice9::DrawRectPatch is not implemented!" << std::endl;
-
+	{
+		//TODO: Implement.
+		Log(warning) << "CDevice9::DrawRectPatch is not implemented!" << std::endl;
+	}
 	StopDraw();
 
 	return S_OK;
@@ -1431,17 +1345,12 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawRectPatch(UINT Handle, const float *pNum
 HRESULT STDMETHODCALLTYPE CDevice9::DrawTriPatch(UINT Handle, const float *pNumSegs, const D3DTRIPATCH_INFO *pTriPatchInfo)
 {
 	BeginRecordingCommands();
+
 	BeginDraw();
-
-	//if (!mIsSceneStarted)
-	//{
-	//	this->StartScene();
-	//}
-
-	//TODO: Implement.
-
-	Log(warning) << "CDevice9::DrawTriPatch is not implemented!" << std::endl;
-
+	{
+		//TODO: Implement.
+		Log(warning) << "CDevice9::DrawTriPatch is not implemented!" << std::endl;
+	}
 	StopDraw();
 
 	return S_OK;

@@ -45,6 +45,8 @@ struct Pair
 };
 
 D3DMATRIX operator* (const D3DMATRIX& m1, const D3DMATRIX& m2);
+int32_t ConvertPrimitiveCountToVertexCount(D3DPRIMITIVETYPE primtiveType, int32_t primtiveCount) noexcept;
+int32_t ConvertPrimitiveCountToBufferSize(D3DPRIMITIVETYPE primtiveType, int32_t primtiveCount, int32_t vertexStride) noexcept;
 
 class CDevice9 : public IDirect3DDevice9Ex
 {	
