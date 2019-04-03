@@ -28,26 +28,30 @@ class CDevice9;
 class CTexture9;
 class CCubeTexture9;
 
+vk::Format ConvertFormat(D3DFORMAT format) noexcept;
+
 class CSurface9 : public IDirect3DSurface9
 {
 private:
 
 public:
-	CSurface9(CDevice9* Device, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DFORMAT Format);
-	CSurface9(CDevice9* Device, D3DPRESENT_PARAMETERS* pPresentationParameters);
-	CSurface9(CDevice9* Device, CTexture9* Texture, UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, HANDLE *pSharedHandle);
-	CSurface9(CDevice9* Device, CCubeTexture9* Texture, UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, HANDLE *pSharedHandle);
-	CSurface9(CDevice9* Device, CTexture9* Texture, UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, HANDLE *pSharedHandle,int32_t filler); //CreateRenderTarget
-	CSurface9(CDevice9* Device, CCubeTexture9* Texture, UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, HANDLE *pSharedHandle, int32_t filler); //CreateRenderTarget
-	CSurface9(CDevice9* Device, CTexture9* Texture, UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, HANDLE *pSharedHandle);
-	CSurface9(CDevice9* Device, CCubeTexture9* Texture, UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, HANDLE *pSharedHandle);
+	CSurface9(CDevice9* Device, CTexture9* Texture, UINT Width, UINT Height, DWORD Usage, UINT Levels, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, BOOL Lockable, D3DPOOL pool, HANDLE *pSharedHandle);
+	CSurface9(CDevice9* Device, CCubeTexture9* Texture, UINT Width, UINT Height, DWORD Usage, UINT Levels, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, BOOL Lockable, D3DPOOL pool, HANDLE *pSharedHandle);
 	~CSurface9();
 
-	CDevice9* mDevice = nullptr;
+	//Reference Counting
+	ULONG mReferenceCount = 1;
+	ULONG mPrivateReferenceCount = 0;
+
+	ULONG PrivateAddRef(void);
+	ULONG PrivateRelease(void);
+
+	//Creation Parameters
 	CTexture9* mTexture = nullptr;
 	CCubeTexture9* mCubeTexture = nullptr;
 	UINT mWidth = 0;
 	UINT mHeight = 0;
+	UINT mLevels = 0;
 	DWORD mUsage = D3DUSAGE_RENDERTARGET;
 	D3DFORMAT mFormat = D3DFMT_UNKNOWN;
 	D3DMULTISAMPLE_TYPE mMultiSample = D3DMULTISAMPLE_NONE;
@@ -57,34 +61,20 @@ public:
 	D3DPOOL mPool = D3DPOOL_DEFAULT;
 	HANDLE* mSharedHandle = nullptr;
 
-	ULONG mReferenceCount = 1;
-	ULONG mPrivateReferenceCount = 0;
+	//Vulkan - Image
+	vk::UniqueImage mImage;
+	vk::UniqueDeviceMemory mImageDeviceMemory;
+	vk::UniqueImageView mImageView;
 
-	ULONG PrivateAddRef(void)
-	{
-		return InterlockedIncrement(&mPrivateReferenceCount);
-	}
+	vk::ImageLayout mImageLayout{ vk::ImageLayout::eUndefined };
+	vk::MemoryAllocateInfo mImageMemoryAllocateInfo;
 
-	ULONG PrivateRelease(void)
-	{
-		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
-
-		if (ref == 0 && mReferenceCount == 0)
-		{
-			delete this;
-		}
-
-		return ref;
-	}
-
+	//Misc
 	uint32_t mMipIndex = 0;
-	uint32_t counter = 0;
-	DWORD mFlags = 0;
 	uint32_t mTargetLayer = 0;
 
-	void Init();
-	void Flush();
-
+private:
+	CDevice9* mDevice = nullptr;
 public:
 	//IUnknown
 	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid,void  **ppv);

@@ -32,20 +32,15 @@ CCubeTexture9::CCubeTexture9(CDevice9* device, UINT EdgeLength, UINT Levels, DWO
 	mFormat(Format),
 	mPool(Pool),
 	mSharedHandle(pSharedHandle),
-	mReferenceCount(1),
-	mResult(vk::Result::eSuccess)
+	mReferenceCount(1)
 {
 	Log(info) << "CCubeTexture9::CCubeTexture9" << std::endl;
-	
 
 	if (!mLevels)
 	{
 		mLevels = (UINT)std::log2(mEdgeLength) + 1;
 	}
 
-	//mLevels = 1; //workaround
-
-	//mSurfaces.reserve(6);
 	for (size_t i = 0; i < 6; i++)
 	{
 		UINT width = mEdgeLength;
@@ -53,7 +48,7 @@ CCubeTexture9::CCubeTexture9(CDevice9* device, UINT EdgeLength, UINT Levels, DWO
 		std::vector<CSurface9*> surfaces;
 		for (size_t j = 0; j < mLevels; j++)
 		{
-			CSurface9* ptr = new CSurface9(mDevice, this, width, height, mLevels, mUsage, mFormat, mPool, mSharedHandle);
+			CSurface9* ptr = new CSurface9(mDevice, this, width, height, mUsage, 1 /*Levels*/, mFormat, D3DMULTISAMPLE_NONE, 0 /*MultisampleQuality*/, false /*Discard*/, false /*Lockable*/, mPool, mSharedHandle);
 
 			ptr->mMipIndex = j;
 			ptr->mTargetLayer = i;
@@ -63,9 +58,49 @@ CCubeTexture9::CCubeTexture9(CDevice9* device, UINT EdgeLength, UINT Levels, DWO
 			width /= 2;
 			height /= 2;
 		}
-		//mSurfaces.push_back(surfaces);
 		mSurfaces[i] = surfaces;
 	}
+
+	const vk::ImageTiling tiling = vk::ImageTiling::eOptimal;
+	const vk::ImageUsageFlags usage = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst;
+	const vk::MemoryPropertyFlags required_props = vk::MemoryPropertyFlagBits::eDeviceLocal;
+
+	const vk::ImageCreateInfo imageCreateInfo = vk::ImageCreateInfo()
+		.setImageType(vk::ImageType::e2D)
+		.setFormat(ConvertFormat(mFormat))
+		.setExtent({ mEdgeLength, mEdgeLength, 1 })
+		.setMipLevels(mLevels)
+		.setArrayLayers(6)
+		.setSamples(vk::SampleCountFlagBits::e1)
+		.setTiling(tiling)
+		.setUsage(usage)
+		.setSharingMode(vk::SharingMode::eExclusive)
+		.setQueueFamilyIndexCount(0)
+		.setPQueueFamilyIndices(nullptr)
+		.setInitialLayout(vk::ImageLayout::ePreinitialized);
+	mImage = mDevice->mDevice->createImageUnique(imageCreateInfo);
+
+	vk::MemoryRequirements memoryRequirements;
+	mDevice->mDevice->getImageMemoryRequirements(mImage.get(), &memoryRequirements);
+
+	mImageMemoryAllocateInfo.setAllocationSize(memoryRequirements.size);
+	mImageMemoryAllocateInfo.setMemoryTypeIndex(0);
+
+	auto pass = mDevice->FindMemoryTypeFromProperties(memoryRequirements.memoryTypeBits, required_props, &mImageMemoryAllocateInfo.memoryTypeIndex);
+
+	mImageDeviceMemory = mDevice->mDevice->allocateMemoryUnique(mImageMemoryAllocateInfo);
+
+	mDevice->mDevice->bindImageMemory(mImage.get(), mImageDeviceMemory.get(), 0);
+
+	//Now transition this thing from init to shader ready.
+	//SetImageLayout(image.get(), vk::ImageAspectFlagBits::eColor, vk::ImageLayout::ePreinitialized, mSharedState.mImageLayout, vk::AccessFlagBits(), vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eFragmentShader);
+
+	auto const viewInfo = vk::ImageViewCreateInfo()
+		.setImage(mImage.get())
+		.setViewType(vk::ImageViewType::e2D)
+		.setFormat(ConvertFormat(mFormat))
+		.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, mLevels, 0, 6));
+	mImageView = mDevice->mDevice->createImageViewUnique(viewInfo);
 }
 
 CCubeTexture9::~CCubeTexture9()
@@ -83,12 +118,21 @@ CCubeTexture9::~CCubeTexture9()
 
 }
 
-void CCubeTexture9::Init()
+ULONG CCubeTexture9::PrivateAddRef(void)
 {
-	//Work-around for games using strange formats that don't support sampling.
-	mFormat = D3DFMT_A8R8G8B8;
+	return InterlockedIncrement(&mPrivateReferenceCount);
+}
 
+ULONG CCubeTexture9::PrivateRelease(void)
+{
+	ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
 
+	if (ref == 0 && mReferenceCount == 0)
+	{
+		delete this;
+	}
+
+	return ref;
 }
 
 ULONG STDMETHODCALLTYPE CCubeTexture9::AddRef(void)
@@ -301,15 +345,4 @@ HRESULT CCubeTexture9::UnlockRect(D3DCUBEMAP_FACES FaceType, UINT Level)
 	//}
 	HRESULT result = mSurfaces[FaceType][Level]->UnlockRect();
 	return result;
-}
-
-void CCubeTexture9::Flush()
-{
-	for (size_t i = 0; i < 6; i++)
-	{
-		for (size_t j = 0; j < mSurfaces[i].size(); j++)
-		{
-			mSurfaces[i][j]->Flush();
-		}
-	}
 }

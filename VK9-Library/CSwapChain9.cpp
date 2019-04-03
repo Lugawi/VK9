@@ -25,18 +25,25 @@ misrepresented as being the original software.
 //#include "PrivateTypes.h"
 
 CSwapChain9::CSwapChain9(CDevice9* Device, D3DPRESENT_PARAMETERS *pPresentationParameters)
-	: mDevice(Device),
-	mPresentationParameters(pPresentationParameters)
+	: mDevice(Device)
 {
 	Log(info) << "CSwapChain9::CSwapChain9" << std::endl;
 
-	if (pPresentationParameters->BackBufferFormat == D3DFMT_A8R8G8B8)
+	if (pPresentationParameters != nullptr)
 	{
-		pPresentationParameters->BackBufferFormat = D3DFMT_X8R8G8B8;
+		if (pPresentationParameters->BackBufferFormat == D3DFMT_UNKNOWN)
+		{
+			pPresentationParameters->BackBufferFormat = D3DFMT_X8R8G8B8;
+		}
+		else if (pPresentationParameters->BackBufferFormat == D3DFMT_A8R8G8B8)
+		{
+			pPresentationParameters->BackBufferFormat = D3DFMT_X8R8G8B8;
+		}
+		memcpy(&mPresentationParameters, pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS));
 	}
-	
-	mBackBuffer = new CSurface9(Device, pPresentationParameters);
-	mFrontBuffer = new CSurface9(Device, pPresentationParameters);
+
+	mBackBuffer = new CSurface9(mDevice, (CTexture9*)nullptr, mPresentationParameters.BackBufferWidth, mPresentationParameters.BackBufferHeight, D3DUSAGE_DEPTHSTENCIL, 1, mPresentationParameters.AutoDepthStencilFormat, mPresentationParameters.MultiSampleType, mPresentationParameters.MultiSampleQuality, false, false, D3DPOOL_DEFAULT, nullptr);
+	mFrontBuffer = new CSurface9(mDevice, (CTexture9*)nullptr, mPresentationParameters.BackBufferWidth, mPresentationParameters.BackBufferHeight, D3DUSAGE_DEPTHSTENCIL, 1, mPresentationParameters.AutoDepthStencilFormat, mPresentationParameters.MultiSampleType, mPresentationParameters.MultiSampleQuality, false, false, D3DPOOL_DEFAULT, nullptr);
 }
 
 CSwapChain9::~CSwapChain9()
@@ -49,8 +56,8 @@ CSwapChain9::~CSwapChain9()
 
 void CSwapChain9::Init()
 {
-	mBackBuffer->Init();
-	mFrontBuffer->Init();
+	//mBackBuffer->Init();
+	//mFrontBuffer->Init();
 }
 
 ULONG STDMETHODCALLTYPE CSwapChain9::AddRef(void)
@@ -131,10 +138,10 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::GetDevice(IDirect3DDevice9** ppDevice)
 
 HRESULT STDMETHODCALLTYPE CSwapChain9::GetDisplayMode(D3DDISPLAYMODE *pMode)
 {
-	pMode->Format = mPresentationParameters->BackBufferFormat;
-	pMode->Height = mPresentationParameters->BackBufferHeight;
-	pMode->Width = mPresentationParameters->BackBufferWidth;
-	pMode->RefreshRate = mPresentationParameters->FullScreen_RefreshRateInHz; //Revsit
+	pMode->Format = mPresentationParameters.BackBufferFormat;
+	pMode->Height = mPresentationParameters.BackBufferHeight;
+	pMode->Width = mPresentationParameters.BackBufferWidth;
+	pMode->RefreshRate = mPresentationParameters.FullScreen_RefreshRateInHz; //Revsit
 
 	return S_OK;
 }
@@ -148,7 +155,7 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::GetFrontBufferData(IDirect3DSurface9 *pDe
 
 HRESULT STDMETHODCALLTYPE CSwapChain9::GetPresentParameters(D3DPRESENT_PARAMETERS *pPresentationParameters)
 {
-	memcpy(pPresentationParameters, mPresentationParameters, sizeof(D3DPRESENT_PARAMETERS)); //Revsit
+	memcpy(pPresentationParameters, &mPresentationParameters, sizeof(D3DPRESENT_PARAMETERS)); //Revsit
 
 	return S_OK;
 }
@@ -187,10 +194,10 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::GetPresentStats(D3DPRESENTSTATS *pPresent
 
 HRESULT STDMETHODCALLTYPE CSwapChain9::GetDisplayModeEx(D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation)
 {
-	pMode->Format = mPresentationParameters->BackBufferFormat;
-	pMode->Height = mPresentationParameters->BackBufferHeight;
-	pMode->Width = mPresentationParameters->BackBufferWidth;
-	pMode->RefreshRate = mPresentationParameters->FullScreen_RefreshRateInHz; //Revsit
+	pMode->Format = mPresentationParameters.BackBufferFormat;
+	pMode->Height = mPresentationParameters.BackBufferHeight;
+	pMode->Width = mPresentationParameters.BackBufferWidth;
+	pMode->RefreshRate = mPresentationParameters.FullScreen_RefreshRateInHz; //Revsit
 
 	(*pRotation) = D3DDISPLAYROTATION_IDENTITY;
 

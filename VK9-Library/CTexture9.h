@@ -33,50 +33,37 @@ public:
 	CTexture9(CDevice9* device,UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, HANDLE *pSharedHandle);
 	~CTexture9();
 
-	void Init();
+	//Reference Counting
+	ULONG mReferenceCount = 1;
+	ULONG mPrivateReferenceCount = 0;
 
+	ULONG PrivateAddRef(void);
+	ULONG PrivateRelease(void);
+
+	//Creation Parameters
 	CDevice9* mDevice = nullptr;
 	UINT mWidth = 0;
 	UINT mHeight = 0;
-	UINT mDepth = 0;
 	UINT mLevels = 0;
 	DWORD mUsage = D3DUSAGE_RENDERTARGET;
 	D3DFORMAT mFormat = D3DFMT_UNKNOWN;
 	D3DPOOL mPool = D3DPOOL_DEFAULT;
 	HANDLE* mSharedHandle = nullptr;
 
-	ULONG mReferenceCount = 1;
-	ULONG mPrivateReferenceCount = 0;
+	//Vulkan - Image
+	vk::UniqueImage mImage;
+	vk::UniqueDeviceMemory mImageDeviceMemory;
+	vk::UniqueImageView mImageView;
 
-	ULONG PrivateAddRef(void)
-	{
-		return InterlockedIncrement(&mPrivateReferenceCount);
-	}
+	vk::ImageLayout mImageLayout{ vk::ImageLayout::eUndefined };
+	vk::MemoryAllocateInfo mImageMemoryAllocateInfo;
 
-	ULONG PrivateRelease(void)
-	{
-		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
-
-		if (ref == 0 && mReferenceCount == 0)
-		{
-			delete this;
-		}
-
-		return ref;
-	}
-
+	//Misc
 	D3DTEXTUREFILTERTYPE mMipFilter = D3DTEXF_NONE;
 	D3DTEXTUREFILTERTYPE mMinFilter = D3DTEXF_NONE;
 	D3DTEXTUREFILTERTYPE mMagFilter = D3DTEXF_NONE;
 
-	uint32_t mFrameBit = 0;
-	size_t mIndex = 0;
-	size_t mLastIndex = 0;
-	std::vector<size_t> mIds;
-
 	std::vector<CSurface9*> mSurfaces;
-
-	void Flush();
 
 public:
 	//IUnknown

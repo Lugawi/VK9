@@ -50,8 +50,6 @@ CTexture9::CTexture9(CDevice9* device, UINT Width, UINT Height, UINT Levels, DWO
 		mLevels = (UINT)std::log2( std::max(mWidth, mHeight) ) + 1;
 	}
 
-	//mLevels = 1; //workaround
-
 	if (mUsage == 0)
 	{
 		mUsage = D3DUSAGE_RENDERTARGET;
@@ -61,8 +59,7 @@ CTexture9::CTexture9(CDevice9* device, UINT Width, UINT Height, UINT Levels, DWO
 	UINT width = mWidth, height = mHeight;
 	for (size_t i = 0; i < mLevels; i++)
 	{
-		CSurface9* ptr = new CSurface9(mDevice, this, width, height, mLevels, mUsage, mFormat, mPool, mSharedHandle);
-
+		CSurface9* ptr = new CSurface9(mDevice, this, width, height, mUsage, 1 /*Levels*/, mFormat, D3DMULTISAMPLE_NONE, 0 /*MultisampleQuality*/, false /*Discard*/, false /*Lockable*/, mPool, mSharedHandle);
 		ptr->mMipIndex = i;
 
 		mSurfaces.push_back(ptr);
@@ -79,6 +76,47 @@ CTexture9::CTexture9(CDevice9* device, UINT Width, UINT Height, UINT Levels, DWO
 			width = 1;
 		}
 	}
+
+	const vk::ImageTiling tiling = vk::ImageTiling::eOptimal;
+	const vk::ImageUsageFlags usage = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst;
+	const vk::MemoryPropertyFlags required_props = vk::MemoryPropertyFlagBits::eDeviceLocal;
+
+	const vk::ImageCreateInfo imageCreateInfo = vk::ImageCreateInfo()
+		.setImageType(vk::ImageType::e2D)
+		.setFormat(ConvertFormat(mFormat))
+		.setExtent({ mWidth, mHeight, 1 })
+		.setMipLevels(mLevels)
+		.setArrayLayers(1)
+		.setSamples(vk::SampleCountFlagBits::e1)
+		.setTiling(tiling)
+		.setUsage(usage)
+		.setSharingMode(vk::SharingMode::eExclusive)
+		.setQueueFamilyIndexCount(0)
+		.setPQueueFamilyIndices(nullptr)
+		.setInitialLayout(vk::ImageLayout::ePreinitialized);
+	mImage = mDevice->mDevice->createImageUnique(imageCreateInfo);
+
+	vk::MemoryRequirements memoryRequirements;
+	mDevice->mDevice->getImageMemoryRequirements(mImage.get(), &memoryRequirements);
+
+	mImageMemoryAllocateInfo.setAllocationSize(memoryRequirements.size);
+	mImageMemoryAllocateInfo.setMemoryTypeIndex(0);
+
+	auto pass = mDevice->FindMemoryTypeFromProperties(memoryRequirements.memoryTypeBits, required_props, &mImageMemoryAllocateInfo.memoryTypeIndex);
+
+	mImageDeviceMemory = mDevice->mDevice->allocateMemoryUnique(mImageMemoryAllocateInfo);
+
+	mDevice->mDevice->bindImageMemory(mImage.get(), mImageDeviceMemory.get(), 0);
+
+	//Now transition this thing from init to shader ready.
+	//SetImageLayout(image.get(), vk::ImageAspectFlagBits::eColor, vk::ImageLayout::ePreinitialized, mSharedState.mImageLayout, vk::AccessFlagBits(), vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eFragmentShader);
+
+	auto const viewInfo = vk::ImageViewCreateInfo()
+		.setImage(mImage.get())
+		.setViewType(vk::ImageViewType::e2D)
+		.setFormat(ConvertFormat(mFormat))
+		.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, mLevels, 0, 1));
+	mImageView = mDevice->mDevice->createImageViewUnique(viewInfo);
 }
 
 CTexture9::~CTexture9()
@@ -89,19 +127,23 @@ CTexture9::~CTexture9()
 	{
 		mSurfaces[i]->Release();
 	}
-
-	for (size_t id : mIds)
-	{
-
-	}
 }
 
-void CTexture9::Init()
+ULONG CTexture9::PrivateAddRef(void)
 {
-	//Work-around for games using strange formats that don't support sampling.
-	mFormat = D3DFMT_A8R8G8B8;
+	return InterlockedIncrement(&mPrivateReferenceCount);
+}
 
+ULONG CTexture9::PrivateRelease(void)
+{
+	ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
 
+	if (ref == 0 && mReferenceCount == 0)
+	{
+		delete this;
+	}
+
+	return ref;
 }
 
 ULONG STDMETHODCALLTYPE CTexture9::AddRef(void)
@@ -304,49 +346,12 @@ HRESULT STDMETHODCALLTYPE CTexture9::GetSurfaceLevel(UINT Level, IDirect3DSurfac
 
 HRESULT STDMETHODCALLTYPE CTexture9::LockRect(UINT Level, D3DLOCKED_RECT* pLockedRect, const RECT* pRect, DWORD Flags)
 {	
-	/*
-	Unless the caller indicates that they have not overwritten anything used by a previous draw call then we have to assume they have.
-	Because the draw may not have happened we need to check to see if presentation has occured and if not flip to the next vertex
-	*/
-
-	//if (((Flags & D3DLOCK_NOOVERWRITE) == D3DLOCK_NOOVERWRITE) || ((Flags & D3DLOCK_READONLY) == D3DLOCK_READONLY))
-	//{
-	//	//This is best case the caller says they didn't modify anything used in a draw call.
-	//}
-	//else
-	//{
-	//	if (mFrameBit != mCommandStreamManager->mFrameBit)
-	//	{
-	//		mIndex = 0;
-	//		mFrameBit = mCommandStreamManager->mFrameBit;
-	//	}
-	//	else
-	//	{
-	//		mLastIndex = mIndex;
-	//		mIndex++;
-	//	}
-	//}
-
-	//if (mIndex > mIds.size() - 1)
-	//{
-	//	Init();
-	//}
-	//else
-	//{
-	//	mId = mIds[mIndex];
-	//}
-
-	//mSurfaces[Level]->mTextureId = mId;
-	//mSurfaces[Level]->mLastTextureId = mIds[mLastIndex];
-
 	HRESULT result = mSurfaces[Level]->LockRect(pLockedRect, pRect, Flags);
 
 	if ((Flags & D3DLOCK_DISCARD) == D3DLOCK_DISCARD)
 	{
 		Log(warning) << "CTexture9::LockRect D3DLOCK_DISCARD is not implemented!" << std::endl;
 	}
-
-	//mLastIndex = mIndex;
 
 	return result;
 }
@@ -356,12 +361,4 @@ HRESULT STDMETHODCALLTYPE CTexture9::UnlockRect(UINT Level)
 	HRESULT result = mSurfaces[Level]->UnlockRect();
 
 	return result;
-}
-
-void CTexture9::Flush()
-{
-	for (size_t i = 0; i < mSurfaces.size(); i++)
-	{
-		mSurfaces[i]->Flush();
-	}
 }

@@ -33,8 +33,14 @@ public:
 	CCubeTexture9(CDevice9* device,UINT EdgeLength, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, HANDLE *pSharedHandle);
 	~CCubeTexture9();
 
-	void Init();
+	//Reference Counting
+	ULONG mReferenceCount = 1;
+	ULONG mPrivateReferenceCount = 0;
 
+	ULONG PrivateAddRef(void);
+	ULONG PrivateRelease(void);
+
+	//Creation Parameters
 	CDevice9* mDevice;
 	UINT mEdgeLength = 0;
 	UINT mLevels = 0;
@@ -43,34 +49,21 @@ public:
 	D3DPOOL mPool = D3DPOOL_DEFAULT;
 	HANDLE* mSharedHandle = nullptr;
 
-	ULONG mReferenceCount = 1;
-	ULONG mPrivateReferenceCount = 0;
+	//Vulkan - Image
+	vk::UniqueImage mImage;
+	vk::UniqueDeviceMemory mImageDeviceMemory;
+	vk::UniqueImageView mImageView;
 
-	ULONG PrivateAddRef(void)
-	{
-		return InterlockedIncrement(&mPrivateReferenceCount);
-	}
+	vk::ImageLayout mImageLayout{ vk::ImageLayout::eUndefined };
+	vk::MemoryAllocateInfo mImageMemoryAllocateInfo;
 
-	ULONG PrivateRelease(void)
-	{
-		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
-
-		if (ref == 0 && mReferenceCount == 0)
-		{
-			delete this;
-		}
-
-		return ref;
-	}
-
-	vk::Result mResult = vk::Result::eSuccess;
+	//Misc
 	D3DTEXTUREFILTERTYPE mMipFilter = D3DTEXF_NONE;
 	D3DTEXTUREFILTERTYPE mMinFilter = D3DTEXF_NONE;
 	D3DTEXTUREFILTERTYPE mMagFilter = D3DTEXF_NONE;
 
 	std::array<std::vector<CSurface9*>, 6> mSurfaces;
 
-	void Flush();
 public:
 	//IUnknown
 	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid,void  **ppv);

@@ -764,8 +764,7 @@ void CDevice9::ResetVulkanDevice()
 	SetRenderTarget(0, ptr->mBackBuffer);
 
 	//Add implicit stencil buffer surface.
-	auto depth = new CSurface9(this, &mPresentationParameters, mPresentationParameters.AutoDepthStencilFormat);
-	depth->Init();
+	CSurface9* depth = new CSurface9(this, (CTexture9*)nullptr, mPresentationParameters.BackBufferWidth, mPresentationParameters.BackBufferHeight, D3DUSAGE_DEPTHSTENCIL, 1, mPresentationParameters.AutoDepthStencilFormat, mPresentationParameters.MultiSampleType, mPresentationParameters.MultiSampleQuality, false, false, D3DPOOL_DEFAULT, nullptr);
 	SetDepthStencilSurface(depth);
 	depth->Release();
 }
@@ -1039,16 +1038,6 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateCubeTexture(UINT EdgeLength, UINT Leve
 
 	CCubeTexture9* obj = new CCubeTexture9(this, EdgeLength, Levels, Usage, Format, Pool, pSharedHandle);
 
-	obj->Init();
-
-	for (size_t i = 0; i < 6; i++)
-	{
-		for (size_t j = 0; j < obj->mLevels; j++)
-		{
-			obj->mSurfaces[i][j]->Init();
-		}
-	}
-
 	(*ppCubeTexture) = (IDirect3DCubeTexture9*)obj;
 
 	return result;
@@ -1058,9 +1047,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateDepthStencilSurface(UINT Width, UINT H
 {
 	HRESULT result = S_OK;
 
-	CSurface9* obj = new CSurface9(this, (CTexture9*)nullptr, Width, Height, Format, MultiSample, MultisampleQuality, Discard, pSharedHandle);
-
-	obj->Init();
+	CSurface9* obj = new CSurface9(this, (CTexture9*)nullptr, Width, Height, D3DUSAGE_DEPTHSTENCIL, 1 /*Levels*/, Format, MultiSample, MultisampleQuality, Discard, false /*Lockable*/, D3DPOOL_DEFAULT, pSharedHandle);
 
 	(*ppSurface) = (IDirect3DSurface9*)obj;
 
@@ -1082,9 +1069,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateOffscreenPlainSurface(UINT Width, UINT
 {
 	HRESULT result = S_OK;
 
-	CSurface9* ptr = new CSurface9(this, (CTexture9*)nullptr, Width, Height, 1, 0, Format, Pool, pSharedHandle);
-
-	ptr->Init();
+	CSurface9* ptr = new CSurface9(this, (CTexture9*)nullptr, Width, Height, D3DUSAGE_RENDERTARGET, 1, Format, D3DMULTISAMPLE_NONE, 0, false, false, Pool, pSharedHandle);
 
 	(*ppSurface) = (IDirect3DSurface9*)ptr;
 
@@ -1172,13 +1157,6 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateTexture(UINT Width, UINT Height, UINT 
 	HRESULT result = S_OK;
 
 	CTexture9* obj = new CTexture9(this, Width, Height, Levels, Usage, Format, Pool, pSharedHandle);
-
-	obj->Init();
-
-	for (size_t i = 0; i < obj->mLevels; i++)
-	{
-		obj->mSurfaces[i]->Init();
-	}
 
 	(*ppTexture) = (IDirect3DTexture9*)obj;
 
@@ -1472,7 +1450,7 @@ void STDMETHODCALLTYPE CDevice9::GetGammaRamp(UINT  iSwapChain, D3DGAMMARAMP *pR
 {
 	auto& swapChain = mSwapChains[iSwapChain];
 
-	HDC windowHdc = GetDC(swapChain->mPresentationParameters->hDeviceWindow);
+	HDC windowHdc = GetDC(swapChain->mPresentationParameters.hDeviceWindow);
 
 	if (!GetDeviceGammaRamp(windowHdc, (LPVOID)pRamp))
 	{
@@ -1889,7 +1867,7 @@ void STDMETHODCALLTYPE CDevice9::SetGammaRamp(UINT  iSwapChain, DWORD Flags, con
 {
 	auto& swapChain = mSwapChains[iSwapChain];
 
-	HDC windowHdc = GetDC(swapChain->mPresentationParameters->hDeviceWindow);
+	HDC windowHdc = GetDC(swapChain->mPresentationParameters.hDeviceWindow);
 	SetDeviceGammaRamp(windowHdc, (LPVOID)pRamp);
 
 	if (Flags != D3DSGR_NO_CALIBRATION)
@@ -2489,9 +2467,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateOffscreenPlainSurfaceEx(UINT Width, UI
 {
 	HRESULT result = S_OK;
 
-	CSurface9* ptr = new CSurface9(this, (CTexture9*)nullptr, Width, Height, 1, 0, Format, Pool, pSharedHandle);
-
-	ptr->Init();
+	CSurface9* ptr = new CSurface9(this, (CTexture9*)nullptr, Width, Height, Usage, 1, Format, D3DMULTISAMPLE_NONE, 0, false, false, Pool, pSharedHandle);
 
 	(*ppSurface) = (IDirect3DSurface9*)ptr;
 
@@ -2502,9 +2478,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateDepthStencilSurfaceEx(UINT Width, UINT
 {
 	HRESULT result = S_OK;
 
-	CSurface9* obj = new CSurface9(this, (CTexture9*)nullptr, Width, Height, Format, MultiSample, MultisampleQuality, Discard, pSharedHandle);
-
-	obj->Init();
+	CSurface9* obj = new CSurface9(this, (CTexture9*)nullptr, Width, Height, Usage, 1, Format, MultiSample, MultisampleQuality, Discard, false, D3DPOOL_DEFAULT, pSharedHandle);
 
 	(*ppSurface) = (IDirect3DSurface9*)obj;
 

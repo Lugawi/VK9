@@ -55,7 +55,7 @@ public:
 	VkResult mResult = VK_SUCCESS;
 
 	CDevice9* mDevice = nullptr;
-	D3DPRESENT_PARAMETERS* mPresentationParameters;
+	D3DPRESENT_PARAMETERS mPresentationParameters;
 	CSurface9* mBackBuffer = nullptr;
 	CSurface9* mFrontBuffer = nullptr;
 
