@@ -2044,11 +2044,19 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetRenderTarget(DWORD RenderTargetIndex, IDi
 	{
 		mRenderTargets[RenderTargetIndex]->PrivateRelease();
 	}
-	mRenderTargets[RenderTargetIndex] = (CSurface9*)pRenderTarget;
+	CSurface9* surface = (CSurface9*)pRenderTarget;
+	mRenderTargets[RenderTargetIndex] = surface;
 	if (mRenderTargets[RenderTargetIndex] != nullptr)
 	{
 		mRenderTargets[RenderTargetIndex]->PrivateAddRef();
 	}
+
+	//Set the viewport to the size of the new render target.
+	D3DVIEWPORT9 viewport = {};
+	viewport.Width = surface->mWidth;
+	viewport.Height = surface->mHeight;
+	viewport.MaxZ = 1;
+	SetViewport(&viewport);
 
 	return S_OK;
 }
