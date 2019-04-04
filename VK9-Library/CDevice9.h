@@ -27,6 +27,7 @@ misrepresented as being the original software.
 #include "CStateBlock9.h"
 
 #include<vector>
+#include <memory>
 
 class C9;
 class CSwapChain9;
@@ -36,6 +37,8 @@ class CSurface9;
 class CPixelShader9;
 class CVertexShader9;
 class CVertexDeclaration9;
+
+class RenderContainer;
 
 template <typename T1>
 struct Pair
@@ -187,6 +190,7 @@ public:
 		return mDevice->createShaderModuleUnique(moduleCreateInfo);
 	}
 
+	//Helper Functions
 	void ResetVulkanDevice();
 	void BeginRecordingCommands();
 	void StopRecordingCommands();
@@ -194,7 +198,7 @@ public:
 	void StopRecordingUtilityCommands();
 	void BeginDraw();
 	void StopDraw();
-
+	void RebuildRenderPass();
 	
 
 	//D3D9 State
@@ -205,11 +209,13 @@ public:
 	PAINTSTRUCT* mPaintInformation = {};
 
 	CSurface9* mDepthStencilSurface = nullptr;
-	CSurface9* mRenderTargets[4] = {};
+	std::array<CSurface9*, 4> mRenderTargets = {};
 	UINT mMaxLatency = 0;
 	INT mPriority = 0;
 	UINT mAvailableTextureMemory = 0;
 	std::vector<CSwapChain9*> mSwapChains;
+	std::vector< std::unique_ptr<RenderContainer> > mRenderContainers;
+	RenderContainer* mCurrentRenderContainer=nullptr;
 
 public:
 
@@ -352,4 +358,18 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE CreateDepthStencilSurfaceEx(UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, IDirect3DSurface9 **ppSurface, HANDLE *pSharedHandle, DWORD Usage);
 	virtual HRESULT STDMETHODCALLTYPE ResetEx(D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode);
 	virtual HRESULT STDMETHODCALLTYPE GetDisplayModeEx(UINT iSwapChain, D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation);
+};
+
+class RenderContainer
+{
+public:
+	RenderContainer(const RenderContainer& obj);
+	RenderContainer(vk::Device& device, CSurface9* depthStencilSurface, std::array<CSurface9*, 4>& renderTargets);
+	~RenderContainer();
+
+	CSurface9* mDepthStencilSurface = nullptr;
+	std::array<CSurface9*, 4> mRenderTargets = {};
+
+	vk::UniqueRenderPass mRenderPass;
+	std::vector <vk::UniqueFramebuffer> mFrameBuffers;
 };

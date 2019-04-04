@@ -30,6 +30,11 @@ misrepresented as being the original software.
 #define MAX_BUFFERUPDATE 65536u
 #endif // !MAX_BUFFERUPDATE
 
+#define D3DCOLOR_A(dw) (((float)(((dw) >> 24) & 0xFF)) / 255.0f)
+#define D3DCOLOR_R(dw) (((float)(((dw) >> 16) & 0xFF)) / 255.0f)
+#define D3DCOLOR_G(dw) (((float)(((dw) >> 8) & 0xFF)) / 255.0f)
+#define D3DCOLOR_B(dw) (((float)(((dw) >> 0) & 0xFF)) / 255.0f)
+
 #include <wingdi.h> //used for gamma ramp
 
 #include "C9.h"
@@ -48,7 +53,6 @@ misrepresented as being the original software.
 #include "CPixelShader9.h"
 #include "CVertexShader9.h"
 #include "CQuery9.h"
-#include "CRenderTargetSurface9.h"
 #include "CVolume9.h"
 #include "LogManager.h"
 //#include "PrivateTypes.h"
@@ -921,6 +925,17 @@ void CDevice9::BeginDraw()
 
 		mInternalDeviceState.mDeviceState.mCapturedIndexBuffer = false;
 	}
+
+	vk::RenderPassBeginInfo renderPassBeginInfo;
+	renderPassBeginInfo.renderPass = mCurrentRenderContainer->mRenderPass.get();
+	renderPassBeginInfo.framebuffer = mCurrentRenderContainer->mFrameBuffers[mFrameIndex].get();
+	renderPassBeginInfo.renderArea.offset.x = 0;
+	renderPassBeginInfo.renderArea.offset.y = 0;
+	renderPassBeginInfo.renderArea.extent.width = mPresentationParameters.BackBufferWidth;
+	renderPassBeginInfo.renderArea.extent.height = mPresentationParameters.BackBufferHeight;
+	//renderPassBeginInfo.clearValueCount = 2;
+	//renderPassBeginInfo.pClearValues = clearValues;
+	mCurrentDrawCommandBuffer.beginRenderPass(&renderPassBeginInfo, vk::SubpassContents::eInline);
 }
 
 void CDevice9::StopDraw()
@@ -930,15 +945,55 @@ void CDevice9::StopDraw()
 		return;
 	}
 
+	mCurrentDrawCommandBuffer.endRenderPass();
+}
 
+void CDevice9::RebuildRenderPass()
+{
+	mCurrentRenderContainer = nullptr;
+	for (auto& renderContainer : mRenderContainers)
+	{
+		if (renderContainer->mRenderTargets == mRenderTargets && renderContainer->mDepthStencilSurface == mDepthStencilSurface)
+		{
+			mCurrentRenderContainer = renderContainer.get();
+		}
+	}
+
+	if (mCurrentRenderContainer)
+	{
+		mRenderContainers.push_back(std::make_unique<RenderContainer>(mDevice.get(), mDepthStencilSurface, mRenderTargets));
+		mCurrentRenderContainer = mRenderContainers[mRenderContainers.size() - 1].get();
+	}
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::Clear(DWORD Count, const D3DRECT *pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
 {
 	BeginRecordingCommands();
 
-	//Flags |= D3DCLEAR_TARGET;
-	Log(warning) << "CDevice9::Clear is not implemented!" << std::endl;
+	std::vector<vk::ClearValue> clearValues;
+	
+	if ((Flags & D3DCLEAR_TARGET) == D3DCLEAR_TARGET)
+	{
+		std::array<float, 4> colorValues = { D3DCOLOR_R(Color), D3DCOLOR_G(Color), D3DCOLOR_B(Color), D3DCOLOR_A(Color) };
+		clearValues.push_back(vk::ClearColorValue(colorValues));
+	}
+
+	if (((Flags & D3DCLEAR_STENCIL) == D3DCLEAR_STENCIL) || ((Flags & D3DCLEAR_ZBUFFER) == D3DCLEAR_ZBUFFER))
+	{
+		clearValues.push_back(vk::ClearDepthStencilValue(Z, Stencil));
+	}
+
+	vk::RenderPassBeginInfo renderPassBeginInfo;
+	renderPassBeginInfo.renderPass = mCurrentRenderContainer->mRenderPass.get();
+	renderPassBeginInfo.framebuffer = mCurrentRenderContainer->mFrameBuffers[mFrameIndex].get();
+	renderPassBeginInfo.renderArea.offset.x = 0;
+	renderPassBeginInfo.renderArea.offset.y = 0;
+	renderPassBeginInfo.renderArea.extent.width = mPresentationParameters.BackBufferWidth;
+	renderPassBeginInfo.renderArea.extent.height = mPresentationParameters.BackBufferHeight;
+	renderPassBeginInfo.clearValueCount = clearValues.size();
+	renderPassBeginInfo.pClearValues = clearValues.data();
+	mCurrentDrawCommandBuffer.beginRenderPass(&renderPassBeginInfo, vk::SubpassContents::eInline);
+	mCurrentDrawCommandBuffer.endRenderPass();
 
 	return S_OK;
 }
@@ -1133,10 +1188,9 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateRenderTarget(UINT Width, UINT Height, 
 {
 	HRESULT result = S_OK;
 
-	//I added an extra int at the end so the signature would be different for this version. Locakable/Discard are both BOOL.
-	CRenderTargetSurface9* obj = new CRenderTargetSurface9(this, Width, Height, Format);
+	CSurface9* ptr = new CSurface9(this, (CTexture9*)nullptr, Width, Height, D3DUSAGE_RENDERTARGET, 1, Format, MultiSample, MultisampleQuality, false, Lockable, D3DPOOL_DEFAULT, pSharedHandle);
 
-	(*ppSurface) = (IDirect3DSurface9*)obj;
+	(*ppSurface) = (IDirect3DSurface9*)ptr;
 
 	return result;
 }
@@ -1837,6 +1891,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetDepthStencilSurface(IDirect3DSurface9* pN
 
 	mDepthStencilSurface = (CSurface9*)pNewZStencil;
 
+	RebuildRenderPass();
+
 	return S_OK;
 }
 
@@ -2059,6 +2115,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetRenderTarget(DWORD RenderTargetIndex, IDi
 	viewport.Height = surface->mHeight;
 	viewport.MaxZ = 1;
 	SetViewport(&viewport);
+
+	RebuildRenderPass();
 
 	return S_OK;
 }
@@ -2459,10 +2517,9 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateRenderTargetEx(UINT Width, UINT Height
 {
 	HRESULT result = S_OK;
 
-	//I added an extra int at the end so the signature would be different for this version. Locakable/Discard are both BOOL.
-	CRenderTargetSurface9* obj = new CRenderTargetSurface9(this, Width, Height, Format);
+	CSurface9* ptr = new CSurface9(this, (CTexture9*)nullptr, Width, Height, Usage, 1, Format, MultiSample, MultisampleQuality, false, Lockable, D3DPOOL_DEFAULT, pSharedHandle);
 
-	(*ppSurface) = (IDirect3DSurface9*)obj;
+	(*ppSurface) = (IDirect3DSurface9*)ptr;
 
 	return result;
 }
@@ -2516,4 +2573,63 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetDisplayModeEx(UINT iSwapChain, D3DDISPLAY
 	(*pRotation) = D3DDISPLAYROTATION_IDENTITY;
 
 	return S_OK;
+}
+
+RenderContainer::RenderContainer(vk::Device& device, CSurface9* depthStencilSurface, std::array<CSurface9*, 4>& renderTargets)
+	: mDepthStencilSurface(depthStencilSurface),
+	mRenderTargets(renderTargets)
+{
+	std::vector<vk::AttachmentDescription> attachments;
+	std::vector<vk::AttachmentReference> colorReference;
+	std::vector<vk::ImageView> frameAttachments;
+
+	uint32_t width = 0;
+	uint32_t height = 0;
+	uint32_t index = 0;
+	for (auto& renderTarget : renderTargets)
+	{
+		if (renderTarget)
+		{
+			width = renderTarget->mWidth;
+			height = renderTarget->mHeight;
+
+			colorReference.push_back(vk::AttachmentReference(index, vk::ImageLayout::eColorAttachmentOptimal));
+			attachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(renderTarget->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal));
+			frameAttachments.push_back(renderTarget->mImageView.get());
+			index += 1;
+		}
+	}
+
+	if (depthStencilSurface)
+	{
+		frameAttachments.push_back(depthStencilSurface->mImageView.get());
+
+		vk::AttachmentReference depthReference(1, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+
+		vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, &depthReference);
+		mRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), attachments.size(), attachments.data(), 1, &subpass));
+	}
+	else
+	{
+		vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, nullptr);
+		mRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), attachments.size(), attachments.data(), 1, &subpass));
+	}
+
+	vk::FramebufferCreateInfo framebufferCreateInfo;
+	framebufferCreateInfo.renderPass = mRenderPass.get();
+	framebufferCreateInfo.attachmentCount = frameAttachments.size();
+	framebufferCreateInfo.pAttachments = frameAttachments.data();
+	framebufferCreateInfo.width = width;
+	framebufferCreateInfo.height = height;
+	framebufferCreateInfo.layers = 1;
+
+	for (size_t i = 0; i < 3; i++)
+	{
+		mFrameBuffers.push_back(device.createFramebufferUnique(framebufferCreateInfo, nullptr));
+	}
+}
+
+RenderContainer::~RenderContainer()
+{
+
 }
