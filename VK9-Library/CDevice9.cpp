@@ -469,6 +469,10 @@ void CDevice9::ResetVulkanDevice()
 		mCommandPool = mDevice->createCommandPoolUnique(vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, deviceQueueCreateInfo.queueFamilyIndex));
 	}
 
+	{
+		mDevice->getQueue(static_cast<uint32_t>(mC9->mGraphicsQueueFamilyIndex), 0, &mQueue);
+	}
+
 	//Create a descriptor pool that should be able to allocate enough of any type.
 	{
 		const vk::DescriptorPoolSize descriptorPoolSizes[11] =
@@ -975,7 +979,7 @@ void CDevice9::RebuildRenderPass()
 		}
 	}
 
-	if (mCurrentRenderContainer)
+	if (!mCurrentRenderContainer)
 	{
 		mRenderContainers.push_back(std::make_unique<RenderContainer>(mDevice.get(), mDepthStencilSurface, mRenderTargets));
 		mCurrentRenderContainer = mRenderContainers[mRenderContainers.size() - 1].get();
@@ -2381,23 +2385,28 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetViewport(const D3DVIEWPORT9* pViewport)
 	}
 	else
 	{
-		BeginRecordingCommands();
-
-		/*
-		We need to shift by 0.5 because D3D9 is offset by half a pixel.
-		It's the difference between measuring from the center versus measuring from the edge.
-		https://docs.microsoft.com/en-us/windows/desktop/direct3d9/directly-mapping-texels-to-pixels
-		*/
-		const auto viewport = vk::Viewport()
-			.setX(((float)pViewport->X) - 0.5f)
-			.setY(((float)pViewport->Y) - 0.5f)
-			.setWidth(((float)pViewport->Width) - 0.5f)
-			.setHeight(((float)pViewport->Height) - 0.5f)
-			.setMinDepth((float)pViewport->MinZ)
-			.setMaxDepth((float)pViewport->MaxZ);
-		mCurrentDrawCommandBuffer.setViewport(0, 1, &viewport);
-
 		mInternalDeviceState.SetViewport(pViewport);
+
+		if (mIsRecording)
+		{
+			/*
+			We need to shift by 0.5 because D3D9 is offset by half a pixel.
+			It's the difference between measuring from the center versus measuring from the edge.
+			https://docs.microsoft.com/en-us/windows/desktop/direct3d9/directly-mapping-texels-to-pixels
+			*/
+			const auto viewport = vk::Viewport()
+				.setX(((float)pViewport->X) - 0.5f)
+				.setY(((float)pViewport->Y) - 0.5f)
+				.setWidth(((float)pViewport->Width) - 0.5f)
+				.setHeight(((float)pViewport->Height) - 0.5f)
+				.setMinDepth((float)pViewport->MinZ)
+				.setMaxDepth((float)pViewport->MaxZ);
+			mCurrentDrawCommandBuffer.setViewport(0, 1, &viewport);
+		}
+		else
+		{
+			BeginRecordingCommands();
+		}
 	}
 
 	return S_OK;

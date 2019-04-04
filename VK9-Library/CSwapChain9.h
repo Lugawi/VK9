@@ -54,6 +54,7 @@ public:
 	vk::UniqueSwapchainKHR mSwapChain;
 	std::vector<vk::Image> mSwapChainImages;
 	uint32_t mImageIndex=0;
+	vk::Queue mQueue;
 
 	//Misc
 	CSurface9* mBackBuffer = nullptr;

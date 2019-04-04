@@ -138,6 +138,12 @@ CSwapChain9::CSwapChain9(CDevice9* Device, D3DPRESENT_PARAMETERS *pPresentationP
 		swapChainCreateInfo.imageSharingMode = vk::SharingMode::eConcurrent;
 		swapChainCreateInfo.queueFamilyIndexCount = 2;
 		swapChainCreateInfo.pQueueFamilyIndices = queueFamilyIndices;
+
+		mDevice->mDevice->getQueue(static_cast<uint32_t>(mPresentQueueFamilyIndex), 0, &mQueue);
+	}
+	else
+	{
+		mQueue = mDevice->mQueue;
 	}
 
 	mSwapChain = mDevice->mDevice->createSwapchainKHRUnique(swapChainCreateInfo);
@@ -145,8 +151,8 @@ CSwapChain9::CSwapChain9(CDevice9* Device, D3DPRESENT_PARAMETERS *pPresentationP
 
 	//I'd like to setup back/front with real swap images to avoid a copy but vulkan is much more strict about render targets.
 
-	mBackBuffer = new CSurface9(mDevice, (CTexture9*)nullptr, mPresentationParameters.BackBufferWidth, mPresentationParameters.BackBufferHeight, D3DUSAGE_DEPTHSTENCIL, 1, mPresentationParameters.AutoDepthStencilFormat, mPresentationParameters.MultiSampleType, mPresentationParameters.MultiSampleQuality, false, false, D3DPOOL_DEFAULT, nullptr);
-	mFrontBuffer = new CSurface9(mDevice, (CTexture9*)nullptr, mPresentationParameters.BackBufferWidth, mPresentationParameters.BackBufferHeight, D3DUSAGE_DEPTHSTENCIL, 1, mPresentationParameters.AutoDepthStencilFormat, mPresentationParameters.MultiSampleType, mPresentationParameters.MultiSampleQuality, false, false, D3DPOOL_DEFAULT, nullptr);
+	mBackBuffer = new CSurface9(mDevice, (CTexture9*)nullptr, mPresentationParameters.BackBufferWidth, mPresentationParameters.BackBufferHeight, D3DUSAGE_RENDERTARGET, 1, mPresentationParameters.BackBufferFormat, mPresentationParameters.MultiSampleType, mPresentationParameters.MultiSampleQuality, false, false, D3DPOOL_DEFAULT, nullptr);
+	mFrontBuffer = new CSurface9(mDevice, (CTexture9*)nullptr, mPresentationParameters.BackBufferWidth, mPresentationParameters.BackBufferHeight, D3DUSAGE_RENDERTARGET, 1, mPresentationParameters.BackBufferFormat, mPresentationParameters.MultiSampleType, mPresentationParameters.MultiSampleQuality, false, false, D3DPOOL_DEFAULT, nullptr);
 }
 
 CSwapChain9::~CSwapChain9()
@@ -377,7 +383,7 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::Present(const RECT *pSourceRect, const RE
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = &mSwapChain.get();
 	presentInfo.pImageIndices = &mImageIndex;
-	mDevice->mQueue.presentKHR(&presentInfo);
+	mQueue.presentKHR(&presentInfo); //use present queue.
 
 	return S_OK;
 }
