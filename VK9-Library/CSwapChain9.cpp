@@ -83,17 +83,16 @@ CSwapChain9::CSwapChain9(CDevice9* Device, D3DPRESENT_PARAMETERS *pPresentationP
 	mFormats = mDevice->mC9->mPhysicalDevices[mDevice->mC9->mPhysicalDeviceIndex].getSurfaceFormatsKHR(mSurface.get());
 	mSurfaceCapabilities = mDevice->mC9->mPhysicalDevices[mDevice->mC9->mPhysicalDeviceIndex].getSurfaceCapabilitiesKHR(mSurface.get());
 
-	VkExtent2D swapchainExtent;
 	if (mSurfaceCapabilities.currentExtent.width == std::numeric_limits<uint32_t>::max())
 	{
 		// If the surface size is undefined, the size is set to the size of the images requested.
-		swapchainExtent.width = std::clamp(mPresentationParameters.BackBufferWidth, mSurfaceCapabilities.minImageExtent.width, mSurfaceCapabilities.maxImageExtent.width);
-		swapchainExtent.height = std::clamp(mPresentationParameters.BackBufferHeight, mSurfaceCapabilities.minImageExtent.height, mSurfaceCapabilities.maxImageExtent.height);
+		mSwapchainExtent.width = std::clamp(mPresentationParameters.BackBufferWidth, mSurfaceCapabilities.minImageExtent.width, mSurfaceCapabilities.maxImageExtent.width);
+		mSwapchainExtent.height = std::clamp(mPresentationParameters.BackBufferHeight, mSurfaceCapabilities.minImageExtent.height, mSurfaceCapabilities.maxImageExtent.height);
 	}
 	else
 	{
 		// If the surface size is defined, the swap chain size must match
-		swapchainExtent = mSurfaceCapabilities.currentExtent;
+		mSwapchainExtent = mSurfaceCapabilities.currentExtent;
 	}
 
 	/*
@@ -128,7 +127,7 @@ CSwapChain9::CSwapChain9(CDevice9* Device, D3DPRESENT_PARAMETERS *pPresentationP
 		(mSurfaceCapabilities.supportedCompositeAlpha & vk::CompositeAlphaFlagBitsKHR::eInherit) ? vk::CompositeAlphaFlagBitsKHR::eInherit : vk::CompositeAlphaFlagBitsKHR::eOpaque;
 
 	vk::SwapchainCreateInfoKHR swapChainCreateInfo(vk::SwapchainCreateFlagsKHR(), mSurface.get(), mSurfaceCapabilities.minImageCount, ConvertFormat(mPresentationParameters.BackBufferFormat), vk::ColorSpaceKHR::eSrgbNonlinear,
-		swapchainExtent, 1, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst, vk::SharingMode::eExclusive, 0, nullptr, preTransform, compositeAlpha, mSwapchainPresentMode, true, nullptr);
+		mSwapchainExtent, 1, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst, vk::SharingMode::eExclusive, 0, nullptr, preTransform, compositeAlpha, mSwapchainPresentMode, true, nullptr);
 
 	uint32_t queueFamilyIndices[2] = { static_cast<uint32_t>(mDevice->mC9->mGraphicsQueueFamilyIndex), static_cast<uint32_t>(mPresentQueueFamilyIndex) };
 	if (mDevice->mC9->mGraphicsQueueFamilyIndex != mPresentQueueFamilyIndex)
@@ -349,8 +348,8 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::Present(const RECT *pSourceRect, const RE
 		const vk::ImageBlit region = vk::ImageBlit()
 			.setSrcSubresource(subResource1)
 			.setDstSubresource(subResource2)
-			.setSrcOffsets({ vk::Offset3D(), vk::Offset3D(mPresentationParameters.BackBufferWidth, mPresentationParameters.BackBufferHeight, 1) })
-			.setDstOffsets({ vk::Offset3D(), vk::Offset3D(mPresentationParameters.BackBufferWidth, mPresentationParameters.BackBufferHeight, 1) });
+			.setSrcOffsets({ vk::Offset3D(), vk::Offset3D(mBackBuffer->mWidth, mBackBuffer->mHeight, 1) })
+			.setDstOffsets({ vk::Offset3D(), vk::Offset3D(mSwapchainExtent.width, mSwapchainExtent.height, 1) });
 
 		/*
 		Currently the format should back between the back buffer and surface so an imagecopy should work but 

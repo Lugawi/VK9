@@ -415,6 +415,20 @@ CDevice9::~CDevice9()
 {
 	mDevice->waitIdle();
 
+	for (auto& swapChain : mSwapChains)
+	{
+		swapChain->Release();
+	}
+	mSwapChains.clear();
+
+	//if (mDepthStencilSurface)
+	//{
+	//	mDepthStencilSurface->Release();
+	//	mDepthStencilSurface = nullptr;
+	//}
+
+	delete mDepthStencilSurface;
+
 	mC9->Release();
 }
 

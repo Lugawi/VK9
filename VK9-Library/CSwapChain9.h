@@ -55,6 +55,7 @@ public:
 	std::vector<vk::Image> mSwapChainImages;
 	uint32_t mImageIndex=0;
 	vk::Queue mQueue;
+	VkExtent2D mSwapchainExtent;
 
 	//Misc
 	CSurface9* mBackBuffer = nullptr;

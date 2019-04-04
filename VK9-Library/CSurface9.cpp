@@ -605,7 +605,7 @@ CSurface9::CSurface9(CDevice9* Device, CTexture9* Texture, UINT Width, UINT Heig
 
 	{
 		const vk::ImageTiling tiling = vk::ImageTiling::eOptimal;
-		const vk::ImageUsageFlags usage = ((mUsage == D3DUSAGE_DEPTHSTENCIL) ? vk::ImageUsageFlagBits::eDepthStencilAttachment : vk::ImageUsageFlagBits::eColorAttachment) | vk::ImageUsageFlagBits::eTransferDst;
+		const vk::ImageUsageFlags usage = ((mUsage == D3DUSAGE_DEPTHSTENCIL) ? vk::ImageUsageFlagBits::eDepthStencilAttachment : vk::ImageUsageFlagBits::eColorAttachment) | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc;
 		const vk::MemoryPropertyFlags required_props = vk::MemoryPropertyFlagBits::eDeviceLocal;
 
 		const vk::ImageCreateInfo imageCreateInfo = vk::ImageCreateInfo()
@@ -673,7 +673,7 @@ CSurface9::CSurface9(CDevice9* Device, CCubeTexture9* Texture, UINT Width, UINT 
 
 	{
 		const vk::ImageTiling tiling = vk::ImageTiling::eOptimal;
-		const vk::ImageUsageFlags usage = ((mUsage == D3DUSAGE_DEPTHSTENCIL) ? vk::ImageUsageFlagBits::eDepthStencilAttachment : vk::ImageUsageFlagBits::eColorAttachment) | vk::ImageUsageFlagBits::eTransferDst;
+		const vk::ImageUsageFlags usage = ((mUsage == D3DUSAGE_DEPTHSTENCIL) ? vk::ImageUsageFlagBits::eDepthStencilAttachment : vk::ImageUsageFlagBits::eColorAttachment) | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc;
 		const vk::MemoryPropertyFlags required_props = vk::MemoryPropertyFlagBits::eDeviceLocal;
 
 		const vk::ImageCreateInfo imageCreateInfo = vk::ImageCreateInfo()
