@@ -486,11 +486,9 @@ void CDevice9::ResetVulkanDevice()
 	//Setup buffers for up draw methods
 	{
 		auto const upVertexBufferInfo = vk::BufferCreateInfo().setSize(MAX_BUFFERUPDATE).setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst);
-		auto const upIndexBufferInfo = vk::BufferCreateInfo().setSize(MAX_BUFFERUPDATE).setUsage(vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst);
-
+		
 		mUpVertexBuffer = mDevice->createBufferUnique(upVertexBufferInfo);
-		mUpIndexBuffer = mDevice->createBufferUnique(upIndexBufferInfo);
-
+		
 		vk::MemoryRequirements mem_reqs;
 		mDevice->getBufferMemoryRequirements(mUpVertexBuffer.get(), &mem_reqs);
 
@@ -498,9 +496,22 @@ void CDevice9::ResetVulkanDevice()
 		FindMemoryTypeFromProperties(mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, &mem_alloc.memoryTypeIndex);
 
 		mUpVertexBufferMemory = mDevice->allocateMemoryUnique(mem_alloc);
+		
+		mDevice->bindBufferMemory(mUpVertexBuffer.get(), mUpVertexBufferMemory.get(), 0);	
+	}
+
+	{
+		auto const upIndexBufferInfo = vk::BufferCreateInfo().setSize(MAX_BUFFERUPDATE).setUsage(vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		mUpIndexBuffer = mDevice->createBufferUnique(upIndexBufferInfo);
+
+		vk::MemoryRequirements mem_reqs;
+		mDevice->getBufferMemoryRequirements(mUpIndexBuffer.get(), &mem_reqs);
+
+		auto mem_alloc = vk::MemoryAllocateInfo().setAllocationSize(mem_reqs.size).setMemoryTypeIndex(0);
+		FindMemoryTypeFromProperties(mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, &mem_alloc.memoryTypeIndex);
+
 		mUpIndexBufferMemory = mDevice->allocateMemoryUnique(mem_alloc);
 
-		mDevice->bindBufferMemory(mUpVertexBuffer.get(), mUpVertexBufferMemory.get(), 0);
 		mDevice->bindBufferMemory(mUpIndexBuffer.get(), mUpIndexBufferMemory.get(), 0);
 	}
 
