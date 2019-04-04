@@ -637,30 +637,9 @@ CSurface9::CSurface9(CDevice9* Device, CTexture9* Texture, UINT Width, UINT Heig
 
 		//Now transition this thing from init to attachment ready.
 		SetImageLayout(((mUsage == D3DUSAGE_DEPTHSTENCIL) ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal));
-
-		auto const viewInfo = vk::ImageViewCreateInfo()
-			.setImage(mImage.get())
-			.setViewType(vk::ImageViewType::e2D)
-			.setFormat(ConvertFormat(mFormat))
-			.setSubresourceRange(vk::ImageSubresourceRange(((mUsage == D3DUSAGE_DEPTHSTENCIL) ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor), 0, 1, 0, 1));
-		mImageView = mDevice->mDevice->createImageViewUnique(viewInfo);
 	}
 
-	{
-		auto const bufferInfo = vk::BufferCreateInfo().setSize(mWidth * mHeight * SizeOf(ConvertFormat(mFormat))).setUsage(vk::BufferUsageFlagBits::eTransferSrc);
-
-		mStagingBuffer = mDevice->mDevice->createBufferUnique(bufferInfo);
-
-		vk::MemoryRequirements mem_reqs;
-		mDevice->mDevice->getBufferMemoryRequirements(mStagingBuffer.get(), &mem_reqs);
-
-		auto mem_alloc = vk::MemoryAllocateInfo().setAllocationSize(mem_reqs.size).setMemoryTypeIndex(0);
-		mDevice->FindMemoryTypeFromProperties(mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, &mem_alloc.memoryTypeIndex);
-
-		mStagingBufferMemory = mDevice->mDevice->allocateMemoryUnique(mem_alloc);
-
-		mDevice->mDevice->bindBufferMemory(mStagingBuffer.get(), mStagingBufferMemory.get(), 0);
-	}
+	ResetViewAndStagingBuffer();
 }
 
 CSurface9::CSurface9(CDevice9* Device, CCubeTexture9* Texture, UINT Width, UINT Height, DWORD Usage, UINT Levels, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, BOOL Lockable, D3DPOOL pool, HANDLE *pSharedHandle)
@@ -726,30 +705,44 @@ CSurface9::CSurface9(CDevice9* Device, CCubeTexture9* Texture, UINT Width, UINT 
 
 		//Now transition this thing from init to attachment ready.
 		SetImageLayout(((mUsage == D3DUSAGE_DEPTHSTENCIL) ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal));
-
-		auto const viewInfo = vk::ImageViewCreateInfo()
-			.setImage(mImage.get())
-			.setViewType(vk::ImageViewType::e2D)
-			.setFormat(ConvertFormat(mFormat))
-			.setSubresourceRange(vk::ImageSubresourceRange(((mUsage == D3DUSAGE_DEPTHSTENCIL) ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor), 0, 1, 0, 1));
-		mImageView = mDevice->mDevice->createImageViewUnique(viewInfo);
 	}
 
+	ResetViewAndStagingBuffer();
+}
+
+CSurface9::CSurface9(CDevice9* Device, vk::Image& image, UINT Width, UINT Height, DWORD Usage, UINT Levels, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, BOOL Lockable, D3DPOOL pool, HANDLE *pSharedHandle)
+	: mDevice(Device),
+	mImage(vk::UniqueImage(image, *Device->mDevice)),
+	mWidth(Width),
+	mHeight(Height),
+	mUsage(Usage),
+	mLevels(Levels),
+	mFormat(Format),
+	mMultiSample(MultiSample),
+	mMultisampleQuality(MultisampleQuality),
+	mDiscard(Discard),
+	mLockable(Lockable),
+	mPool(pool),
+	mSharedHandle(pSharedHandle)
+{
+	if (mFormat == D3DFMT_D16_LOCKABLE || mFormat == D3DFMT_D32 || mFormat == D3DFMT_D15S1 || mFormat == D3DFMT_D24S8 || mFormat == D3DFMT_D24X8 || mFormat == D3DFMT_D24X4S4 || mFormat == D3DFMT_D16)
 	{
-		auto const bufferInfo = vk::BufferCreateInfo().setSize(mWidth * mHeight * SizeOf(ConvertFormat(mFormat))).setUsage(vk::BufferUsageFlagBits::eTransferSrc);
-
-		mStagingBuffer = mDevice->mDevice->createBufferUnique(bufferInfo);
-
-		vk::MemoryRequirements mem_reqs;
-		mDevice->mDevice->getBufferMemoryRequirements(mStagingBuffer.get(), &mem_reqs);
-
-		auto mem_alloc = vk::MemoryAllocateInfo().setAllocationSize(mem_reqs.size).setMemoryTypeIndex(0);
-		mDevice->FindMemoryTypeFromProperties(mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, &mem_alloc.memoryTypeIndex);
-
-		mStagingBufferMemory = mDevice->mDevice->allocateMemoryUnique(mem_alloc);
-
-		mDevice->mDevice->bindBufferMemory(mStagingBuffer.get(), mStagingBufferMemory.get(), 0);
+		mUsage = D3DUSAGE_DEPTHSTENCIL;
 	}
+
+	if (mCubeTexture != nullptr)
+	{
+		mCubeTexture->AddRef();
+	}
+	else if (mTexture != nullptr)
+	{
+		mTexture->AddRef();
+	}
+
+	//Now transition this thing from init to attachment ready.
+	SetImageLayout(((mUsage == D3DUSAGE_DEPTHSTENCIL) ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal));
+
+	ResetViewAndStagingBuffer();
 }
 
 CSurface9::~CSurface9()
@@ -836,6 +829,34 @@ void CSurface9::SetImageLayout(vk::ImageLayout newLayout)
 	mDevice->StopRecordingUtilityCommands();
 
 	mImageLayout = newLayout;
+}
+
+void CSurface9::ResetViewAndStagingBuffer()
+{
+	{
+		auto const viewInfo = vk::ImageViewCreateInfo()
+			.setImage(mImage.get())
+			.setViewType(vk::ImageViewType::e2D)
+			.setFormat(ConvertFormat(mFormat))
+			.setSubresourceRange(vk::ImageSubresourceRange(((mUsage == D3DUSAGE_DEPTHSTENCIL) ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor), 0, 1, 0, 1));
+		mImageView = mDevice->mDevice->createImageViewUnique(viewInfo);
+	}
+
+	{
+		auto const bufferInfo = vk::BufferCreateInfo().setSize(mWidth * mHeight * SizeOf(ConvertFormat(mFormat))).setUsage(vk::BufferUsageFlagBits::eTransferSrc);
+
+		mStagingBuffer = mDevice->mDevice->createBufferUnique(bufferInfo);
+
+		vk::MemoryRequirements mem_reqs;
+		mDevice->mDevice->getBufferMemoryRequirements(mStagingBuffer.get(), &mem_reqs);
+
+		auto mem_alloc = vk::MemoryAllocateInfo().setAllocationSize(mem_reqs.size).setMemoryTypeIndex(0);
+		mDevice->FindMemoryTypeFromProperties(mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, &mem_alloc.memoryTypeIndex);
+
+		mStagingBufferMemory = mDevice->mDevice->allocateMemoryUnique(mem_alloc);
+
+		mDevice->mDevice->bindBufferMemory(mStagingBuffer.get(), mStagingBufferMemory.get(), 0);
+	}
 }
 
 ULONG STDMETHODCALLTYPE CSurface9::AddRef(void)

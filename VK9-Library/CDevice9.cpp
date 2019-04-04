@@ -222,7 +222,7 @@ int32_t ConvertPrimitiveCountToBufferSize(D3DPRIMITIVETYPE primtiveType, int32_t
 	switch (primtiveType)
 	{
 	case D3DPT_POINTLIST:
-		output = (primtiveCount) * vertexStride;
+		output = (primtiveCount)* vertexStride;
 		break;
 	case D3DPT_LINELIST:
 		output = (primtiveCount * 2) * vertexStride;
@@ -754,6 +754,11 @@ void CDevice9::ResetVulkanDevice()
 		mUtilityFences.push_back(mDevice->createFenceUnique(fenceCreateInfo));
 	}
 
+	/*
+		mSwapChains[0]->mBackBuffer->ResetViewAndStagingBuffer();
+		mSwapChains[0]->mFrontBuffer->ResetViewAndStagingBuffer();
+	*/
+
 	//Add implicit swap chain.
 	mSwapChains.clear();
 	CSwapChain9* ptr = nullptr;
@@ -761,7 +766,7 @@ void CDevice9::ResetVulkanDevice()
 	mSwapChains.push_back(ptr);
 
 	//Add implicit render target
-	SetRenderTarget(0, ptr->mBackBuffer);
+	SetRenderTarget(0, mSwapChains[0]->mBackBuffer);
 
 	//Add implicit stencil buffer surface.
 	CSurface9* depth = new CSurface9(this, (CTexture9*)nullptr, mPresentationParameters.BackBufferWidth, mPresentationParameters.BackBufferHeight, D3DUSAGE_DEPTHSTENCIL, 1, mPresentationParameters.AutoDepthStencilFormat, mPresentationParameters.MultiSampleType, mPresentationParameters.MultiSampleQuality, false, false, D3DPOOL_DEFAULT, nullptr);
@@ -911,7 +916,7 @@ void CDevice9::BeginDraw()
 			default:
 				Log(warning) << "CDevice9::BeginDraw unknown index format! - " << mInternalDeviceState.mDeviceState.mIndexBuffer->mFormat << std::endl;
 				break;
-			}	
+			}
 		}
 
 		mInternalDeviceState.mDeviceState.mCapturedIndexBuffer = false;
@@ -956,10 +961,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::EndScene()
 
 HRESULT STDMETHODCALLTYPE CDevice9::Present(const RECT *pSourceRect, const RECT *pDestRect, HWND hDestWindowOverride, const RGNDATA *pDirtyRegion)
 {
-	Log(warning) << "CDevice9::Present is not implemented!" << std::endl;
-	//if (mCommandStreamManager->mResult == vk::Result::eErrorDeviceLost) { return D3DERR_DEVICELOST; }
-
-	return D3D_OK;
+	return mSwapChains[0]->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, 0/*dwFlags*/);
 }
 
 ULONG STDMETHODCALLTYPE CDevice9::AddRef(void)
@@ -1026,7 +1028,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::ColorFill(IDirect3DSurface9 *pSurface, const
 HRESULT STDMETHODCALLTYPE CDevice9::CreateAdditionalSwapChain(D3DPRESENT_PARAMETERS *pPresentationParameters, IDirect3DSwapChain9 **ppSwapChain)
 {
 	auto ptr = new CSwapChain9(this, pPresentationParameters);
-	ptr->Init();
+
 	(*ppSwapChain) = ptr;
 
 	return S_OK;
@@ -2395,13 +2397,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::ComposeRects(IDirect3DSurface9 *pSrc, IDirec
 
 HRESULT STDMETHODCALLTYPE CDevice9::PresentEx(const RECT *pSourceRect, const RECT *pDestRect, HWND hDestWindowOverride, const RGNDATA *pDirtyRegion, DWORD dwFlags)
 {
-	StopRecordingCommands();
-
-	Log(warning) << "CDevice9::PresentEx is not implemented!" << std::endl;
-
-
-
-	return D3D_OK;
+	return mSwapChains[0]->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetGPUThreadPriority(INT *pPriority)

@@ -38,6 +38,7 @@ private:
 public:
 	CSurface9(CDevice9* Device, CTexture9* Texture, UINT Width, UINT Height, DWORD Usage, UINT Levels, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, BOOL Lockable, D3DPOOL pool, HANDLE *pSharedHandle);
 	CSurface9(CDevice9* Device, CCubeTexture9* Texture, UINT Width, UINT Height, DWORD Usage, UINT Levels, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, BOOL Lockable, D3DPOOL pool, HANDLE *pSharedHandle);
+	CSurface9(CDevice9* Device, vk::Image& image, UINT Width, UINT Height, DWORD Usage, UINT Levels, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, BOOL Lockable, D3DPOOL pool, HANDLE *pSharedHandle);
 	~CSurface9();
 
 	//Reference Counting
@@ -80,6 +81,7 @@ public:
 
 	//Helper Functions
 	void SetImageLayout(vk::ImageLayout newLayout);
+	void ResetViewAndStagingBuffer();
 private:
 	CDevice9* mDevice = nullptr;
 public:

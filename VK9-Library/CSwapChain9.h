@@ -29,41 +29,38 @@ class CSurface9;
 
 class CSwapChain9 : public IDirect3DSwapChain9Ex
 {
-private:
+
 
 public:
-	ULONG mReferenceCount = 1;
-	ULONG mPrivateReferenceCount = 0;
-
-	ULONG PrivateAddRef(void)
-	{
-		return InterlockedIncrement(&mPrivateReferenceCount);
-	}
-
-	ULONG PrivateRelease(void)
-	{
-		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
-
-		if (ref == 0 && mReferenceCount == 0)
-		{
-			delete this;
-		}
-
-		return ref;
-	}
-
-	VkResult mResult = VK_SUCCESS;
-
-	CDevice9* mDevice = nullptr;
-	D3DPRESENT_PARAMETERS mPresentationParameters;
-	CSurface9* mBackBuffer = nullptr;
-	CSurface9* mFrontBuffer = nullptr;
-
 	CSwapChain9(CDevice9* Device, D3DPRESENT_PARAMETERS *pPresentationParameters);
 	~CSwapChain9();
 
-	void Init();
+	//Reference Counting
+	ULONG mReferenceCount = 1;
+	ULONG mPrivateReferenceCount = 0;
 
+	ULONG PrivateAddRef(void);
+	ULONG PrivateRelease(void);
+
+	//Creation Parameters
+	D3DPRESENT_PARAMETERS mPresentationParameters;
+
+	//Vulkan Swapchain
+	vk::UniqueSurfaceKHR mSurface;
+	size_t mPresentQueueFamilyIndex;
+	std::vector<vk::SurfaceFormatKHR> mFormats;
+	vk::SurfaceCapabilitiesKHR mSurfaceCapabilities;
+	vk::PresentModeKHR mSwapchainPresentMode;
+	vk::UniqueSwapchainKHR mSwapChain;
+	std::vector<vk::Image> mSwapChainImages;
+	uint32_t mImageIndex=0;
+
+	//Misc
+	CSurface9* mBackBuffer = nullptr;
+	CSurface9* mFrontBuffer = nullptr;
+
+private:
+	CDevice9* mDevice = nullptr;
 public:
 	//IUnknown
 	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void  **ppv);

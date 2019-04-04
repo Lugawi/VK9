@@ -125,6 +125,7 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <PrecompiledHeaderFile>pch/stdafx.h</PrecompiledHeaderFile>
       <ForcedIncludeFiles>pch/stdafx.h</ForcedIncludeFiles>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -200,6 +201,7 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <ForcedIncludeFiles>pch/stdafx.h</ForcedIncludeFiles>
       <PrecompiledHeaderFile>pch/stdafx.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -274,6 +276,7 @@
       <EnablePREfast>false</EnablePREfast>
       <ForcedIncludeFiles>pch/stdafx.h</ForcedIncludeFiles>
       <PrecompiledHeaderFile>pch/stdafx.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -349,6 +352,7 @@
       <EnablePREfast>false</EnablePREfast>
       <ForcedIncludeFiles>pch/stdafx.h</ForcedIncludeFiles>
       <PrecompiledHeaderFile>pch/stdafx.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
