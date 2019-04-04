@@ -251,6 +251,128 @@ int32_t ConvertPrimitiveCountToBufferSize(D3DPRIMITIVETYPE primtiveType, int32_t
 	return output;
 }
 
+vk::CullModeFlagBits GetCullMode(D3DCULL input) noexcept
+{
+	vk::CullModeFlagBits output;
+
+	switch (input)
+	{
+	case D3DCULL_NONE:
+		output = vk::CullModeFlagBits::eNone;
+		break;
+	case D3DCULL_CW:
+		output = vk::CullModeFlagBits::eBack;
+		break;
+	case D3DCULL_CCW:
+		output = vk::CullModeFlagBits::eBack;
+		break;
+	default:
+		output = vk::CullModeFlagBits::eNone;
+		break;
+	}
+
+	return output;
+}
+
+vk::FrontFace GetFrontFace(D3DCULL input) noexcept
+{
+	vk::FrontFace output;
+
+	switch (input)
+	{
+	case D3DCULL_NONE:
+		output = vk::FrontFace::eClockwise;
+		break;
+	case D3DCULL_CW:
+		output = vk::FrontFace::eCounterClockwise;
+		break;
+	case D3DCULL_CCW:
+		output = vk::FrontFace::eClockwise;
+		break;
+	default:
+		output = vk::FrontFace::eClockwise;
+		break;
+	}
+
+	return output;
+}
+
+vk::CompareOp ConvertCompareOperation(D3DCMPFUNC input) noexcept
+{
+	vk::CompareOp output;
+
+	switch (input)
+	{
+	case D3DCMP_NEVER:
+		output = (vk::CompareOp)VK_COMPARE_OP_NEVER;
+		break;
+	case D3DCMP_LESS:
+		output = (vk::CompareOp)VK_COMPARE_OP_LESS;
+		break;
+	case D3DCMP_EQUAL:
+		output = (vk::CompareOp)VK_COMPARE_OP_EQUAL;
+		break;
+	case D3DCMP_LESSEQUAL:
+		output = (vk::CompareOp)VK_COMPARE_OP_LESS_OR_EQUAL;
+		break;
+	case D3DCMP_GREATER:
+		output = (vk::CompareOp)VK_COMPARE_OP_GREATER;
+		break;
+	case D3DCMP_NOTEQUAL:
+		output = (vk::CompareOp)VK_COMPARE_OP_NOT_EQUAL;
+		break;
+	case D3DCMP_GREATEREQUAL:
+		output = (vk::CompareOp)VK_COMPARE_OP_GREATER_OR_EQUAL;
+		break;
+	case D3DCMP_ALWAYS:
+		output = (vk::CompareOp)VK_COMPARE_OP_ALWAYS;
+		break;
+	default:
+		output = (vk::CompareOp)VK_COMPARE_OP_MAX_ENUM;
+		break;
+	}
+
+	return output;
+}
+
+vk::StencilOp ConvertStencilOperation(D3DSTENCILOP input) noexcept
+{
+	vk::StencilOp output;
+
+	switch (input)
+	{
+	case D3DSTENCILOP_KEEP:
+		output = (vk::StencilOp)VK_STENCIL_OP_KEEP;
+		break;
+	case D3DSTENCILOP_ZERO:
+		output = (vk::StencilOp)VK_STENCIL_OP_ZERO;
+		break;
+	case D3DSTENCILOP_REPLACE:
+		output = (vk::StencilOp)VK_STENCIL_OP_REPLACE;
+		break;
+	case D3DSTENCILOP_INCRSAT:
+		output = (vk::StencilOp)VK_STENCIL_OP_INCREMENT_AND_CLAMP;
+		break;
+	case D3DSTENCILOP_DECRSAT:
+		output = (vk::StencilOp)VK_STENCIL_OP_DECREMENT_AND_CLAMP;
+		break;
+	case D3DSTENCILOP_INVERT:
+		output = (vk::StencilOp)VK_STENCIL_OP_INVERT;
+		break;
+	case D3DSTENCILOP_INCR:
+		output = (vk::StencilOp)VK_STENCIL_OP_INCREMENT_AND_WRAP;
+		break;
+	case D3DSTENCILOP_DECR:
+		output = (vk::StencilOp)VK_STENCIL_OP_DECREMENT_AND_WRAP;
+		break;
+	default:
+		output = (vk::StencilOp)VK_STENCIL_OP_MAX_ENUM;
+		break;
+	}
+
+	return output;
+}
+
 CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode)
 	:
 	mC9(c9),
@@ -509,9 +631,9 @@ void CDevice9::ResetVulkanDevice()
 	//Setup buffers for up draw methods
 	{
 		auto const upVertexBufferInfo = vk::BufferCreateInfo().setSize(MAX_BUFFERUPDATE).setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst);
-		
+
 		mUpVertexBuffer = mDevice->createBufferUnique(upVertexBufferInfo);
-		
+
 		vk::MemoryRequirements mem_reqs;
 		mDevice->getBufferMemoryRequirements(mUpVertexBuffer.get(), &mem_reqs);
 
@@ -519,8 +641,8 @@ void CDevice9::ResetVulkanDevice()
 		FindMemoryTypeFromProperties(mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, &mem_alloc.memoryTypeIndex);
 
 		mUpVertexBufferMemory = mDevice->allocateMemoryUnique(mem_alloc);
-		
-		mDevice->bindBufferMemory(mUpVertexBuffer.get(), mUpVertexBufferMemory.get(), 0);	
+
+		mDevice->bindBufferMemory(mUpVertexBuffer.get(), mUpVertexBufferMemory.get(), 0);
 	}
 
 	{
@@ -718,7 +840,7 @@ void CDevice9::ResetVulkanDevice()
 			}
 		};
 
-		//TODO: adjust push constant range to handle light enable, I, and B values.
+		//TODO: adjust push constant range to handle light enable, I, and B values or make new buffers for them.
 
 		auto const pipelineLayoutCreateInfo = vk::PipelineLayoutCreateInfo()
 			.setSetLayoutCount(1)
@@ -726,6 +848,12 @@ void CDevice9::ResetVulkanDevice()
 			.setPushConstantRangeCount(1)
 			.setPSetLayouts(&mDescriptorLayout.get());
 		mPipelineLayout = mDevice->createPipelineLayoutUnique(pipelineLayoutCreateInfo);
+	}
+
+	//Setup Pipeline Cache
+	{
+		vk::PipelineCacheCreateInfo const pipelineCacheInfo;
+		mPipelineCache = mDevice->createPipelineCacheUnique(pipelineCacheInfo);
 	}
 
 	//Load fixed function shaders.
@@ -823,6 +951,8 @@ void CDevice9::BeginRecordingCommands()
 
 	mDevice->waitForFences(1, &mDrawFences[mFrameIndex].get(), VK_TRUE, UINT64_MAX);
 	mDevice->resetFences(1, &mDrawFences[mFrameIndex].get());
+
+	mPipelines[mFrameIndex].clear(); //I need to profile this to see what the cost of deleting all of these each frame is.
 
 	mCurrentDrawCommandBuffer = mDrawCommandBuffers[mFrameIndex].get();
 
@@ -960,6 +1090,134 @@ void CDevice9::BeginDraw()
 		mInternalDeviceState.mDeviceState.mCapturedIndexBuffer = false;
 	}
 
+	//Check to see if the pipeline is stale. If so create a new one and bind it.
+	auto& deviceState = mInternalDeviceState.mDeviceState;
+	if (
+		deviceState.mCapturedVertexShader
+		|| deviceState.mCapturedPixelShader
+		|| deviceState.mCapturedAnyStreamFrequency
+		|| deviceState.mCapturedAnyStreamSource
+		|| deviceState.mCapturedFVF
+		|| deviceState.mCapturedVertexDeclaration
+		|| deviceState.mCapturedRenderState[D3DRS_CULLMODE]
+		|| deviceState.mCapturedRenderState[D3DRS_ZENABLE]
+		|| deviceState.mCapturedRenderState[D3DRS_ZWRITEENABLE]
+		|| deviceState.mCapturedRenderState[D3DRS_ZFUNC]
+		|| deviceState.mCapturedRenderState[D3DRS_STENCILREF]
+		|| deviceState.mCapturedRenderState[D3DRS_STENCILMASK]
+		|| deviceState.mCapturedRenderState[D3DRS_STENCILWRITEMASK]
+		|| deviceState.mCapturedRenderState[D3DRS_CCW_STENCILFAIL]
+		|| deviceState.mCapturedRenderState[D3DRS_STENCILFAIL]
+		|| deviceState.mCapturedRenderState[D3DRS_CCW_STENCILPASS]
+		|| deviceState.mCapturedRenderState[D3DRS_STENCILPASS]
+		|| deviceState.mCapturedRenderState[D3DRS_CCW_STENCILFUNC]
+		|| deviceState.mCapturedRenderState[D3DRS_STENCILFUNC]
+
+		)
+	{
+		vk::PipelineShaderStageCreateInfo const shaderStageInfo[2] =
+		{ //TODO: wire up real shaders
+			vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZ.get()).setPName("main"),
+			vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ.get()).setPName("main")
+		};
+
+		const vk::VertexInputAttributeDescription vertexInputAttributeDescription[4] =
+		{ //TODO:
+			vk::VertexInputAttributeDescription(0U,0U,vk::Format::eR32G32B32Sfloat,0),
+			vk::VertexInputAttributeDescription(1U,0U,vk::Format::eR32G32B32Sfloat,1),
+			vk::VertexInputAttributeDescription(2U,0U,vk::Format::eR32G32B32A32Sfloat,1 + 1),
+			vk::VertexInputAttributeDescription(3U,0U,vk::Format::eR32G32B32A32Sfloat,1 + 1 + 1)
+		};
+		const vk::VertexInputBindingDescription vertexInputBindingDescription[1] =
+		{//TODO:
+			vk::VertexInputBindingDescription(0,3,vk::VertexInputRate::eVertex)
+		};
+
+		auto const vertexInputInfo = vk::PipelineVertexInputStateCreateInfo()
+			.setPVertexAttributeDescriptions(vertexInputAttributeDescription)
+			.setVertexAttributeDescriptionCount(4)
+			.setPVertexBindingDescriptions(vertexInputBindingDescription)
+			.setVertexBindingDescriptionCount(1);
+		auto const inputAssemblyInfo = vk::PipelineInputAssemblyStateCreateInfo().setTopology(vk::PrimitiveTopology::eTriangleList);
+		auto const viewportInfo = vk::PipelineViewportStateCreateInfo().setViewportCount(1).setScissorCount(1);
+		auto const rasterizationInfo = vk::PipelineRasterizationStateCreateInfo()
+			.setDepthClampEnable(VK_FALSE)
+			.setRasterizerDiscardEnable(VK_FALSE)
+			.setPolygonMode(vk::PolygonMode::eFill)
+			.setCullMode(GetCullMode((D3DCULL)deviceState.mRenderState[D3DRS_CULLMODE]))
+			.setFrontFace(GetFrontFace((D3DCULL)deviceState.mRenderState[D3DRS_CULLMODE]))
+			.setDepthBiasEnable(VK_TRUE)
+			.setLineWidth(1.0f);
+		auto const multisampleInfo = vk::PipelineMultisampleStateCreateInfo();
+
+		auto const frontStencilOp = vk::StencilOpState()
+			.setReference(deviceState.mRenderState[D3DRS_STENCILREF])
+			.setCompareMask(deviceState.mRenderState[D3DRS_STENCILMASK])
+			.setWriteMask(deviceState.mRenderState[D3DRS_STENCILWRITEMASK])
+			.setFailOp(deviceState.mRenderState[D3DRS_CULLMODE] != D3DCULL_CCW ? ConvertStencilOperation((D3DSTENCILOP)deviceState.mRenderState[D3DRS_CCW_STENCILFAIL]) : ConvertStencilOperation((D3DSTENCILOP)deviceState.mRenderState[D3DRS_STENCILFAIL]))
+			.setPassOp(deviceState.mRenderState[D3DRS_CULLMODE] != D3DCULL_CCW ? ConvertStencilOperation((D3DSTENCILOP)deviceState.mRenderState[D3DRS_CCW_STENCILPASS]) : ConvertStencilOperation((D3DSTENCILOP)deviceState.mRenderState[D3DRS_STENCILPASS]))
+			.setCompareOp(deviceState.mRenderState[D3DRS_CULLMODE] != D3DCULL_CCW ? ConvertCompareOperation((D3DCMPFUNC)deviceState.mRenderState[D3DRS_CCW_STENCILFUNC]) : ConvertCompareOperation((D3DCMPFUNC)deviceState.mRenderState[D3DRS_STENCILFUNC]));
+		auto const backStencilOp = vk::StencilOpState()
+			.setReference(deviceState.mRenderState[D3DRS_STENCILREF])
+			.setCompareMask(deviceState.mRenderState[D3DRS_STENCILMASK])
+			.setWriteMask(deviceState.mRenderState[D3DRS_STENCILWRITEMASK])
+			.setFailOp(deviceState.mRenderState[D3DRS_CULLMODE] == D3DCULL_CCW ? ConvertStencilOperation((D3DSTENCILOP)deviceState.mRenderState[D3DRS_CCW_STENCILFAIL]) : ConvertStencilOperation((D3DSTENCILOP)deviceState.mRenderState[D3DRS_STENCILFAIL]))
+			.setPassOp(deviceState.mRenderState[D3DRS_CULLMODE] == D3DCULL_CCW ? ConvertStencilOperation((D3DSTENCILOP)deviceState.mRenderState[D3DRS_CCW_STENCILPASS]) : ConvertStencilOperation((D3DSTENCILOP)deviceState.mRenderState[D3DRS_STENCILPASS]))
+			.setCompareOp(deviceState.mRenderState[D3DRS_CULLMODE] == D3DCULL_CCW ? ConvertCompareOperation((D3DCMPFUNC)deviceState.mRenderState[D3DRS_CCW_STENCILFUNC]) : ConvertCompareOperation((D3DCMPFUNC)deviceState.mRenderState[D3DRS_STENCILFUNC]));
+		auto const depthStencilInfo = vk::PipelineDepthStencilStateCreateInfo()
+			.setDepthTestEnable(deviceState.mRenderState[D3DRS_ZENABLE])
+			.setDepthWriteEnable(deviceState.mRenderState[D3DRS_ZWRITEENABLE])
+			.setDepthCompareOp(ConvertCompareOperation((D3DCMPFUNC)deviceState.mRenderState[D3DRS_ZFUNC]))
+			.setDepthBoundsTestEnable(VK_FALSE)
+			.setStencilTestEnable(deviceState.mRenderState[D3DRS_STENCILENABLE])
+			.setFront(frontStencilOp)
+			.setBack(backStencilOp);
+
+		vk::PipelineColorBlendAttachmentState const colorBlendAttachments[1] =
+		{
+			vk::PipelineColorBlendAttachmentState().setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA)
+		};
+		auto const colorBlendInfo = vk::PipelineColorBlendStateCreateInfo().setAttachmentCount(1).setPAttachments(colorBlendAttachments);
+		vk::DynamicState const dynamicStates[3] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor, vk::DynamicState::eDepthBias };
+		auto const dynamicStateInfo = vk::PipelineDynamicStateCreateInfo().setPDynamicStates(dynamicStates).setDynamicStateCount(3);
+		auto const pipeline = vk::GraphicsPipelineCreateInfo()
+			.setStageCount(2)
+			.setPStages(shaderStageInfo)
+			.setPVertexInputState(&vertexInputInfo)
+			.setPInputAssemblyState(&inputAssemblyInfo)
+			.setPViewportState(&viewportInfo)
+			.setPRasterizationState(&rasterizationInfo)
+			.setPMultisampleState(&multisampleInfo)
+			.setPDepthStencilState(&depthStencilInfo)
+			.setPColorBlendState(&colorBlendInfo)
+			.setPDynamicState(&dynamicStateInfo)
+			.setLayout(mPipelineLayout.get())
+			.setRenderPass(mCurrentRenderContainer->mRenderPass.get());
+
+		mPipelines[mFrameIndex].push_back(mDevice->createGraphicsPipelineUnique(mPipelineCache.get(), pipeline));
+		mCurrentDrawCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mPipelines[mFrameIndex][mPipelines[mFrameIndex].size()].get());
+
+		deviceState.mCapturedVertexShader = false;
+		deviceState.mCapturedPixelShader = false;
+		deviceState.mCapturedAnyStreamFrequency = false;
+		deviceState.mCapturedAnyStreamSource = false;
+		deviceState.mCapturedFVF = false;
+		deviceState.mCapturedVertexDeclaration = false;
+		deviceState.mCapturedRenderState[D3DRS_CULLMODE] = false;
+		deviceState.mCapturedRenderState[D3DRS_ZENABLE] = false;
+		deviceState.mCapturedRenderState[D3DRS_ZWRITEENABLE] = false;
+		deviceState.mCapturedRenderState[D3DRS_ZFUNC] = false;
+		deviceState.mCapturedRenderState[D3DRS_STENCILREF] = false;
+		deviceState.mCapturedRenderState[D3DRS_STENCILMASK] = false;
+		deviceState.mCapturedRenderState[D3DRS_STENCILWRITEMASK] = false;
+		deviceState.mCapturedRenderState[D3DRS_CCW_STENCILFAIL] = false;
+		deviceState.mCapturedRenderState[D3DRS_STENCILFAIL] = false;
+		deviceState.mCapturedRenderState[D3DRS_CCW_STENCILPASS] = false;
+		deviceState.mCapturedRenderState[D3DRS_STENCILPASS] = false;
+		deviceState.mCapturedRenderState[D3DRS_CCW_STENCILFUNC] = false;
+		deviceState.mCapturedRenderState[D3DRS_STENCILFUNC] = false;
+	}
+
 	vk::RenderPassBeginInfo renderPassBeginInfo;
 	renderPassBeginInfo.renderPass = mCurrentRenderContainer->mRenderPass.get();
 	renderPassBeginInfo.framebuffer = mCurrentRenderContainer->mFrameBuffers[mFrameIndex].get();
@@ -1016,7 +1274,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::Clear(DWORD Count, const D3DRECT *pRects, DW
 		{
 			clearValues.push_back(vk::ClearColorValue(colorValues));
 		}
-	}	
+	}
 	clearValues.push_back(vk::ClearDepthStencilValue(Z, Stencil));
 
 	if (((Flags & D3DCLEAR_TARGET) == D3DCLEAR_TARGET) && (((Flags & D3DCLEAR_STENCIL) == D3DCLEAR_STENCIL) || ((Flags & D3DCLEAR_ZBUFFER) == D3DCLEAR_ZBUFFER)))
@@ -2680,8 +2938,8 @@ RenderContainer::RenderContainer(vk::Device& device, CSurface9* depthStencilSurf
 			clearDepthAttachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(renderTarget->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal));
 			clearBothAttachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(renderTarget->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal));
 
-			colorReference.push_back(vk::AttachmentReference(index, vk::ImageLayout::eColorAttachmentOptimal));	
-			
+			colorReference.push_back(vk::AttachmentReference(index, vk::ImageLayout::eColorAttachmentOptimal));
+
 			index += 1;
 		}
 	}

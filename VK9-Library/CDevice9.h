@@ -50,6 +50,10 @@ struct Pair
 D3DMATRIX operator* (const D3DMATRIX& m1, const D3DMATRIX& m2);
 int32_t ConvertPrimitiveCountToVertexCount(D3DPRIMITIVETYPE primtiveType, int32_t primtiveCount) noexcept;
 int32_t ConvertPrimitiveCountToBufferSize(D3DPRIMITIVETYPE primtiveType, int32_t primtiveCount, int32_t vertexStride) noexcept;
+vk::CullModeFlagBits GetCullMode(D3DCULL input) noexcept;
+vk::FrontFace GetFrontFace(D3DCULL input) noexcept;
+vk::CompareOp ConvertCompareOperation(D3DCMPFUNC input) noexcept;
+vk::StencilOp ConvertStencilOperation(D3DSTENCILOP input) noexcept;
 
 class CDevice9 : public IDirect3DDevice9Ex
 {	
@@ -80,6 +84,7 @@ public:
 	vk::Queue mQueue;
 	vk::UniqueDescriptorSetLayout mDescriptorLayout;
 	vk::UniquePipelineLayout mPipelineLayout;
+	vk::UniquePipelineCache mPipelineCache;
 
 	std::vector<vk::UniqueSemaphore> mImageAvailableSemaphores;
 	std::vector<vk::UniqueSemaphore> mRenderFinishedSemaphores;
@@ -92,8 +97,11 @@ public:
 	std::vector<vk::UniqueFence> mUtilityFences;
 	uint32_t mUtilityIndex = 0;
 	bool mIsRecordingUtility = false;
-
 	bool mIsDrawing = false;
+
+	std::array<std::vector<vk::UniquePipeline>, 3> mPipelines;
+	std::array<std::vector<vk::DescriptorSet>, 3> mDescriptorSets;
+	size_t mDescriptorSetIndex=0;
 
 	/*
 	The idea with these two is to set these to one of the command buffers from the vectors.
@@ -216,7 +224,6 @@ public:
 	std::vector<CSwapChain9*> mSwapChains;
 	std::vector< std::unique_ptr<RenderContainer> > mRenderContainers;
 	RenderContainer* mCurrentRenderContainer=nullptr;
-
 public:
 
 	//IUnknown

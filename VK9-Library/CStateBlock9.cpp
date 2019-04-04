@@ -318,6 +318,7 @@ void CStateBlock9::SetStreamSource(unsigned int stream, IDirect3DVertexBuffer9* 
 
 void CStateBlock9::SetStreamSourceFreq(unsigned int streamNumber, unsigned int divider)
 {
+	mDeviceState.mCapturedAnyStreamFrequency = true;
 	mDeviceState.mCapturedStreamSourceFrequency[streamNumber] = true;
 	mDeviceState.mStreamSourceFrequency[streamNumber] = divider;
 }
@@ -693,6 +694,7 @@ void CStateBlock9::CaptureStreamSourceFrequencies()
 {
 	for (int stream = 0; stream < MAX_VERTEX_INPUTS; stream++)
 	{
+		mDeviceState.mCapturedAnyStreamFrequency = true;
 		mDeviceState.mCapturedStreamSourceFrequency[stream] = true;
 		mDevice->GetStreamSourceFreq(stream, &mDeviceState.mStreamSourceFrequency[stream]);
 	}

@@ -74,6 +74,7 @@ struct DeviceState
 	};
 	StreamSource mStreamSource[MAX_VERTEX_INPUTS] = {};
 
+	bool mCapturedAnyStreamFrequency = false;
 	bool mCapturedStreamSourceFrequency[MAX_VERTEX_INPUTS] = {};
 	unsigned int mStreamSourceFrequency[MAX_VERTEX_INPUTS] = {};
 
