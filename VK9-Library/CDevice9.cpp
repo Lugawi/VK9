@@ -1004,30 +1004,68 @@ HRESULT STDMETHODCALLTYPE CDevice9::Clear(DWORD Count, const D3DRECT *pRects, DW
 {
 	BeginRecordingCommands();
 
+	/*
+	https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkRenderPassBeginInfo.html
+	The array is indexed by attachment number. Only elements corresponding to cleared attachments are used. Other elements of pClearValues are ignored.
+	*/
 	std::vector<vk::ClearValue> clearValues;
-	
-	if ((Flags & D3DCLEAR_TARGET) == D3DCLEAR_TARGET)
+	const std::array<float, 4> colorValues = { D3DCOLOR_R(Color), D3DCOLOR_G(Color), D3DCOLOR_B(Color), D3DCOLOR_A(Color) };
+	for (auto& renderTarget : mRenderTargets)
+	{
+		if (renderTarget)
+		{
+			clearValues.push_back(vk::ClearColorValue(colorValues));
+		}
+	}	
+	clearValues.push_back(vk::ClearDepthStencilValue(Z, Stencil));
+
+	if (((Flags & D3DCLEAR_TARGET) == D3DCLEAR_TARGET) && (((Flags & D3DCLEAR_STENCIL) == D3DCLEAR_STENCIL) || ((Flags & D3DCLEAR_ZBUFFER) == D3DCLEAR_ZBUFFER)))
+	{
+		vk::RenderPassBeginInfo renderPassBeginInfo;
+		renderPassBeginInfo.renderPass = mCurrentRenderContainer->mClearBothRenderPass.get();
+		renderPassBeginInfo.framebuffer = mCurrentRenderContainer->mClearBothFrameBuffers[mFrameIndex].get();
+		renderPassBeginInfo.renderArea.offset.x = 0;
+		renderPassBeginInfo.renderArea.offset.y = 0;
+		renderPassBeginInfo.renderArea.extent.width = mPresentationParameters.BackBufferWidth;
+		renderPassBeginInfo.renderArea.extent.height = mPresentationParameters.BackBufferHeight;
+		renderPassBeginInfo.clearValueCount = clearValues.size();
+		renderPassBeginInfo.pClearValues = clearValues.data();
+		mCurrentDrawCommandBuffer.beginRenderPass(&renderPassBeginInfo, vk::SubpassContents::eInline);
+		mCurrentDrawCommandBuffer.endRenderPass();
+	}
+	else if ((Flags & D3DCLEAR_TARGET) == D3DCLEAR_TARGET)
 	{
 		std::array<float, 4> colorValues = { D3DCOLOR_R(Color), D3DCOLOR_G(Color), D3DCOLOR_B(Color), D3DCOLOR_A(Color) };
 		clearValues.push_back(vk::ClearColorValue(colorValues));
-	}
 
-	if (((Flags & D3DCLEAR_STENCIL) == D3DCLEAR_STENCIL) || ((Flags & D3DCLEAR_ZBUFFER) == D3DCLEAR_ZBUFFER))
+		vk::RenderPassBeginInfo renderPassBeginInfo;
+		renderPassBeginInfo.renderPass = mCurrentRenderContainer->mClearColorRenderPass.get();
+		renderPassBeginInfo.framebuffer = mCurrentRenderContainer->mClearColorFrameBuffers[mFrameIndex].get();
+		renderPassBeginInfo.renderArea.offset.x = 0;
+		renderPassBeginInfo.renderArea.offset.y = 0;
+		renderPassBeginInfo.renderArea.extent.width = mPresentationParameters.BackBufferWidth;
+		renderPassBeginInfo.renderArea.extent.height = mPresentationParameters.BackBufferHeight;
+		renderPassBeginInfo.clearValueCount = clearValues.size();
+		renderPassBeginInfo.pClearValues = clearValues.data();
+		mCurrentDrawCommandBuffer.beginRenderPass(&renderPassBeginInfo, vk::SubpassContents::eInline);
+		mCurrentDrawCommandBuffer.endRenderPass();
+	}
+	else if (((Flags & D3DCLEAR_STENCIL) == D3DCLEAR_STENCIL) || ((Flags & D3DCLEAR_ZBUFFER) == D3DCLEAR_ZBUFFER))
 	{
 		clearValues.push_back(vk::ClearDepthStencilValue(Z, Stencil));
-	}
 
-	vk::RenderPassBeginInfo renderPassBeginInfo;
-	renderPassBeginInfo.renderPass = mCurrentRenderContainer->mRenderPass.get();
-	renderPassBeginInfo.framebuffer = mCurrentRenderContainer->mFrameBuffers[mFrameIndex].get();
-	renderPassBeginInfo.renderArea.offset.x = 0;
-	renderPassBeginInfo.renderArea.offset.y = 0;
-	renderPassBeginInfo.renderArea.extent.width = mPresentationParameters.BackBufferWidth;
-	renderPassBeginInfo.renderArea.extent.height = mPresentationParameters.BackBufferHeight;
-	renderPassBeginInfo.clearValueCount = clearValues.size();
-	renderPassBeginInfo.pClearValues = clearValues.data();
-	mCurrentDrawCommandBuffer.beginRenderPass(&renderPassBeginInfo, vk::SubpassContents::eInline);
-	mCurrentDrawCommandBuffer.endRenderPass();
+		vk::RenderPassBeginInfo renderPassBeginInfo;
+		renderPassBeginInfo.renderPass = mCurrentRenderContainer->mClearDepthRenderPass.get();
+		renderPassBeginInfo.framebuffer = mCurrentRenderContainer->mClearDepthFrameBuffers[mFrameIndex].get();
+		renderPassBeginInfo.renderArea.offset.x = 0;
+		renderPassBeginInfo.renderArea.offset.y = 0;
+		renderPassBeginInfo.renderArea.extent.width = mPresentationParameters.BackBufferWidth;
+		renderPassBeginInfo.renderArea.extent.height = mPresentationParameters.BackBufferHeight;
+		renderPassBeginInfo.clearValueCount = clearValues.size();
+		renderPassBeginInfo.pClearValues = clearValues.data();
+		mCurrentDrawCommandBuffer.beginRenderPass(&renderPassBeginInfo, vk::SubpassContents::eInline);
+		mCurrentDrawCommandBuffer.endRenderPass();
+	}
 
 	return S_OK;
 }
@@ -2618,6 +2656,9 @@ RenderContainer::RenderContainer(vk::Device& device, CSurface9* depthStencilSurf
 	: mDepthStencilSurface(depthStencilSurface),
 	mRenderTargets(renderTargets)
 {
+	std::vector<vk::AttachmentDescription> clearColorAttachments;
+	std::vector<vk::AttachmentDescription> clearDepthAttachments;
+	std::vector<vk::AttachmentDescription> clearBothAttachments;
 	std::vector<vk::AttachmentDescription> attachments;
 	std::vector<vk::AttachmentReference> colorReference;
 	std::vector<vk::ImageView> frameAttachments;
@@ -2635,6 +2676,10 @@ RenderContainer::RenderContainer(vk::Device& device, CSurface9* depthStencilSurf
 			frameAttachments.push_back(renderTarget->mImageView.get());
 			attachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(renderTarget->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal));
 
+			clearColorAttachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(renderTarget->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal));
+			clearDepthAttachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(renderTarget->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal));
+			clearBothAttachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(renderTarget->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal));
+
 			colorReference.push_back(vk::AttachmentReference(index, vk::ImageLayout::eColorAttachmentOptimal));	
 			
 			index += 1;
@@ -2646,15 +2691,54 @@ RenderContainer::RenderContainer(vk::Device& device, CSurface9* depthStencilSurf
 		frameAttachments.push_back(depthStencilSurface->mImageView.get());
 		attachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(depthStencilSurface->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal));
 
+		clearColorAttachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(depthStencilSurface->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal));
+		clearDepthAttachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(depthStencilSurface->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal));
+		clearBothAttachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(depthStencilSurface->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal));
+
 		vk::AttachmentReference depthReference(index, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
-		vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, &depthReference);
-		mRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), attachments.size(), attachments.data(), 1, &subpass));
+		{
+			vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, &depthReference);
+			mRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), attachments.size(), attachments.data(), 1, &subpass));
+		}
+
+		{
+			vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, &depthReference);
+			mClearColorRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), clearColorAttachments.size(), clearColorAttachments.data(), 1, &subpass));
+		}
+
+		{
+			vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, &depthReference);
+			mClearDepthRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), clearDepthAttachments.size(), clearDepthAttachments.data(), 1, &subpass));
+		}
+
+		{
+			vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, &depthReference);
+			mClearBothRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), clearBothAttachments.size(), clearBothAttachments.data(), 1, &subpass));
+		}
 	}
 	else
 	{
-		vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, nullptr);
-		mRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), attachments.size(), attachments.data(), 1, &subpass));
+		{
+			vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, nullptr);
+			mRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), attachments.size(), attachments.data(), 1, &subpass));
+		}
+
+		{
+			vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, nullptr);
+			mClearColorRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), clearColorAttachments.size(), clearColorAttachments.data(), 1, &subpass));
+		}
+
+		//Fake depth clear and both clear because apps may still request a clear containing depth even when there is no depth surface.
+		{
+			vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, nullptr);
+			mClearDepthRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), attachments.size(), attachments.data(), 1, &subpass));
+		}
+
+		{
+			vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, nullptr);
+			mClearBothRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), clearColorAttachments.size(), clearColorAttachments.data(), 1, &subpass));
+		}
 	}
 
 	vk::FramebufferCreateInfo framebufferCreateInfo;
@@ -2668,6 +2752,24 @@ RenderContainer::RenderContainer(vk::Device& device, CSurface9* depthStencilSurf
 	for (size_t i = 0; i < 3; i++)
 	{
 		mFrameBuffers.push_back(device.createFramebufferUnique(framebufferCreateInfo, nullptr));
+	}
+
+	framebufferCreateInfo.renderPass = mClearColorRenderPass.get();
+	for (size_t i = 0; i < 3; i++)
+	{
+		mClearColorFrameBuffers.push_back(device.createFramebufferUnique(framebufferCreateInfo, nullptr));
+	}
+
+	framebufferCreateInfo.renderPass = mClearDepthRenderPass.get();
+	for (size_t i = 0; i < 3; i++)
+	{
+		mClearDepthFrameBuffers.push_back(device.createFramebufferUnique(framebufferCreateInfo, nullptr));
+	}
+
+	framebufferCreateInfo.renderPass = mClearBothRenderPass.get();
+	for (size_t i = 0; i < 3; i++)
+	{
+		mClearBothFrameBuffers.push_back(device.createFramebufferUnique(framebufferCreateInfo, nullptr));
 	}
 }
 

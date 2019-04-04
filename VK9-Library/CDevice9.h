@@ -363,7 +363,6 @@ public:
 class RenderContainer
 {
 public:
-	RenderContainer(const RenderContainer& obj);
 	RenderContainer(vk::Device& device, CSurface9* depthStencilSurface, std::array<CSurface9*, 4>& renderTargets);
 	~RenderContainer();
 
@@ -372,4 +371,13 @@ public:
 
 	vk::UniqueRenderPass mRenderPass;
 	std::vector <vk::UniqueFramebuffer> mFrameBuffers;
+
+	vk::UniqueRenderPass mClearColorRenderPass;
+	std::vector <vk::UniqueFramebuffer> mClearColorFrameBuffers;
+
+	vk::UniqueRenderPass mClearDepthRenderPass;
+	std::vector <vk::UniqueFramebuffer> mClearDepthFrameBuffers;
+
+	vk::UniqueRenderPass mClearBothRenderPass;
+	std::vector <vk::UniqueFramebuffer> mClearBothFrameBuffers;
 };

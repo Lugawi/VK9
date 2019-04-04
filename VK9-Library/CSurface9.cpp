@@ -776,8 +776,6 @@ ULONG CSurface9::PrivateRelease(void)
 
 void CSurface9::SetImageLayout(vk::ImageLayout newLayout)
 {
-	Log(info) << "CSurface9::SetImageLayout test1" << std::endl;
-
 	mDevice->BeginRecordingUtilityCommands();
 	{
 		const vk::PipelineStageFlags src_stages = ((mImageLayout == vk::ImageLayout::eTransferSrcOptimal || mImageLayout == vk::ImageLayout::eTransferDstOptimal) ? vk::PipelineStageFlagBits::eTransfer : vk::PipelineStageFlagBits::eTopOfPipe);
