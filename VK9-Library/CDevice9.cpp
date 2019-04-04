@@ -278,6 +278,11 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 		memcpy(&mFullscreenDisplayMode, pFullscreenDisplayMode, sizeof(D3DDISPLAYMODEEX));
 	}
 
+	if (hFocusWindow && !mPresentationParameters.hDeviceWindow)
+	{
+		mPresentationParameters.hDeviceWindow = hFocusWindow;
+	}
+
 	//Setup Windows window
 	if (!mPresentationParameters.BackBufferWidth)
 	{

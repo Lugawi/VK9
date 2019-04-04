@@ -287,23 +287,23 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::Present(const RECT *pSourceRect, const RE
 {
 	if (pSourceRect)
 	{
-		Log(warning) << "Present::Present SourceRect is not implemented!" << std::endl;
+		Log(warning) << "CSwapChain9::Present SourceRect is not implemented!" << std::endl;
 	}
 	if (pDestRect)
 	{
-		Log(warning) << "Present::Present DestRect is not implemented!" << std::endl;
+		Log(warning) << "CSwapChain9::Present DestRect is not implemented!" << std::endl;
 	}
 	if (hDestWindowOverride != NULL && mPresentationParameters.hDeviceWindow != hDestWindowOverride)
 	{
-		Log(warning) << "Present::Present window override is not implemented!" << std::endl;
+		Log(warning) << "CSwapChain9::Present window override is not implemented!" << std::endl;
 	}
 	if (pDirtyRegion)
 	{
-		Log(warning) << "Present::Present DirtyRegion is not implemented!" << std::endl;
+		Log(warning) << "CSwapChain9::Present DirtyRegion is not implemented!" << std::endl;
 	}
 	if (dwFlags)
 	{
-		Log(warning) << "Present::Present dwFlags are not implemented!" << std::endl;
+		Log(warning) << "CSwapChain9::Present dwFlags are not implemented!" << std::endl;
 	}
 
 	mDevice->BeginRecordingCommands(); //recording should already be running by this point.
