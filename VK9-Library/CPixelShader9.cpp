@@ -21,22 +21,49 @@ misrepresented as being the original software.
 #include "CPixelShader9.h"
 #include "CDevice9.h"
 #include "LogManager.h"
+#include "ShaderConverter.h"
 //#include "PrivateTypes.h"
 
 CPixelShader9::CPixelShader9(CDevice9* device,const DWORD* pFunction)
 	: mDevice(device),
-	mFunction((DWORD*)pFunction)
+	mFunction(nullptr)
 {
 	Log(info) << "CPixelShader9::CPixelShader9" << std::endl;
+
+	mSize = _msize((void*)pFunction); //This is MSVC only but the only other way to get the size is to walk the shader byte code.
+
+	ShaderConverter converter(mDevice->mDevice.get());
+	mShader = converter.Convert((uint32_t*)pFunction);
+
+	if (mSize)
+	{
+		mFunction = (DWORD*)malloc(mSize);
+		memcpy(mFunction, pFunction, mSize);
+	}
 }
 
 CPixelShader9::~CPixelShader9()
 {
 	Log(info) << "CPixelShader9::~CPixelShader9" << std::endl;
 
-
-
 	free(mFunction);
+}
+
+ULONG CPixelShader9::PrivateAddRef(void)
+{
+	return InterlockedIncrement(&mPrivateReferenceCount);
+}
+
+ULONG CPixelShader9::PrivateRelease(void)
+{
+	ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
+
+	if (ref == 0 && mReferenceCount == 0)
+	{
+		delete this;
+	}
+
+	return ref;
 }
 
 ULONG STDMETHODCALLTYPE CPixelShader9::AddRef(void)
@@ -165,6 +192,8 @@ HRESULT STDMETHODCALLTYPE CPixelShader9::GetFunction(void* pData, UINT* pSizeOfD
 	{
 		return S_OK;
 	}
+
+	//Log(warn) << "CPixelShader9::GetFunction" << std::endl;
 
 	memcpy(pData, mFunction, mSize);
 

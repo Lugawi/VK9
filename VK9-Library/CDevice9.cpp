@@ -901,7 +901,7 @@ void CDevice9::ResetVulkanDevice()
 
 	//VertexConstant
 	{
-		auto const vertexConstantBufferInfo = vk::BufferCreateInfo().setSize(sizeof(mInternalDeviceState.mDeviceState.mVertexShaderConstantF)).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		auto const vertexConstantBufferInfo = vk::BufferCreateInfo().setSize(sizeof(mInternalDeviceState.mDeviceState.mVertexShaderConstantI) + sizeof(mInternalDeviceState.mDeviceState.mVertexShaderConstantB) + sizeof(mInternalDeviceState.mDeviceState.mVertexShaderConstantF)).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
 		mVertexConstantBuffer = mDevice->createBufferUnique(vertexConstantBufferInfo);
 		vk::MemoryRequirements vertexConstantMemoryRequirements;
 		mDevice->getBufferMemoryRequirements(mVertexConstantBuffer.get(), &vertexConstantMemoryRequirements);
@@ -911,11 +911,9 @@ void CDevice9::ResetVulkanDevice()
 		mDevice->bindBufferMemory(mVertexConstantBuffer.get(), mVertexConstantBufferMemory.get(), 0);
 	}
 
-	//Handle B and I with constants maybe
-
 	//PixelConstant
 	{
-		auto const pixelConstantBufferInfo = vk::BufferCreateInfo().setSize(sizeof(mInternalDeviceState.mDeviceState.mPixelShaderConstantF)).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		auto const pixelConstantBufferInfo = vk::BufferCreateInfo().setSize(sizeof(mInternalDeviceState.mDeviceState.mPixelShaderConstantI) + sizeof(mInternalDeviceState.mDeviceState.mPixelShaderConstantB) + sizeof(mInternalDeviceState.mDeviceState.mPixelShaderConstantF)).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
 		mPixelConstantBuffer = mDevice->createBufferUnique(pixelConstantBufferInfo);
 		vk::MemoryRequirements pixelConstantMemoryRequirements;
 		mDevice->getBufferMemoryRequirements(mPixelConstantBuffer.get(), &pixelConstantMemoryRequirements);
@@ -1003,7 +1001,7 @@ void CDevice9::ResetVulkanDevice()
 			}
 		};
 
-		//TODO: adjust push constant range to handle light enable, I, and B values or make new buffers for them.
+		//TODO: look into optimizations using push constants and specialization constants.
 
 		auto const pipelineLayoutCreateInfo = vk::PipelineLayoutCreateInfo()
 			.setSetLayoutCount(1)
@@ -1285,15 +1283,265 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 		|| deviceState.mCapturedRenderState[D3DRS_BLENDOPALPHA]
 		|| deviceState.mCapturedRenderState[D3DRS_SRCBLENDALPHA]
 		|| deviceState.mCapturedRenderState[D3DRS_DESTBLENDALPHA]
+		|| deviceState.mCapturedRenderState[D3DRS_POINTSPRITEENABLE]
 		)
 	{
 		auto& vertexDeclaration = (*mInternalDeviceState.mDeviceState.mVertexDeclaration); //If this is null we can't do anything anyway.
 
-		vk::PipelineShaderStageCreateInfo const shaderStageInfo[2] =
-		{ //TODO: wire up real shaders
-			vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZ.get()).setPName("main"),
-			vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ.get()).setPName("main")
-		};
+		std::vector<vk::PipelineShaderStageCreateInfo> shaderStageInfo;
+
+		//vk::PipelineShaderStageCreateInfo const shaderStageInfo[2] =
+		//{ //TODO: wire up real shaders
+		//	vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZ.get()).setPName("main"),
+		//	vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ.get()).setPName("main")
+		//};
+
+		if (mInternalDeviceState.mDeviceState.mVertexShader != nullptr)
+		{
+			shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mInternalDeviceState.mDeviceState.mVertexShader->mShader.get()).setPName("main"));
+
+
+			if (mInternalDeviceState.mDeviceState.mPixelShader != nullptr)
+			{
+				shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mInternalDeviceState.mDeviceState.mPixelShader->mShader.get()).setPName("main"));
+			}
+			else
+			{
+				shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_Passthrough.get()).setPName("main"));
+			}
+		}
+		else
+		{
+			if (vertexDeclaration.mHasPosition && !vertexDeclaration.mHasNormal && !vertexDeclaration.mHasPSize && !vertexDeclaration.mHasColor1 && !vertexDeclaration.mHasColor2)
+			{
+				switch (vertexDeclaration.mTextureCount)
+				{
+				case 0:
+					if (vertexDeclaration.mIsTransformed)
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZRHW.get()).setPName("main"));
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZ.get()).setPName("main"));
+					}
+
+					if (deviceState.mRenderState[D3DRS_POINTSPRITEENABLE])
+					{
+						Log(fatal) << "CDevice9::BeginDraw point sprite not supported with hasPosition && !hasColor && !hasNormal && " << vertexDeclaration.mTextureCount << std::endl;
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ.get()).setPName("main"));
+					}
+					break;
+				case 1:
+					if (vertexDeclaration.mIsTransformed)
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZRHW_TEX1.get()).setPName("main"));
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZ_TEX1.get()).setPName("main"));
+					}
+
+					if (deviceState.mRenderState[D3DRS_POINTSPRITEENABLE])
+					{
+						Log(fatal) << "CDevice9::BeginDraw point sprite not supported with hasPosition && !hasColor && !hasNormal && " << vertexDeclaration.mTextureCount << std::endl;
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ_TEX1.get()).setPName("main"));
+					}
+					break;
+				case 2:
+					if (vertexDeclaration.mIsTransformed)
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZRHW_TEX2.get()).setPName("main"));
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZ_TEX2.get()).setPName("main"));
+					}
+
+					if (deviceState.mRenderState[D3DRS_POINTSPRITEENABLE])
+					{
+						Log(fatal) << "CDevice9::BeginDraw point sprite not supported with hasPosition && !hasColor && !hasNormal && " << vertexDeclaration.mTextureCount << std::endl;
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ_TEX2.get()).setPName("main"));
+					}
+					break;
+				default:
+					Log(fatal) << "CDevice9::BeginDraw unsupported texture count " << vertexDeclaration.mTextureCount << std::endl;
+					break;
+				}
+			}
+			else if (vertexDeclaration.mHasPosition && !vertexDeclaration.mHasNormal && !vertexDeclaration.mHasPSize && vertexDeclaration.mHasColor1 && !vertexDeclaration.mHasColor2)
+			{
+				switch (vertexDeclaration.mTextureCount)
+				{
+				case 0:
+					if (vertexDeclaration.mIsTransformed)
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZRHW_DIFFUSE.get()).setPName("main"));
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZ_DIFFUSE.get()).setPName("main"));
+					}
+
+					if (deviceState.mRenderState[D3DRS_POINTSPRITEENABLE])
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eGeometry).setModule(mGeomShaderModule_XYZ_DIFFUSE.get()).setPName("main"));
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ_DIFFUSE_TEX1.get()).setPName("main"));
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ_DIFFUSE.get()).setPName("main"));
+					}
+
+					break;
+				case 1:
+					if (vertexDeclaration.mIsTransformed)
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZRHW_DIFFUSE_TEX1.get()).setPName("main"));
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZ_DIFFUSE_TEX1.get()).setPName("main"));
+					}
+
+					if (deviceState.mRenderState[D3DRS_POINTSPRITEENABLE])
+					{
+						Log(fatal) << "CDevice9::BeginDraw point sprite not supported with hasPosition && hasColor && !hasNormal && " << vertexDeclaration.mTextureCount << std::endl;
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ_DIFFUSE_TEX1.get()).setPName("main"));
+					}
+					break;
+				case 2:
+					if (vertexDeclaration.mIsTransformed)
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZRHW_DIFFUSE_TEX2.get()).setPName("main"));
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZ_DIFFUSE_TEX2.get()).setPName("main"));
+					}
+
+					if (deviceState.mRenderState[D3DRS_POINTSPRITEENABLE])
+					{
+						Log(fatal) << "CDevice9::BeginDraw point sprite not supported with hasPosition && hasColor && !hasNormal && " << vertexDeclaration.mTextureCount << std::endl;
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ_DIFFUSE_TEX2.get()).setPName("main"));
+					}
+					break;
+				default:
+					Log(fatal) << "CDevice9::BeginDraw unsupported texture count " << vertexDeclaration.mTextureCount << std::endl;
+					break;
+				}
+			}
+			else if (vertexDeclaration.mHasPosition && vertexDeclaration.mHasNormal && !vertexDeclaration.mHasPSize && vertexDeclaration.mHasColor1 && !vertexDeclaration.mHasColor2)
+			{
+				switch (vertexDeclaration.mTextureCount)
+				{
+				case 2:
+					shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZ_NORMAL_DIFFUSE_TEX2.get()).setPName("main"));
+
+					if (deviceState.mRenderState[D3DRS_POINTSPRITEENABLE])
+					{
+						Log(fatal) << "CDevice9::BeginDraw point sprite not supported with hasPosition && hasColor && hasNormal && " << vertexDeclaration.mTextureCount << std::endl;
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ_NORMAL_DIFFUSE_TEX2.get()).setPName("main"));
+					}
+					break;
+				case 1:
+					shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZ_NORMAL_DIFFUSE_TEX1.get()).setPName("main"));
+					if (deviceState.mRenderState[D3DRS_POINTSPRITEENABLE])
+					{
+						Log(fatal) << "CDevice9::BeginDraw point sprite not supported with hasPosition && hasColor && hasNormal && " << vertexDeclaration.mTextureCount << std::endl;
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ_NORMAL_DIFFUSE_TEX1.get()).setPName("main"));
+					}
+					break;
+				case 0:
+					shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZ_NORMAL_DIFFUSE.get()).setPName("main"));
+					if (deviceState.mRenderState[D3DRS_POINTSPRITEENABLE])
+					{
+						Log(fatal) << "CDevice9::BeginDraw point sprite not supported with hasPosition && hasColor && hasNormal && " << vertexDeclaration.mTextureCount << std::endl;
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ_NORMAL_DIFFUSE.get()).setPName("main"));
+					}
+					break;
+				default:
+					Log(fatal) << "CDevice9::BeginDraw unsupported texture count " << vertexDeclaration.mTextureCount << std::endl;
+					break;
+				}
+			}
+			else if (vertexDeclaration.mHasPosition  && vertexDeclaration.mHasNormal && !vertexDeclaration.mHasPSize && !vertexDeclaration.mHasColor1 && !vertexDeclaration.mHasColor2)
+			{
+				switch (vertexDeclaration.mTextureCount)
+				{
+				case 0:
+					shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZ_NORMAL.get()).setPName("main"));
+					if (deviceState.mRenderState[D3DRS_POINTSPRITEENABLE])
+					{
+						Log(fatal) << "CDevice9::BeginDraw point sprite not supported with hasPosition && !hasColor && hasNormal && " << vertexDeclaration.mTextureCount << std::endl;
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ_NORMAL.get()).setPName("main"));
+					}
+					break;
+				case 1:
+					shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZ_NORMAL_TEX1.get()).setPName("main"));
+					if (deviceState.mRenderState[D3DRS_POINTSPRITEENABLE])
+					{
+						Log(fatal) << "CDevice9::BeginDraw point sprite not supported with hasPosition && !hasColor && hasNormal && " << vertexDeclaration.mTextureCount << std::endl;
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ_NORMAL_TEX1.get()).setPName("main"));
+					}
+					break;
+				case 2:
+					shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZ_NORMAL_TEX2.get()).setPName("main"));
+					if (deviceState.mRenderState[D3DRS_POINTSPRITEENABLE])
+					{
+						Log(fatal) << "CDevice9::BeginDraw point sprite not supported with hasPosition && !hasColor && hasNormal && " << vertexDeclaration.mTextureCount << std::endl;
+					}
+					else
+					{
+						shaderStageInfo.push_back(vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ_NORMAL_TEX2.get()).setPName("main"));
+					}
+					break;
+				default:
+					Log(fatal) << "CDevice9::BeginDraw unsupported texture count " << vertexDeclaration.mTextureCount << std::endl;
+					break;
+				}
+			}
+			else
+			{
+				Log(fatal) << "CDevice9::BeginDraw unsupported layout." << std::endl;
+				Log(fatal) << "CDevice9::BeginDraw hasPosition = " << vertexDeclaration.mHasPosition << std::endl;
+				Log(fatal) << "CDevice9::BeginDraw hasNormal = " << vertexDeclaration.mHasNormal << std::endl;
+				Log(fatal) << "CDevice9::BeginDraw hasPSize = " << vertexDeclaration.mHasPSize << std::endl;
+				Log(fatal) << "CDevice9::BeginDraw hasColor1 = " << vertexDeclaration.mHasColor1 << std::endl;
+				Log(fatal) << "CDevice9::BeginDraw hasColor2 = " << vertexDeclaration.mHasColor2 << std::endl;
+				Log(fatal) << "CDevice9::BeginDraw textureCount = " << vertexDeclaration.mTextureCount << std::endl;
+			}
+		}
 
 		std::vector<vk::VertexInputBindingDescription> vertexInputBindingDescription;
 		for (size_t i = 0; i < MAX_VERTEX_INPUTS; i++)
@@ -1365,8 +1613,8 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 		vk::DynamicState const dynamicStates[3] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor, vk::DynamicState::eDepthBias };
 		auto const dynamicStateInfo = vk::PipelineDynamicStateCreateInfo().setPDynamicStates(dynamicStates).setDynamicStateCount(3);
 		auto const pipeline = vk::GraphicsPipelineCreateInfo()
-			.setStageCount(2)
-			.setPStages(shaderStageInfo)
+			.setStageCount(shaderStageInfo.size())
+			.setPStages(shaderStageInfo.data())
 			.setPVertexInputState(&vertexInputInfo)
 			.setPInputAssemblyState(&inputAssemblyInfo)
 			.setPViewportState(&viewportInfo)
@@ -1409,6 +1657,7 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 		deviceState.mCapturedRenderState[D3DRS_BLENDOPALPHA] = false;
 		deviceState.mCapturedRenderState[D3DRS_SRCBLENDALPHA] = false;
 		deviceState.mCapturedRenderState[D3DRS_DESTBLENDALPHA] = false;
+		deviceState.mCapturedRenderState[D3DRS_POINTSPRITEENABLE] = false;
 
 		mLastPrimitiveType = primitiveType;
 	}
@@ -2576,7 +2825,9 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantB(UINT StartRegister, 
 	}
 	else
 	{
-		//BeginRecordingCommands();
+		BeginRecordingCommands();
+
+		mCurrentDrawCommandBuffer.updateBuffer(mPixelConstantBuffer.get(), sizeof(mInternalDeviceState.mDeviceState.mPixelShaderConstantI) + StartRegister * sizeof(int), BoolCount * sizeof(int), pConstantData);
 
 		mInternalDeviceState.SetPixelShaderConstantB(StartRegister, pConstantData, BoolCount);
 	}
@@ -2594,7 +2845,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantF(UINT StartRegister, 
 	{
 		BeginRecordingCommands();
 
-		mCurrentDrawCommandBuffer.updateBuffer(mPixelConstantBuffer.get(), StartRegister * sizeof(float[4]), Vector4fCount * sizeof(float[4]), pConstantData);
+		mCurrentDrawCommandBuffer.updateBuffer(mPixelConstantBuffer.get(), sizeof(mInternalDeviceState.mDeviceState.mPixelShaderConstantI) + sizeof(mInternalDeviceState.mDeviceState.mPixelShaderConstantB) + StartRegister * sizeof(float[4]), Vector4fCount * sizeof(float[4]), pConstantData);
 
 		mInternalDeviceState.SetPixelShaderConstantF(StartRegister, pConstantData, Vector4fCount);
 	}
@@ -2610,7 +2861,9 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantI(UINT StartRegister, 
 	}
 	else
 	{
-		//BeginRecordingCommands();
+		BeginRecordingCommands();
+
+		mCurrentDrawCommandBuffer.updateBuffer(mPixelConstantBuffer.get(), StartRegister * sizeof(int[4]), Vector4iCount * sizeof(int[4]), pConstantData);
 
 		mInternalDeviceState.SetPixelShaderConstantI(StartRegister, pConstantData, Vector4iCount);
 	}
@@ -2855,7 +3108,9 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantB(UINT StartRegister,
 	}
 	else
 	{
-		//BeginRecordingCommands();
+		BeginRecordingCommands();
+
+		mCurrentDrawCommandBuffer.updateBuffer(mVertexConstantBuffer.get(), sizeof(mInternalDeviceState.mDeviceState.mVertexShaderConstantI) + StartRegister * sizeof(int), BoolCount * sizeof(int), pConstantData);
 
 		mInternalDeviceState.SetVertexShaderConstantB(StartRegister, pConstantData, BoolCount);
 	}
@@ -2873,7 +3128,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantF(UINT StartRegister,
 	{
 		BeginRecordingCommands();
 
-		mCurrentDrawCommandBuffer.updateBuffer(mVertexConstantBuffer.get(), StartRegister * sizeof(float[4]), Vector4fCount * sizeof(float[4]), pConstantData);
+		mCurrentDrawCommandBuffer.updateBuffer(mVertexConstantBuffer.get(), sizeof(mInternalDeviceState.mDeviceState.mVertexShaderConstantI) + sizeof(mInternalDeviceState.mDeviceState.mVertexShaderConstantB) + StartRegister * sizeof(float[4]), Vector4fCount * sizeof(float[4]), pConstantData);
 
 		mInternalDeviceState.SetVertexShaderConstantF(StartRegister, pConstantData, Vector4fCount);
 	}
@@ -2889,7 +3144,9 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantI(UINT StartRegister,
 	}
 	else
 	{
-		//BeginRecordingCommands();
+		BeginRecordingCommands();
+
+		mCurrentDrawCommandBuffer.updateBuffer(mVertexConstantBuffer.get(), StartRegister * sizeof(int[4]), Vector4iCount * sizeof(int[4]), pConstantData);
 
 		mInternalDeviceState.SetVertexShaderConstantI(StartRegister, pConstantData, Vector4iCount);
 	}

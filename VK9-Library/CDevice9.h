@@ -176,7 +176,7 @@ public:
 	vk::UniqueShaderModule mVertShaderModule_XYZ_NORMAL;
 	vk::UniqueShaderModule mFragShaderModule_XYZ_NORMAL;
 
-	vk::UniqueShaderModule  mVertShaderModule_XYZ_NORMAL_TEX1;
+	vk::UniqueShaderModule mVertShaderModule_XYZ_NORMAL_TEX1;
 	vk::UniqueShaderModule mFragShaderModule_XYZ_NORMAL_TEX1;
 
 	vk::UniqueShaderModule mVertShaderModule_XYZ_NORMAL_TEX2;

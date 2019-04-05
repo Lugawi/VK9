@@ -21,21 +21,51 @@ misrepresented as being the original software.
 #include "CVertexShader9.h"
 #include "CDevice9.h"
 #include "LogManager.h"
+#include "ShaderConverter.h"
 //#include "PrivateTypes.h"
+
+#include <malloc.h>
 
 CVertexShader9::CVertexShader9(CDevice9* device, const DWORD* pFunction)
 	: mDevice(device),
-	mFunction((DWORD*)pFunction)
+	mFunction(nullptr)
 {
 	Log(info) << "CVertexShader9::CVertexShader9" << std::endl;
+
+	mSize = _msize((void*)pFunction); //This is MSVC only but the only other way to get the size is to walk the shader byte code.
+
+	ShaderConverter converter(mDevice->mDevice.get());
+	mShader = converter.Convert((uint32_t*)pFunction);
+
+	if (mSize)
+	{
+		mFunction = (DWORD*)malloc(mSize);
+		memcpy(mFunction, pFunction, mSize);
+	}	
 }
 
 CVertexShader9::~CVertexShader9()
 {
 	Log(info) << "CVertexShader9::~CVertexShader9" << std::endl;
 
-
 	free(mFunction);
+}
+
+ULONG CVertexShader9::PrivateAddRef(void)
+{
+	return InterlockedIncrement(&mPrivateReferenceCount);
+}
+
+ULONG CVertexShader9::PrivateRelease(void)
+{
+	ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
+
+	if (ref == 0 && mReferenceCount == 0)
+	{
+		delete this;
+	}
+
+	return ref;
 }
 
 ULONG STDMETHODCALLTYPE CVertexShader9::AddRef(void)
@@ -169,6 +199,8 @@ HRESULT STDMETHODCALLTYPE CVertexShader9::GetFunction(void* pData, UINT* pSizeOf
 	{
 		return S_OK;
 	}
+
+	//Log(warn) << "CVertexShader9::GetFunction" << std::endl;
 
 	memcpy(pData, mFunction, mSize);
 

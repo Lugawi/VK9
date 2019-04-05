@@ -32,30 +32,21 @@ public:
 	CPixelShader9(CDevice9* device,const DWORD* pFunction);
 	~CPixelShader9();
 
-	CDevice9* mDevice = nullptr;
-	DWORD* mFunction = nullptr;
-	size_t mSize = 0;
-
+	//Reference Counting
 	ULONG mReferenceCount = 1;
 	ULONG mPrivateReferenceCount = 0;
 
-	ULONG PrivateAddRef(void)
-	{
-		return InterlockedIncrement(&mPrivateReferenceCount);
-	}
+	ULONG PrivateAddRef(void);
+	ULONG PrivateRelease(void);
 
-	ULONG PrivateRelease(void)
-	{
-		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
+	//Creation Parameters
+	DWORD* mFunction = nullptr;
+	size_t mSize = 0;
 
-		if (ref == 0 && mReferenceCount == 0)
-		{
-			delete this;
-		}
-
-		return ref;
-	}
-
+	//Misc
+	vk::UniqueShaderModule mShader;
+private:
+	CDevice9* mDevice = nullptr;
 public:
 	//IUnknown
 	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid,void  **ppv);
