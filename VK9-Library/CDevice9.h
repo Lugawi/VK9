@@ -227,6 +227,7 @@ public:
 	UINT mAvailableTextureMemory = 0;
 	std::vector<CSwapChain9*> mSwapChains;
 	std::vector< std::unique_ptr<RenderContainer> > mRenderContainers;
+	std::vector< std::unique_ptr<CVertexDeclaration9> > mVertexDeclarations;
 	RenderContainer* mCurrentRenderContainer=nullptr;
 	D3DPRIMITIVETYPE mLastPrimitiveType = D3DPT_FORCE_DWORD;
 public:

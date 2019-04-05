@@ -24,48 +24,55 @@ misrepresented as being the original software.
 #include <vulkan/vk_sdk_platform.h>
 #include "d3d9.h"
 
+#include <vector>
+
 class CDevice9;
+
+vk::Format ConvertDeclType(D3DDECLTYPE input) noexcept;
+uint32_t GetTextureCount(DWORD fvf) noexcept;
 
 class CVertexDeclaration9 : public IDirect3DVertexDeclaration9
 {
-private:
-	CDevice9* mDevice;
 public:
 	CVertexDeclaration9(CDevice9* device,const D3DVERTEXELEMENT9* pVertexElements);
+	CVertexDeclaration9(CDevice9* device, DWORD fvf);
 	~CVertexDeclaration9();
 
+	//Reference Counting
+	ULONG mReferenceCount = 1;
+	ULONG mPrivateReferenceCount = 0;
+
+	ULONG PrivateAddRef(void);
+	ULONG PrivateRelease(void);
+
+	//Creation Parameters
 	std::vector<D3DVERTEXELEMENT9> mVertexElements;
+	DWORD mFVF = 0;
+
+	//Misc
+	uint32_t mPositionSize = 3;
+	BOOL mIsTransformed = 0;
+
 	BOOL mHasPosition=0;
 	BOOL mHasBlendWeight = 0;
 	BOOL mHasBlendIndices = 0;
 	BOOL mHasNormal = 0;
 	BOOL mHasPSize = 0;
+	size_t mTextureCount = 0;
+	BOOL mHasTangent = 0;
+	BOOL mHasBinormal = 0;
+	BOOL mHasTessfactor = 0;
 	BOOL mHasPositionT = 0;
 	BOOL mHasColor1=0;
 	BOOL mHasColor2=0;
-	int32_t mTextureCount=0;
+	BOOL mHasFog = 0;
+	BOOL mHasDepth = 0;
+	BOOL mHasSample = 0;
 
-	ULONG mReferenceCount=1;
-	ULONG mPrivateReferenceCount = 0;
+	std::vector<vk::VertexInputAttributeDescription> mVertexInputAttributeDescription;
 
-	ULONG PrivateAddRef(void)
-	{
-		return InterlockedIncrement(&mPrivateReferenceCount);
-	}
-
-	ULONG PrivateRelease(void)
-	{
-		ULONG ref = InterlockedDecrement(&mPrivateReferenceCount);
-
-		if (ref == 0 && mReferenceCount == 0)
-		{
-			delete this;
-		}
-
-		return ref;
-	}
-
-	VkResult mResult= VK_SUCCESS;
+private:
+	CDevice9* mDevice;
 public:
 	//IUnknown
 	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid,void  **ppv);

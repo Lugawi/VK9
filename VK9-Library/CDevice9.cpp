@@ -1287,20 +1287,13 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 		|| deviceState.mCapturedRenderState[D3DRS_DESTBLENDALPHA]
 		)
 	{
+		auto& vertexDeclaration = (*mInternalDeviceState.mDeviceState.mVertexDeclaration); //If this is null we can't do anything anyway.
+
 		vk::PipelineShaderStageCreateInfo const shaderStageInfo[2] =
 		{ //TODO: wire up real shaders
 			vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZ.get()).setPName("main"),
 			vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ.get()).setPName("main")
 		};
-
-		const vk::VertexInputAttributeDescription vertexInputAttributeDescription[4] =
-		{ //TODO:
-			vk::VertexInputAttributeDescription(0U,0U,vk::Format::eR32G32B32Sfloat,0),
-			vk::VertexInputAttributeDescription(1U,0U,vk::Format::eR32G32B32Sfloat,1),
-			vk::VertexInputAttributeDescription(2U,0U,vk::Format::eR32G32B32A32Sfloat,1 + 1),
-			vk::VertexInputAttributeDescription(3U,0U,vk::Format::eR32G32B32A32Sfloat,1 + 1 + 1)
-		};
-
 
 		std::vector<vk::VertexInputBindingDescription> vertexInputBindingDescription;
 		for (size_t i = 0; i < MAX_VERTEX_INPUTS; i++)
@@ -1314,8 +1307,8 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 		}
 
 		auto const vertexInputInfo = vk::PipelineVertexInputStateCreateInfo()
-			.setPVertexAttributeDescriptions(vertexInputAttributeDescription)
-			.setVertexAttributeDescriptionCount(4)
+			.setPVertexAttributeDescriptions(vertexDeclaration.mVertexInputAttributeDescription.data())
+			.setVertexAttributeDescriptionCount(vertexDeclaration.mVertexInputAttributeDescription.size())
 			.setPVertexBindingDescriptions(vertexInputBindingDescription.data())
 			.setVertexBindingDescriptionCount(vertexInputBindingDescription.size());
 
@@ -2448,6 +2441,21 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetFVF(DWORD FVF)
 		//BeginRecordingCommands();
 
 		mInternalDeviceState.SetFVF(FVF);
+
+		//Convert the FVF into a vertex declaration.
+		mInternalDeviceState.SetVertexDeclaration(nullptr);
+		for (auto& vertexDeclaration : mVertexDeclarations)
+		{
+			if (vertexDeclaration && vertexDeclaration->mFVF == FVF)
+			{
+				mInternalDeviceState.SetVertexDeclaration(vertexDeclaration.get());
+			}
+		}
+		if (!mInternalDeviceState.mDeviceState.mVertexDeclaration)
+		{
+			mVertexDeclarations.push_back(std::make_unique<CVertexDeclaration9>(this, FVF));
+			mInternalDeviceState.SetVertexDeclaration(mVertexDeclarations[mVertexDeclarations.size()-1].get());
+		}
 	}
 
 	return S_OK;
