@@ -373,6 +373,169 @@ vk::StencilOp ConvertStencilOperation(D3DSTENCILOP input) noexcept
 	return output;
 }
 
+vk::PolygonMode ConvertFillMode(D3DFILLMODE input) noexcept
+{
+	vk::PolygonMode output;
+
+	switch (input)
+	{
+	case D3DFILL_SOLID:
+		output = (vk::PolygonMode)VK_POLYGON_MODE_FILL;
+		break;
+	case D3DFILL_POINT:
+		output = (vk::PolygonMode)VK_POLYGON_MODE_POINT;
+		break;
+	case D3DFILL_WIREFRAME:
+		output = (vk::PolygonMode)VK_POLYGON_MODE_LINE;
+		break;
+	default:
+		output = (vk::PolygonMode)VK_POLYGON_MODE_FILL;
+		break;
+	}
+
+	return output;
+}
+
+vk::PrimitiveTopology ConvertPrimitiveType(D3DPRIMITIVETYPE input) noexcept
+{
+	vk::PrimitiveTopology output;
+
+	switch (input)
+	{
+	case D3DPT_POINTLIST:
+		output = (vk::PrimitiveTopology)VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+		break;
+	case D3DPT_LINELIST:
+		output = (vk::PrimitiveTopology)VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+		break;
+	case D3DPT_LINESTRIP:
+		output = (vk::PrimitiveTopology)VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+		break;
+	case D3DPT_TRIANGLELIST:
+		output = (vk::PrimitiveTopology)VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		break;
+	case D3DPT_TRIANGLESTRIP:
+		output = (vk::PrimitiveTopology)VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+		break;
+	case D3DPT_TRIANGLEFAN:
+		output = (vk::PrimitiveTopology)VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
+		break;
+	default:
+		output = (vk::PrimitiveTopology)VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		break;
+	}
+
+	/* Types D3d9 doesn't support
+		VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY = 6,
+		VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY = 7,
+		VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY = 8,
+		VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY = 9,
+		VK_PRIMITIVE_TOPOLOGY_PATCH_LIST = 10,
+	*/
+
+	return output;
+}
+
+vk::BlendFactor ConvertColorFactor(D3DBLEND input) noexcept
+{
+	vk::BlendFactor output;
+
+	switch (input)
+	{
+	case D3DBLEND_ZERO:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_ZERO;
+		break;
+	case D3DBLEND_ONE:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_ONE;
+		break;
+	case D3DBLEND_SRCCOLOR:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_SRC_COLOR;
+		break;
+	case D3DBLEND_INVSRCCOLOR:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
+		break;
+	case D3DBLEND_SRCALPHA:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_SRC_ALPHA;
+		break;
+	case D3DBLEND_INVSRCALPHA:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		break;
+	case D3DBLEND_DESTALPHA:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_DST_ALPHA;
+		break;
+	case D3DBLEND_INVDESTALPHA:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
+		break;
+	case D3DBLEND_DESTCOLOR:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_DST_COLOR;
+		break;
+	case D3DBLEND_INVDESTCOLOR:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
+		break;
+	case D3DBLEND_SRCALPHASAT:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
+		break;
+	case D3DBLEND_BOTHSRCALPHA:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_CONSTANT_ALPHA;
+		break;
+	case D3DBLEND_BOTHINVSRCALPHA:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA;
+		break;
+	case D3DBLEND_BLENDFACTOR:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_CONSTANT_COLOR;
+		break;
+	case D3DBLEND_INVBLENDFACTOR:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR;
+		break;
+		//Revisit
+#if !defined(D3D_DISABLE_9EX)
+	case D3DBLEND_SRCCOLOR2:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_SRC1_COLOR;
+		break;
+	case D3DBLEND_INVSRCCOLOR2:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR;
+		break;
+#endif // !D3D_DISABLE_9EX
+	default:
+		output = (vk::BlendFactor)VK_BLEND_FACTOR_ONE;
+		break;
+	}
+
+	return output;
+}
+
+vk::BlendOp ConvertColorOperation(D3DBLENDOP input) noexcept
+{
+	vk::BlendOp output;
+
+	switch (input)
+	{
+	case D3DBLENDOP_ADD:
+		output = (vk::BlendOp)VK_BLEND_OP_ADD;
+		break;
+	case D3DBLENDOP_SUBTRACT:
+		output = (vk::BlendOp)VK_BLEND_OP_SUBTRACT;
+		break;
+	case D3DBLENDOP_REVSUBTRACT:
+		output = (vk::BlendOp)VK_BLEND_OP_REVERSE_SUBTRACT;
+		break;
+	case D3DBLENDOP_MIN:
+		output = (vk::BlendOp)VK_BLEND_OP_MIN;
+		break;
+	case D3DBLENDOP_MAX:
+		output = (vk::BlendOp)VK_BLEND_OP_MAX;
+		break;
+	case D3DBLENDOP_FORCE_DWORD:
+		output = (vk::BlendOp)VK_BLEND_OP_MAX_ENUM;
+		break;
+	default:
+		output = (vk::BlendOp)VK_BLEND_OP_ADD;
+		break;
+	}
+
+	return output;
+}
+
 CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode)
 	:
 	mC9(c9),
@@ -953,6 +1116,7 @@ void CDevice9::BeginRecordingCommands()
 	mDevice->resetFences(1, &mDrawFences[mFrameIndex].get());
 
 	mPipelines[mFrameIndex].clear(); //I need to profile this to see what the cost of deleting all of these each frame is.
+	mLastPrimitiveType = D3DPT_FORCE_DWORD; //Force pipeline rebuild on first draw.
 
 	mCurrentDrawCommandBuffer = mDrawCommandBuffers[mFrameIndex].get();
 
@@ -1041,7 +1205,7 @@ void CDevice9::StopRecordingUtilityCommands()
 	mIsRecordingUtility = false;
 }
 
-void CDevice9::BeginDraw()
+void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 {
 	if (mIsDrawing)
 	{
@@ -1092,8 +1256,8 @@ void CDevice9::BeginDraw()
 
 	//Check to see if the pipeline is stale. If so create a new one and bind it.
 	auto& deviceState = mInternalDeviceState.mDeviceState;
-	if (
-		deviceState.mCapturedVertexShader
+	if ((mLastPrimitiveType != primitiveType)
+		|| deviceState.mCapturedVertexShader
 		|| deviceState.mCapturedPixelShader
 		|| deviceState.mCapturedAnyStreamFrequency
 		|| deviceState.mCapturedAnyStreamSource
@@ -1112,7 +1276,15 @@ void CDevice9::BeginDraw()
 		|| deviceState.mCapturedRenderState[D3DRS_STENCILPASS]
 		|| deviceState.mCapturedRenderState[D3DRS_CCW_STENCILFUNC]
 		|| deviceState.mCapturedRenderState[D3DRS_STENCILFUNC]
-
+		|| deviceState.mCapturedRenderState[D3DRS_FILLMODE]
+		|| deviceState.mCapturedRenderState[D3DRS_COLORWRITEENABLE]
+		|| deviceState.mCapturedRenderState[D3DRS_ALPHABLENDENABLE]
+		|| deviceState.mCapturedRenderState[D3DRS_BLENDOP]
+		|| deviceState.mCapturedRenderState[D3DRS_SRCBLEND]
+		|| deviceState.mCapturedRenderState[D3DRS_DESTBLEND]
+		|| deviceState.mCapturedRenderState[D3DRS_BLENDOPALPHA]
+		|| deviceState.mCapturedRenderState[D3DRS_SRCBLENDALPHA]
+		|| deviceState.mCapturedRenderState[D3DRS_DESTBLENDALPHA]
 		)
 	{
 		vk::PipelineShaderStageCreateInfo const shaderStageInfo[2] =
@@ -1128,26 +1300,36 @@ void CDevice9::BeginDraw()
 			vk::VertexInputAttributeDescription(2U,0U,vk::Format::eR32G32B32A32Sfloat,1 + 1),
 			vk::VertexInputAttributeDescription(3U,0U,vk::Format::eR32G32B32A32Sfloat,1 + 1 + 1)
 		};
-		const vk::VertexInputBindingDescription vertexInputBindingDescription[1] =
-		{//TODO:
-			vk::VertexInputBindingDescription(0,3,vk::VertexInputRate::eVertex)
-		};
+
+
+		std::vector<vk::VertexInputBindingDescription> vertexInputBindingDescription;
+		for (size_t i = 0; i < MAX_VERTEX_INPUTS; i++)
+		{
+			auto& streamSource = deviceState.mStreamSource[i];  
+			if (streamSource.vertexBuffer)
+			{
+				auto inputRate = (deviceState.mStreamSourceFrequency[i] == D3DSTREAMSOURCE_INDEXEDDATA) ? vk::VertexInputRate::eVertex : vk::VertexInputRate::eInstance;
+				vertexInputBindingDescription.push_back(vk::VertexInputBindingDescription(i, streamSource.stride, inputRate));
+			}
+		}
 
 		auto const vertexInputInfo = vk::PipelineVertexInputStateCreateInfo()
 			.setPVertexAttributeDescriptions(vertexInputAttributeDescription)
 			.setVertexAttributeDescriptionCount(4)
-			.setPVertexBindingDescriptions(vertexInputBindingDescription)
-			.setVertexBindingDescriptionCount(1);
-		auto const inputAssemblyInfo = vk::PipelineInputAssemblyStateCreateInfo().setTopology(vk::PrimitiveTopology::eTriangleList);
+			.setPVertexBindingDescriptions(vertexInputBindingDescription.data())
+			.setVertexBindingDescriptionCount(vertexInputBindingDescription.size());
+
+		auto const inputAssemblyInfo = vk::PipelineInputAssemblyStateCreateInfo().setTopology(ConvertPrimitiveType(primitiveType));
 		auto const viewportInfo = vk::PipelineViewportStateCreateInfo().setViewportCount(1).setScissorCount(1);
 		auto const rasterizationInfo = vk::PipelineRasterizationStateCreateInfo()
 			.setDepthClampEnable(VK_FALSE)
 			.setRasterizerDiscardEnable(VK_FALSE)
-			.setPolygonMode(vk::PolygonMode::eFill)
+			.setPolygonMode(ConvertFillMode((D3DFILLMODE)deviceState.mRenderState[D3DRS_FILLMODE]))
 			.setCullMode(GetCullMode((D3DCULL)deviceState.mRenderState[D3DRS_CULLMODE]))
 			.setFrontFace(GetFrontFace((D3DCULL)deviceState.mRenderState[D3DRS_CULLMODE]))
 			.setDepthBiasEnable(VK_TRUE)
 			.setLineWidth(1.0f);
+
 		auto const multisampleInfo = vk::PipelineMultisampleStateCreateInfo();
 
 		auto const frontStencilOp = vk::StencilOpState()
@@ -1175,9 +1357,18 @@ void CDevice9::BeginDraw()
 
 		vk::PipelineColorBlendAttachmentState const colorBlendAttachments[1] =
 		{
-			vk::PipelineColorBlendAttachmentState().setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA)
+			vk::PipelineColorBlendAttachmentState()
+			.setColorWriteMask((vk::ColorComponentFlagBits)deviceState.mRenderState[D3DRS_COLORWRITEENABLE])
+			.setBlendEnable(deviceState.mRenderState[D3DRS_ALPHABLENDENABLE])
+			.setColorBlendOp(ConvertColorOperation((D3DBLENDOP)deviceState.mRenderState[D3DRS_BLENDOP]))
+			.setSrcColorBlendFactor(ConvertColorFactor((D3DBLEND)deviceState.mRenderState[D3DRS_SRCBLEND]))
+			.setDstColorBlendFactor(ConvertColorFactor((D3DBLEND)deviceState.mRenderState[D3DRS_DESTBLEND]))
+			.setAlphaBlendOp(ConvertColorOperation((D3DBLENDOP)deviceState.mRenderState[D3DRS_BLENDOPALPHA]))
+			.setSrcAlphaBlendFactor(ConvertColorFactor((D3DBLEND)deviceState.mRenderState[D3DRS_SRCBLENDALPHA]))
+			.setDstAlphaBlendFactor(ConvertColorFactor((D3DBLEND)deviceState.mRenderState[D3DRS_DESTBLENDALPHA]))
 		};
 		auto const colorBlendInfo = vk::PipelineColorBlendStateCreateInfo().setAttachmentCount(1).setPAttachments(colorBlendAttachments);
+
 		vk::DynamicState const dynamicStates[3] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor, vk::DynamicState::eDepthBias };
 		auto const dynamicStateInfo = vk::PipelineDynamicStateCreateInfo().setPDynamicStates(dynamicStates).setDynamicStateCount(3);
 		auto const pipeline = vk::GraphicsPipelineCreateInfo()
@@ -1216,6 +1407,17 @@ void CDevice9::BeginDraw()
 		deviceState.mCapturedRenderState[D3DRS_STENCILPASS] = false;
 		deviceState.mCapturedRenderState[D3DRS_CCW_STENCILFUNC] = false;
 		deviceState.mCapturedRenderState[D3DRS_STENCILFUNC] = false;
+		deviceState.mCapturedRenderState[D3DRS_FILLMODE] = false;
+		deviceState.mCapturedRenderState[D3DRS_COLORWRITEENABLE] = false;
+		deviceState.mCapturedRenderState[D3DRS_ALPHABLENDENABLE] = false;
+		deviceState.mCapturedRenderState[D3DRS_BLENDOP] = false;
+		deviceState.mCapturedRenderState[D3DRS_SRCBLEND] = false;
+		deviceState.mCapturedRenderState[D3DRS_DESTBLEND] = false;
+		deviceState.mCapturedRenderState[D3DRS_BLENDOPALPHA] = false;
+		deviceState.mCapturedRenderState[D3DRS_SRCBLENDALPHA] = false;
+		deviceState.mCapturedRenderState[D3DRS_DESTBLENDALPHA] = false;
+
+		mLastPrimitiveType = primitiveType;
 	}
 
 	vk::RenderPassBeginInfo renderPassBeginInfo;
@@ -1611,7 +1813,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitive(D3DPRIMITIVETYPE Type, 
 {
 	BeginRecordingCommands();
 
-	BeginDraw();
+	BeginDraw(Type);
 	{
 		mCurrentDrawCommandBuffer.drawIndexed(ConvertPrimitiveCountToVertexCount(Type, PrimitiveCount), 1, StartIndex, BaseVertexIndex, 0);
 	}
@@ -1627,7 +1829,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE Prim
 	mCurrentDrawCommandBuffer.updateBuffer(mUpVertexBuffer.get(), 0, ConvertPrimitiveCountToBufferSize(PrimitiveType, PrimitiveCount, VertexStreamZeroStride), pVertexStreamZeroData);
 	mCurrentDrawCommandBuffer.updateBuffer(mUpIndexBuffer.get(), 0, ConvertPrimitiveCountToBufferSize(PrimitiveType, PrimitiveCount, (IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4), pIndexData);
 
-	BeginDraw();
+	BeginDraw(PrimitiveType);
 	{
 		mInternalDeviceState.mDeviceState.mCapturedAnyStreamSource = true; //Mark vertex streams as dirty so next draw will reset them.
 		mInternalDeviceState.mDeviceState.mCapturedIndexBuffer = true;
@@ -1661,7 +1863,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType
 {
 	BeginRecordingCommands();
 
-	BeginDraw();
+	BeginDraw(PrimitiveType);
 	{
 		mCurrentDrawCommandBuffer.draw(ConvertPrimitiveCountToVertexCount(PrimitiveType, PrimitiveCount), 1, StartVertex, 0);
 	}
@@ -1676,7 +1878,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveTy
 
 	mCurrentDrawCommandBuffer.updateBuffer(mUpVertexBuffer.get(), 0, ConvertPrimitiveCountToBufferSize(PrimitiveType, PrimitiveCount, VertexStreamZeroStride), pVertexStreamZeroData);
 
-	BeginDraw();
+	BeginDraw(PrimitiveType);
 	{
 		mInternalDeviceState.mDeviceState.mCapturedAnyStreamSource = true; //Mark vertex streams as dirty so next draw will reset them.
 
@@ -1696,12 +1898,12 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawRectPatch(UINT Handle, const float *pNum
 {
 	BeginRecordingCommands();
 
-	BeginDraw();
+	//BeginDraw(PrimitiveType);
 	{
 		//TODO: Implement.
 		Log(warning) << "CDevice9::DrawRectPatch is not implemented!" << std::endl;
 	}
-	StopDraw();
+	//StopDraw();
 
 	return S_OK;
 }
@@ -1710,12 +1912,12 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawTriPatch(UINT Handle, const float *pNumS
 {
 	BeginRecordingCommands();
 
-	BeginDraw();
+	//BeginDraw(PrimitiveType);
 	{
 		//TODO: Implement.
 		Log(warning) << "CDevice9::DrawTriPatch is not implemented!" << std::endl;
 	}
-	StopDraw();
+	//StopDraw();
 
 	return S_OK;
 }

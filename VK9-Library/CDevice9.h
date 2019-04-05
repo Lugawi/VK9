@@ -54,6 +54,10 @@ vk::CullModeFlagBits GetCullMode(D3DCULL input) noexcept;
 vk::FrontFace GetFrontFace(D3DCULL input) noexcept;
 vk::CompareOp ConvertCompareOperation(D3DCMPFUNC input) noexcept;
 vk::StencilOp ConvertStencilOperation(D3DSTENCILOP input) noexcept;
+vk::PolygonMode ConvertFillMode(D3DFILLMODE input) noexcept;
+vk::PrimitiveTopology ConvertPrimitiveType(D3DPRIMITIVETYPE input) noexcept;
+vk::BlendFactor ConvertColorFactor(D3DBLEND input) noexcept;
+vk::BlendOp ConvertColorOperation(D3DBLENDOP input) noexcept;
 
 class CDevice9 : public IDirect3DDevice9Ex
 {	
@@ -204,7 +208,7 @@ public:
 	void StopRecordingCommands();
 	void BeginRecordingUtilityCommands();
 	void StopRecordingUtilityCommands();
-	void BeginDraw();
+	void BeginDraw(D3DPRIMITIVETYPE primitiveType);
 	void StopDraw();
 	void RebuildRenderPass();
 	
@@ -224,6 +228,7 @@ public:
 	std::vector<CSwapChain9*> mSwapChains;
 	std::vector< std::unique_ptr<RenderContainer> > mRenderContainers;
 	RenderContainer* mCurrentRenderContainer=nullptr;
+	D3DPRIMITIVETYPE mLastPrimitiveType = D3DPT_FORCE_DWORD;
 public:
 
 	//IUnknown
