@@ -453,6 +453,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdafx.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="ShaderConverter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BitCast.h" />
@@ -478,6 +479,7 @@
     <ClInclude Include="pch\stdafx.h" />
     <ClInclude Include="PrivateTypes.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="ShaderConverter.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TinyQueue.h" />
     <ClInclude Include="WorkItem.h" />

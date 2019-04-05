@@ -31,9 +31,11 @@ misrepresented as being the original software.
 #include <vulkan/vk_sdk_platform.h>
 #include <vulkan/vulkan.hpp>
 #include <spirv.hpp>
-//#include <GLSL.std.450.h>
+#include <GLSL.std.450.h>
 
 std::ostream& operator<< (std::ostream& os, vk::Result result);
+std::ostream& operator<< (std::ostream& os, GLSLstd450 code);
+std::ostream& operator<< (std::ostream& os, spv::Op code);
 
 enum SeverityLevel
 {
