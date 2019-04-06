@@ -291,6 +291,10 @@ struct RenderState
 	uint sourceBlendAlpha;
 	uint destinationBlendAlpha;
 	uint blendOperationAlpha;	
+
+	uint screenWidth;
+	uint screenHeight;
+	uint textureCount;
 };
 
 struct ShaderConstantSlots
@@ -299,12 +303,6 @@ struct ShaderConstantSlots
 	uint BooleanConstants[16]; 
 	float FloatConstants[1024];
 };
-
-layout(push_constant) uniform ShaderStateBlockPush {
-    uint screenWidth;
-	uint screenHeight;
-	uint textureCount;
-} pushConstants;
 
 layout(std140,binding = 0) uniform RenderStateBlock
 {

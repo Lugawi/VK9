@@ -50,8 +50,9 @@ struct DeviceState
 	bool mCapturedIndexBuffer = false;
 	CIndexBuffer9* mIndexBuffer = nullptr;
 
-	bool mCapturedRenderState[D3DRS_BLENDOPALPHA + 1] = {};
-	unsigned long mRenderState[D3DRS_BLENDOPALPHA + 1] = {};
+	// + 3 is for extra state I'm sticking on the end.
+	bool mCapturedRenderState[D3DRS_BLENDOPALPHA + 1 + 3] = {};
+	unsigned long mRenderState[D3DRS_BLENDOPALPHA + 1 + 3] = {};
 
 	bool mCapturedNPatchMode = false;
 	float mNPatchMode = 0.0f;

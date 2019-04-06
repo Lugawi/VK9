@@ -689,6 +689,9 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 		InvalidateRect(mFocusWindow, 0, true);
 	}
 
+	mInternalDeviceState.mDeviceState.mScissorRect.right = mPresentationParameters.BackBufferWidth;
+	mInternalDeviceState.mDeviceState.mScissorRect.bottom = mPresentationParameters.BackBufferHeight;
+
 	//Setup Vulkan objects
 	ResetVulkanDevice();
 
@@ -894,6 +897,9 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 	SetRenderState(D3DRS_DESTBLENDALPHA, D3DBLEND_ZERO);
 	SetRenderState(D3DRS_BLENDOPALPHA, D3DBLENDOP_ADD);
 
+	SetRenderState((D3DRENDERSTATETYPE)(D3DRS_BLENDOPALPHA + 1), mPresentationParameters.BackBufferWidth); //screenWidth
+	SetRenderState((D3DRENDERSTATETYPE)(D3DRS_BLENDOPALPHA + 2), mPresentationParameters.BackBufferHeight); //screenHeight
+	SetRenderState((D3DRENDERSTATETYPE)(D3DRS_BLENDOPALPHA + 3), 1); //textureCount
 
 	//Set texture and sampler state.
 
@@ -1217,7 +1223,7 @@ void CDevice9::ResetVulkanDevice()
 			vk::DescriptorSetLayoutBinding() /*Light Enable*/
 				.setBinding(2)
 				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-				.setDescriptorCount(textureCount)
+				.setDescriptorCount(1)
 				.setStageFlags(vk::ShaderStageFlagBits::eVertex)
 				.setPImmutableSamplers(nullptr),
 			vk::DescriptorSetLayoutBinding() /*Material*/
@@ -1502,7 +1508,7 @@ void CDevice9::BeginRecordingCommands()
 	mCurrentDrawCommandBuffer.begin(&beginInfo);
 
 	//Set Scissor because we don't know if the user will set a new one this frame.
-	const vk::Rect2D scissor(vk::Offset2D(mInternalDeviceState.mDeviceState.mScissorRect.right, mInternalDeviceState.mDeviceState.mScissorRect.bottom), vk::Extent2D(mInternalDeviceState.mDeviceState.mScissorRect.left, mInternalDeviceState.mDeviceState.mScissorRect.top));
+	const vk::Rect2D scissor(vk::Offset2D(mInternalDeviceState.mDeviceState.mScissorRect.left, mInternalDeviceState.mDeviceState.mScissorRect.top), vk::Extent2D(mInternalDeviceState.mDeviceState.mScissorRect.right, mInternalDeviceState.mDeviceState.mScissorRect.bottom));
 	mCurrentDrawCommandBuffer.setScissor(0, 1, &scissor);
 
 	//Set the view because we don't know if the user will set a new one this frame.
@@ -1514,6 +1520,22 @@ void CDevice9::BeginRecordingCommands()
 		.setMinDepth((float)mInternalDeviceState.mDeviceState.mViewport.MinZ)
 		.setMaxDepth((float)mInternalDeviceState.mDeviceState.mViewport.MaxZ);
 	mCurrentDrawCommandBuffer.setViewport(0, 1, &viewport);
+
+	//Set the depthBias because we don't know if they user will set a new one this frame.
+	if (mInternalDeviceState.mDeviceState.mRenderState[D3DRS_ZENABLE] != D3DZB_FALSE) //&& type > 3
+	{
+		mCurrentDrawCommandBuffer.setDepthBias(
+			bit_cast(mInternalDeviceState.mDeviceState.mRenderState[D3DRS_DEPTHBIAS]),
+			0.0f,
+			bit_cast(mInternalDeviceState.mDeviceState.mRenderState[D3DRS_SLOPESCALEDEPTHBIAS]));
+	}
+	else
+	{
+		mCurrentDrawCommandBuffer.setDepthBias(
+			0.0f,
+			0.0f,
+			0.0f);
+	}
 
 	//Bind the descriptor because we don't know if the user will set a new one this frame.
 	if (mLastDescriptorSet != vk::DescriptorSet())
@@ -2044,7 +2066,7 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 	}
 
 	//Check to see if the texture stuff has changed and if so update the descriptor set.
-	if (deviceState.mCapturedAnyTexture || deviceState.mCapturedAnySamplerState)
+	if (deviceState.mCapturedAnyTexture || deviceState.mCapturedAnySamplerState) //1==1 || 
 	{
 		//If we're out of descriptor sets to write into then allocate a new one.
 		if (mDescriptorSetIndex >= mDescriptorSets[mFrameIndex].size())
@@ -2135,6 +2157,8 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 	//renderPassBeginInfo.clearValueCount = 2;
 	//renderPassBeginInfo.pClearValues = clearValues;
 	mCurrentDrawCommandBuffer.beginRenderPass(&renderPassBeginInfo, vk::SubpassContents::eInline);
+
+	mIsDrawing = true;
 }
 
 void CDevice9::StopDraw()
@@ -2145,6 +2169,8 @@ void CDevice9::StopDraw()
 	}
 
 	mCurrentDrawCommandBuffer.endRenderPass();
+
+	mIsDrawing = false;
 }
 
 void CDevice9::RebuildRenderPass()
@@ -3417,7 +3443,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetScissorRect(const RECT* pRect)
 	{
 		BeginRecordingCommands();
 
-		const vk::Rect2D scissor(vk::Offset2D(pRect->right, pRect->bottom), vk::Extent2D(pRect->left, pRect->top));
+		const vk::Rect2D scissor(vk::Offset2D(pRect->left, pRect->top), vk::Extent2D(pRect->right, pRect->bottom));
 		mCurrentDrawCommandBuffer.setScissor(0, 1, &scissor);
 
 		mInternalDeviceState.SetScissorRect(pRect);
@@ -3901,45 +3927,85 @@ RenderContainer::RenderContainer(vk::Device& device, CSurface9* depthStencilSurf
 
 		{
 			vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, &depthReference);
-			mRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), attachments.size(), attachments.data(), 1, &subpass));
+			vk::SubpassDependency dependency;
+			dependency.srcStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+			dependency.dstStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+			dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+
+			mRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), attachments.size(), attachments.data(), 1, &subpass, 1, &dependency));
 		}
 
 		{
 			vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, &depthReference);
-			mClearColorRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), clearColorAttachments.size(), clearColorAttachments.data(), 1, &subpass));
+			vk::SubpassDependency dependency;
+			dependency.srcStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+			dependency.dstStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+			dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+
+			mClearColorRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), clearColorAttachments.size(), clearColorAttachments.data(), 1, &subpass, 1, &dependency));
 		}
 
 		{
 			vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, &depthReference);
-			mClearDepthRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), clearDepthAttachments.size(), clearDepthAttachments.data(), 1, &subpass));
+			vk::SubpassDependency dependency;
+			dependency.srcStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+			dependency.dstStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+			dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+
+			mClearDepthRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), clearDepthAttachments.size(), clearDepthAttachments.data(), 1, &subpass, 1, &dependency));
 		}
 
 		{
 			vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, &depthReference);
-			mClearBothRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), clearBothAttachments.size(), clearBothAttachments.data(), 1, &subpass));
+			vk::SubpassDependency dependency;
+			dependency.srcStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+			dependency.dstStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+			dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+
+			mClearBothRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), clearBothAttachments.size(), clearBothAttachments.data(), 1, &subpass, 1, &dependency));
 		}
 	}
 	else
 	{
 		{
 			vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, nullptr);
-			mRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), attachments.size(), attachments.data(), 1, &subpass));
+			vk::SubpassDependency dependency;
+			dependency.srcStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+			dependency.dstStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+			dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+
+			mRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), attachments.size(), attachments.data(), 1, &subpass, 1, &dependency));
 		}
 
 		{
 			vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, nullptr);
-			mClearColorRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), clearColorAttachments.size(), clearColorAttachments.data(), 1, &subpass));
+			vk::SubpassDependency dependency;
+			dependency.srcStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+			dependency.dstStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+			dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+
+			mClearColorRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), clearColorAttachments.size(), clearColorAttachments.data(), 1, &subpass, 1, &dependency));
 		}
 
 		//Fake depth clear and both clear because apps may still request a clear containing depth even when there is no depth surface.
 		{
 			vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, nullptr);
-			mClearDepthRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), attachments.size(), attachments.data(), 1, &subpass));
+			vk::SubpassDependency dependency;
+			dependency.srcStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+			dependency.dstStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+			dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+
+			mClearDepthRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), attachments.size(), attachments.data(), 1, &subpass, 1, &dependency));
 		}
 
 		{
 			vk::SubpassDescription subpass(vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, colorReference.size(), colorReference.data(), nullptr, nullptr);
-			mClearBothRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), clearColorAttachments.size(), clearColorAttachments.data(), 1, &subpass));
+			vk::SubpassDependency dependency;
+			dependency.srcStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+			dependency.dstStageMask = vk::PipelineStageFlagBits::eAllGraphics;
+			dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+
+			mClearBothRenderPass = device.createRenderPassUnique(vk::RenderPassCreateInfo(vk::RenderPassCreateFlags(), clearColorAttachments.size(), clearColorAttachments.data(), 1, &subpass, 1, &dependency));
 		}
 	}
 

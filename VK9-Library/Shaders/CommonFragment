@@ -20,38 +20,24 @@ misrepresented as being the original software.
 
 struct TextureStage
 {
-	uint colorOperation; //1
-	uint colorArgument1; //2
-	uint colorArgument2; //3
-	uint alphaOperation; //4	
-	uint alphaArgument1; //5
-	uint alphaArgument2; //6
-	float bumpMapMatrix00; //7
-	float bumpMapMatrix01; //8
-	float bumpMapMatrix10; //9
-	float bumpMapMatrix11; //10
-	uint texureCoordinateIndex; //11
-	uint filler12;
-	uint filler13;
-	uint filler14;
-	uint filler15;
-	uint filler16;
-	uint filler17;
-	uint filler18;
-	uint filler19;
-	uint filler20;
-	uint filler21;
-	float bumpMapScale; //22
-	float bumpMapOffset; //23
-	uint textureTransformationFlags; //24
-	float filler25;
-	uint colorArgument0; //26
-	uint alphaArgument0; //27
-	uint Result; //28
-	uint filler29;
-	uint filler30;
-	uint filler31;
-	uint Constant; //32
+	uint colorOperation; 
+	uint colorArgument1; 
+	uint colorArgument2; 
+	uint alphaOperation; 
+	uint alphaArgument1; 
+	uint alphaArgument2; 
+	float bumpMapMatrix00; 
+	float bumpMapMatrix01; 
+	float bumpMapMatrix10; 
+	float bumpMapMatrix11; 
+	uint texureCoordinateIndex; 
+	float bumpMapScale; 
+	float bumpMapOffset;
+	uint textureTransformationFlags; 
+	uint colorArgument0; 
+	uint alphaArgument0; 
+	uint Result; 
+	uint Constant;
 };
 
 layout(std140,binding = 5) uniform TextureStageBlock
