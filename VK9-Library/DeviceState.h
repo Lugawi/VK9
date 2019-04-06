@@ -58,11 +58,14 @@ struct DeviceState
 
 	//A device can have only 8 textures.
 	//https://docs.microsoft.com/en-us/windows/desktop/api/d3d9helper/nf-d3d9helper-idirect3ddevice9-settexturestagestate
+	
+	bool mCapturedAnyTextureStageState = false;
 	bool mCapturedTextureStageState[8][D3DTSS_CONSTANT + 1];
 	unsigned long mTextureStageState[8][D3DTSS_CONSTANT + 1];
 
-	bool mCapturedSamplerState[16 + 4][D3DSAMP_DMAPOFFSET + 1];
-	DWORD mSamplerState[16 + 4][D3DSAMP_DMAPOFFSET + 1];
+	bool mCapturedAnySamplerState = false;
+	bool mCapturedSamplerState[16 + 4][D3DSAMP_DMAPOFFSET + 1];	
+	std::array< std::array<DWORD, D3DSAMP_DMAPOFFSET + 1> , 16 + 4> mSamplerState = {};
 
 	bool mCapturedAnyStreamSource = false;
 	bool mCapturedStreamSource[MAX_VERTEX_INPUTS] = {};
@@ -78,6 +81,7 @@ struct DeviceState
 	bool mCapturedStreamSourceFrequency[MAX_VERTEX_INPUTS] = {};
 	unsigned int mStreamSourceFrequency[MAX_VERTEX_INPUTS] = {};
 
+	bool mCapturedAnyTexture = false;
 	bool mCapturedTexture[16 + 4] = {};
 	IDirect3DBaseTexture9* mTexture[16 + 4] = {};
 

@@ -25,6 +25,7 @@ misrepresented as being the original software.
 #include "d3d9.h"
 
 #include "CStateBlock9.h"
+#include "CTexture9.h"
 
 #include<vector>
 #include <memory>
@@ -39,6 +40,7 @@ class CVertexShader9;
 class CVertexDeclaration9;
 
 class RenderContainer;
+class SamplerContainer;
 
 template <typename T1>
 struct Pair
@@ -58,6 +60,9 @@ vk::PolygonMode ConvertFillMode(D3DFILLMODE input) noexcept;
 vk::PrimitiveTopology ConvertPrimitiveType(D3DPRIMITIVETYPE input) noexcept;
 vk::BlendFactor ConvertColorFactor(D3DBLEND input) noexcept;
 vk::BlendOp ConvertColorOperation(D3DBLENDOP input) noexcept;
+vk::Filter ConvertFilter(D3DTEXTUREFILTERTYPE input) noexcept;
+vk::SamplerAddressMode ConvertTextureAddress(D3DTEXTUREADDRESS input) noexcept;
+vk::SamplerMipmapMode ConvertMipmapMode(D3DTEXTUREFILTERTYPE input) noexcept;
 
 class CDevice9 : public IDirect3DDevice9Ex
 {	
@@ -106,6 +111,11 @@ public:
 	std::array<std::vector<vk::UniquePipeline>, 3> mPipelines;
 	std::array<std::vector<vk::DescriptorSet>, 3> mDescriptorSets;
 	size_t mDescriptorSetIndex=0;
+	vk::DescriptorSet mLastDescriptorSet;
+
+	vk::DescriptorBufferInfo mDescriptorBufferInfo[9];
+	vk::WriteDescriptorSet mWriteDescriptorSet[9];
+	vk::DescriptorImageInfo mDescriptorImageInfo[16];
 
 	/*
 	The idea with these two is to set these to one of the command buffers from the vectors.
@@ -228,8 +238,11 @@ public:
 	std::vector<CSwapChain9*> mSwapChains;
 	std::vector< std::unique_ptr<RenderContainer> > mRenderContainers;
 	std::vector< std::unique_ptr<CVertexDeclaration9> > mVertexDeclarations;
+	std::vector< std::unique_ptr<SamplerContainer> > mSamplerContainers;
 	RenderContainer* mCurrentRenderContainer=nullptr;
 	D3DPRIMITIVETYPE mLastPrimitiveType = D3DPT_FORCE_DWORD;
+	std::unique_ptr<CTexture9> mBlankTexture;
+
 public:
 
 	//IUnknown
@@ -393,4 +406,15 @@ public:
 
 	vk::UniqueRenderPass mClearBothRenderPass;
 	std::vector <vk::UniqueFramebuffer> mClearBothFrameBuffers;
+};
+
+class SamplerContainer
+{
+public:
+	SamplerContainer(vk::Device& device, std::array<DWORD, D3DSAMP_DMAPOFFSET + 1>& samplerState);
+	~SamplerContainer();
+
+	std::array<DWORD, D3DSAMP_DMAPOFFSET + 1> mSamplerState = {};
+	vk::UniqueSampler mSampler;
+
 };

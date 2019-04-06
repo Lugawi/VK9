@@ -287,6 +287,7 @@ void CStateBlock9::SetSamplerState(unsigned long index, D3DSAMPLERSTATETYPE stat
 		return;
 	}
 
+	mDeviceState.mCapturedAnySamplerState = true;
 	mDeviceState.mCapturedSamplerState[sampler][state] = true;
 	mDeviceState.mSamplerState[sampler][state] = value;
 }
@@ -363,12 +364,14 @@ void CStateBlock9::SetTexture(unsigned long index, IDirect3DBaseTexture9* textur
 		}
 	}
 
+	mDeviceState.mCapturedAnyTexture = true;
 	mDeviceState.mCapturedTexture[sampler] = true;
 	mDeviceState.mTexture[sampler] = texture;
 }
 
 void CStateBlock9::SetTextureStageState(unsigned long stage, D3DTEXTURESTAGESTATETYPE type, unsigned long value)
 {
+	mDeviceState.mCapturedAnyTextureStageState = true;
 	mDeviceState.mCapturedTextureStageState[stage][type] = true;
 	mDeviceState.mTextureStageState[stage][type] = value;
 }
@@ -441,6 +444,7 @@ void CStateBlock9::CaptureSamplerState(unsigned long index, D3DSAMPLERSTATETYPE 
 	if (index < 16)
 	{
 		mDevice->GetSamplerState(index, state, &mDeviceState.mSamplerState[index][state]);
+		mDeviceState.mCapturedAnySamplerState = true;
 		mDeviceState.mCapturedSamplerState[index][state] = true;
 	}
 	else if (index >= D3DVERTEXTEXTURESAMPLER0)
@@ -448,6 +452,7 @@ void CStateBlock9::CaptureSamplerState(unsigned long index, D3DSAMPLERSTATETYPE 
 		unsigned int sampler = 16 + (index - D3DVERTEXTEXTURESAMPLER0);
 
 		mDevice->GetSamplerState(index, state, &mDeviceState.mSamplerState[sampler][state]);
+		mDeviceState.mCapturedAnySamplerState = true;
 		mDeviceState.mCapturedSamplerState[sampler][state] = true;
 	}
 }
@@ -455,6 +460,7 @@ void CStateBlock9::CaptureSamplerState(unsigned long index, D3DSAMPLERSTATETYPE 
 void CStateBlock9::CaptureTextureStageState(unsigned long stage, D3DTEXTURESTAGESTATETYPE type)
 {
 	mDevice->GetTextureStageState(stage, type, &mDeviceState.mTextureStageState[stage][type]);
+	mDeviceState.mCapturedAnyTextureStageState = true;
 	mDeviceState.mCapturedTextureStageState[stage][type] = true;
 }
 
@@ -721,6 +727,7 @@ void CStateBlock9::CaptureTextures()
 {
 	for (int sampler = 0; sampler < 16 + 4; sampler++)
 	{
+		mDeviceState.mCapturedAnyTexture = true;
 		mDeviceState.mCapturedTexture[sampler] = true;
 		int index = sampler < 16 ? sampler : D3DVERTEXTEXTURESAMPLER0 + (sampler - 16);
 		mDevice->GetTexture(index, reinterpret_cast<IDirect3DBaseTexture9**>(&mDeviceState.mTexture[sampler]));

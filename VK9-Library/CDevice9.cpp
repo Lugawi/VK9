@@ -55,6 +55,7 @@ misrepresented as being the original software.
 #include "CQuery9.h"
 #include "CVolume9.h"
 #include "LogManager.h"
+#include "BitCast.h"
 //#include "PrivateTypes.h"
 
 const uint32_t XYZRHW_VERT[] =
@@ -536,6 +537,104 @@ vk::BlendOp ConvertColorOperation(D3DBLENDOP input) noexcept
 	return output;
 }
 
+vk::Filter ConvertFilter(D3DTEXTUREFILTERTYPE input) noexcept
+{
+	vk::Filter output;
+
+	switch (input)
+	{
+	case D3DTEXF_NONE:	// filtering disabled (valid for mip filter only)
+		output = (vk::Filter)VK_FILTER_NEAREST; //revisit
+		break;
+	case D3DTEXF_POINT:	// nearest
+		output = (vk::Filter)VK_FILTER_NEAREST;
+		break;
+	case D3DTEXF_LINEAR:	// linear interpolation
+		output = (vk::Filter)VK_FILTER_LINEAR;
+		break;
+	case D3DTEXF_ANISOTROPIC:	// anisotropic
+		/*
+		https://www.khronos.org/registry/vulkan/specs/1.0-extensions/html/vkspec.html
+		If either magFilter or minFilter is VK_FILTER_CUBIC_IMG, anisotropyEnable must be VK_FALSE
+		*/
+		output = (vk::Filter)VK_FILTER_LINEAR;
+		//output = VK_FILTER_CUBIC_IMG; //revisit
+		break;
+	case D3DTEXF_PYRAMIDALQUAD:	// 4-sample tent
+		output = (vk::Filter)VK_FILTER_CUBIC_IMG; //revisit
+		break;
+	case D3DTEXF_GAUSSIANQUAD:	// 4-sample Gaussian
+		output = (vk::Filter)VK_FILTER_CUBIC_IMG; //revisit
+		break;
+	default:
+		output = (vk::Filter)VK_FILTER_NEAREST; //revisit
+		break;
+	}
+
+	return output;
+}
+
+vk::SamplerAddressMode ConvertTextureAddress(D3DTEXTUREADDRESS input) noexcept
+{
+	vk::SamplerAddressMode output;
+
+	switch (input)
+	{
+	case D3DTADDRESS_WRAP:
+		output = (vk::SamplerAddressMode)VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		break;
+	case D3DTADDRESS_MIRROR:
+		output = (vk::SamplerAddressMode)VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+		break;
+	case D3DTADDRESS_CLAMP:
+		output = (vk::SamplerAddressMode)VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		break;
+	case D3DTADDRESS_BORDER:
+		output = (vk::SamplerAddressMode)VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+		break;
+	case D3DTADDRESS_MIRRORONCE:
+		output = (vk::SamplerAddressMode)VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
+		break;
+	default:
+		output = (vk::SamplerAddressMode)VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		break;
+	}
+
+	return output;
+}
+
+vk::SamplerMipmapMode ConvertMipmapMode(D3DTEXTUREFILTERTYPE input) noexcept
+{
+	vk::SamplerMipmapMode output;
+
+	switch (input)
+	{
+	case D3DTEXF_NONE:	// filtering disabled (valid for mip filter only)
+		output = (vk::SamplerMipmapMode)VK_SAMPLER_MIPMAP_MODE_NEAREST; //revisit
+		break;
+	case D3DTEXF_POINT:	// nearest
+		output = (vk::SamplerMipmapMode)VK_SAMPLER_MIPMAP_MODE_NEAREST;
+		break;
+	case D3DTEXF_LINEAR:	// linear interpolation
+		output = (vk::SamplerMipmapMode)VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		break;
+	case D3DTEXF_ANISOTROPIC:	// anisotropic
+		output = (vk::SamplerMipmapMode)VK_SAMPLER_MIPMAP_MODE_LINEAR; //revisit
+		break;
+	case D3DTEXF_PYRAMIDALQUAD:	// 4-sample tent
+		output = (vk::SamplerMipmapMode)VK_SAMPLER_MIPMAP_MODE_LINEAR; //revisit
+		break;
+	case D3DTEXF_GAUSSIANQUAD:	// 4-sample Gaussian
+		output = (vk::SamplerMipmapMode)VK_SAMPLER_MIPMAP_MODE_LINEAR; //revisit
+		break;
+	default:
+		output = (vk::SamplerMipmapMode)VK_SAMPLER_MIPMAP_MODE_LINEAR; //revisit
+		break;
+	}
+
+	return output;
+}
+
 CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode)
 	:
 	mC9(c9),
@@ -926,8 +1025,8 @@ void CDevice9::ResetVulkanDevice()
 	//Handle B and I with constants maybe
 
 	//Create Descriptor layout.
-	{
-		const uint32_t textureCount = 16;
+	const uint32_t textureCount = 16;
+	{		
 		const vk::DescriptorSetLayoutBinding layoutBindings[9] =
 		{
 			vk::DescriptorSetLayoutBinding() /*Render State*/
@@ -987,6 +1086,111 @@ void CDevice9::ResetVulkanDevice()
 		};
 		auto const descriptorLayout = vk::DescriptorSetLayoutCreateInfo().setBindingCount(9).setPBindings(layoutBindings);
 		mDescriptorLayout = mDevice->createDescriptorSetLayoutUnique(descriptorLayout);
+	}
+
+	//Setup descriptor write structures
+	{
+		//Render State
+		mDescriptorBufferInfo[0].buffer = mRenderStateBuffer.get();
+		mDescriptorBufferInfo[0].offset = 0;
+		mDescriptorBufferInfo[0].range = sizeof(mInternalDeviceState.mDeviceState.mRenderState);
+
+		mWriteDescriptorSet[0].dstBinding = 0;
+		mWriteDescriptorSet[0].dstArrayElement = 0;
+		mWriteDescriptorSet[0].descriptorType = vk::DescriptorType::eUniformBuffer;
+		mWriteDescriptorSet[0].descriptorCount = 1;
+		mWriteDescriptorSet[0].pBufferInfo = &mDescriptorBufferInfo[0];
+
+		//Lights
+		mDescriptorBufferInfo[1].buffer = mLightBuffer.get();
+		mDescriptorBufferInfo[1].offset = 0;
+		mDescriptorBufferInfo[1].range = sizeof(mInternalDeviceState.mDeviceState.mLight);
+
+		mWriteDescriptorSet[1].dstBinding = 1;
+		mWriteDescriptorSet[1].dstArrayElement = 0;
+		mWriteDescriptorSet[1].descriptorType = vk::DescriptorType::eUniformBuffer;
+		mWriteDescriptorSet[1].descriptorCount = 1;
+		mWriteDescriptorSet[1].pBufferInfo = &mDescriptorBufferInfo[1];
+
+		//Light Enable
+		mDescriptorBufferInfo[2].buffer = mLightEnableBuffer.get();
+		mDescriptorBufferInfo[2].offset = 0;
+		mDescriptorBufferInfo[2].range = sizeof(mInternalDeviceState.mDeviceState.mLightEnableState);
+
+		mWriteDescriptorSet[2].dstBinding = 2;
+		mWriteDescriptorSet[2].dstArrayElement = 0;
+		mWriteDescriptorSet[2].descriptorType = vk::DescriptorType::eUniformBuffer;
+		mWriteDescriptorSet[2].descriptorCount = 1;
+		mWriteDescriptorSet[2].pBufferInfo = &mDescriptorBufferInfo[2];
+
+		//Material
+		mDescriptorBufferInfo[3].buffer = mMaterialBuffer.get();
+		mDescriptorBufferInfo[3].offset = 0;
+		mDescriptorBufferInfo[3].range = sizeof(mInternalDeviceState.mDeviceState.mMaterial);
+
+		mWriteDescriptorSet[3].dstBinding = 3;
+		mWriteDescriptorSet[3].dstArrayElement = 0;
+		mWriteDescriptorSet[3].descriptorType = vk::DescriptorType::eUniformBuffer;
+		mWriteDescriptorSet[3].descriptorCount = 1;
+		mWriteDescriptorSet[3].pBufferInfo = &mDescriptorBufferInfo[3];
+
+		//Transformation
+		mDescriptorBufferInfo[4].buffer = mTransformationBuffer.get();
+		mDescriptorBufferInfo[4].offset = 0;
+		mDescriptorBufferInfo[4].range = sizeof(mInternalDeviceState.mDeviceState.mTransform);
+
+		mWriteDescriptorSet[4].dstBinding = 4;
+		mWriteDescriptorSet[4].dstArrayElement = 0;
+		mWriteDescriptorSet[4].descriptorType = vk::DescriptorType::eUniformBuffer;
+		mWriteDescriptorSet[4].descriptorCount = 1;
+		mWriteDescriptorSet[4].pBufferInfo = &mDescriptorBufferInfo[4];
+
+		//Texture Stages
+		mDescriptorBufferInfo[5].buffer = mTextureStageBuffer.get();
+		mDescriptorBufferInfo[5].offset = 0;
+		mDescriptorBufferInfo[5].range = sizeof(mInternalDeviceState.mDeviceState.mTextureStageState);
+
+		mWriteDescriptorSet[5].dstBinding = 5;
+		mWriteDescriptorSet[5].dstArrayElement = 0;
+		mWriteDescriptorSet[5].descriptorType = vk::DescriptorType::eUniformBuffer;
+		mWriteDescriptorSet[5].descriptorCount = 1;
+		mWriteDescriptorSet[5].pBufferInfo = &mDescriptorBufferInfo[5];
+
+		//Image/Sampler
+		//for (size_t i = 0; i < textureCount; i++)
+		//{
+		//	//mDescriptorImageInfo[i].sampler = mSampler;
+		//	//mDescriptorImageInfo[i].imageView = mImageView;
+		//	mDescriptorImageInfo[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+		//}
+
+		mWriteDescriptorSet[6].dstBinding = 6;
+		mWriteDescriptorSet[6].dstArrayElement = 0;
+		mWriteDescriptorSet[6].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+		mWriteDescriptorSet[6].descriptorCount = textureCount;
+		mWriteDescriptorSet[6].pImageInfo = mDescriptorImageInfo;
+
+		//Vertex Shader Const
+		mDescriptorBufferInfo[7].buffer = mVertexConstantBuffer.get();
+		mDescriptorBufferInfo[7].offset = 0;
+		mDescriptorBufferInfo[7].range = sizeof(mInternalDeviceState.mDeviceState.mVertexShaderConstantI) + sizeof(mInternalDeviceState.mDeviceState.mVertexShaderConstantB) + sizeof(mInternalDeviceState.mDeviceState.mVertexShaderConstantF);
+
+		mWriteDescriptorSet[7].dstBinding = 7;
+		mWriteDescriptorSet[7].dstArrayElement = 0;
+		mWriteDescriptorSet[7].descriptorType = vk::DescriptorType::eUniformBuffer;
+		mWriteDescriptorSet[7].descriptorCount = 1;
+		mWriteDescriptorSet[7].pBufferInfo = &mDescriptorBufferInfo[7];
+
+		//Pixel Shader Const
+		mDescriptorBufferInfo[8].buffer = mPixelConstantBuffer.get();
+		mDescriptorBufferInfo[8].offset = 0;
+		mDescriptorBufferInfo[8].range = sizeof(mInternalDeviceState.mDeviceState.mPixelShaderConstantI) + sizeof(mInternalDeviceState.mDeviceState.mPixelShaderConstantB) + sizeof(mInternalDeviceState.mDeviceState.mPixelShaderConstantF);
+
+		mWriteDescriptorSet[8].dstBinding = 8;
+		mWriteDescriptorSet[8].dstArrayElement = 0;
+		mWriteDescriptorSet[8].descriptorType = vk::DescriptorType::eUniformBuffer;
+		mWriteDescriptorSet[8].descriptorCount = 1;
+		mWriteDescriptorSet[8].pBufferInfo = &mDescriptorBufferInfo[8];
 	}
 
 	//Create Pipeline layout.
@@ -1099,6 +1303,8 @@ void CDevice9::ResetVulkanDevice()
 	CSurface9* depth = new CSurface9(this, (CTexture9*)nullptr, mPresentationParameters.BackBufferWidth, mPresentationParameters.BackBufferHeight, D3DUSAGE_DEPTHSTENCIL, 1, mPresentationParameters.AutoDepthStencilFormat, mPresentationParameters.MultiSampleType, mPresentationParameters.MultiSampleQuality, false, false, D3DPOOL_DEFAULT, nullptr);
 	SetDepthStencilSurface(depth);
 	depth->Release();
+
+	mBlankTexture = std::make_unique<CTexture9>(this, 1, 1, 1, D3DUSAGE_RENDERTARGET, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, nullptr);
 }
 
 void CDevice9::BeginRecordingCommands()
@@ -1109,6 +1315,7 @@ void CDevice9::BeginRecordingCommands()
 	}
 
 	mFrameIndex = (mFrameIndex++) % mDrawCommandBuffers.size();
+	mDescriptorSetIndex = 0;
 
 	mDevice->waitForFences(1, &mDrawFences[mFrameIndex].get(), VK_TRUE, UINT64_MAX);
 	mDevice->resetFences(1, &mDrawFences[mFrameIndex].get());
@@ -1134,6 +1341,12 @@ void CDevice9::BeginRecordingCommands()
 		.setMinDepth((float)mInternalDeviceState.mDeviceState.mViewport.MinZ)
 		.setMaxDepth((float)mInternalDeviceState.mDeviceState.mViewport.MaxZ);
 	mCurrentDrawCommandBuffer.setViewport(0, 1, &viewport);
+
+	//Bind the descriptor because we don't know if the user will set a new one this frame.
+	if (mLastDescriptorSet != vk::DescriptorSet())
+	{
+		mCurrentDrawCommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, mPipelineLayout.get(), 0, 1, &mLastDescriptorSet, 0, nullptr);
+	}
 
 	mIsRecording = true;
 
@@ -1289,12 +1502,7 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 		auto& vertexDeclaration = (*mInternalDeviceState.mDeviceState.mVertexDeclaration); //If this is null we can't do anything anyway.
 
 		std::vector<vk::PipelineShaderStageCreateInfo> shaderStageInfo;
-
-		//vk::PipelineShaderStageCreateInfo const shaderStageInfo[2] =
-		//{ //TODO: wire up real shaders
-		//	vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eVertex).setModule(mVertShaderModule_XYZ.get()).setPName("main"),
-		//	vk::PipelineShaderStageCreateInfo().setStage(vk::ShaderStageFlagBits::eFragment).setModule(mFragShaderModule_XYZ.get()).setPName("main")
-		//};
+		shaderStageInfo.reserve(3);
 
 		if (mInternalDeviceState.mDeviceState.mVertexShader != nullptr)
 		{
@@ -1627,7 +1835,7 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 			.setRenderPass(mCurrentRenderContainer->mRenderPass.get());
 
 		mPipelines[mFrameIndex].push_back(mDevice->createGraphicsPipelineUnique(mPipelineCache.get(), pipeline));
-		mCurrentDrawCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mPipelines[mFrameIndex][mPipelines[mFrameIndex].size()].get());
+		mCurrentDrawCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mPipelines[mFrameIndex][mPipelines[mFrameIndex].size()-1].get());
 
 		deviceState.mCapturedVertexShader = false;
 		deviceState.mCapturedPixelShader = false;
@@ -1660,6 +1868,88 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 		deviceState.mCapturedRenderState[D3DRS_POINTSPRITEENABLE] = false;
 
 		mLastPrimitiveType = primitiveType;
+	}
+
+	//Check to see if the texture stuff has changed and if so update the descriptor set.
+	if (deviceState.mCapturedAnyTexture || deviceState.mCapturedAnySamplerState)
+	{
+		//If we're out of descriptor sets to write into then allocate a new one.
+		if (mDescriptorSetIndex >= mDescriptorSets[mFrameIndex].size())
+		{
+			vk::DescriptorSet descriptorSet;
+			vk::DescriptorSetAllocateInfo descriptorSetInfo(mDescriptorPool.get(), 1, &mDescriptorLayout.get());
+			vk::Result result = mDevice->allocateDescriptorSets(&descriptorSetInfo, &descriptorSet);
+			if (result != vk::Result::eSuccess)
+			{
+				Log(fatal) << "CDevice9::BeginDraw vkAllocateDescriptorSets failed with return code of " << result << std::endl;
+				//return;
+			}
+			mDescriptorSets[mFrameIndex].push_back(descriptorSet);
+		}
+
+		for (size_t i = 0; i < 16; i++)
+		{
+			mDescriptorImageInfo[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+			mDescriptorImageInfo[i].sampler = vk::Sampler();
+
+			//Look for an existing sampler.
+			for (auto& samplerContainer : mSamplerContainers)
+			{
+				if (samplerContainer->mSamplerState == deviceState.mSamplerState[i])
+				{
+					mDescriptorImageInfo[i].sampler = samplerContainer->mSampler.get();
+				}
+			}
+
+			//If no matching sampler was found then make one.
+			if (mDescriptorImageInfo[i].sampler == vk::Sampler())
+			{
+				mSamplerContainers.push_back(std::make_unique<SamplerContainer>(mDevice.get(), deviceState.mSamplerState[i]));
+				mDescriptorImageInfo[i].sampler = mSamplerContainers[mSamplerContainers.size() - 1]->mSampler.get();
+			}
+
+			//Bind the current set texture or if null bind a dummy texture.
+			if (deviceState.mTexture[i])
+			{	
+				switch (deviceState.mTexture[i]->GetType())
+				{
+				case D3DRTYPE_TEXTURE:
+					mDescriptorImageInfo[i].imageView = reinterpret_cast <CTexture9*>(deviceState.mTexture[i])->mImageView.get();
+					break;
+				case D3DRTYPE_VOLUMETEXTURE:
+					//mDescriptorImageInfo[i].imageView = reinterpret_cast <CVolumeTexture9*>(deviceState.mTexture[i])->mImageView.get();
+					break;
+				case D3DRTYPE_CUBETEXTURE:
+					mDescriptorImageInfo[i].imageView = reinterpret_cast <CCubeTexture9*>(deviceState.mTexture[i])->mImageView.get();
+					break;
+				}				
+			}
+			else
+			{
+				mDescriptorImageInfo[i].imageView = mBlankTexture->mImageView.get();
+			}
+		}
+
+		mLastDescriptorSet = mDescriptorSets[mFrameIndex][mDescriptorSetIndex];
+
+		mWriteDescriptorSet[0].dstSet = mLastDescriptorSet;
+		mWriteDescriptorSet[1].dstSet = mLastDescriptorSet;
+		mWriteDescriptorSet[2].dstSet = mLastDescriptorSet;
+		mWriteDescriptorSet[3].dstSet = mLastDescriptorSet;
+		mWriteDescriptorSet[4].dstSet = mLastDescriptorSet;
+		mWriteDescriptorSet[5].dstSet = mLastDescriptorSet;
+		mWriteDescriptorSet[6].dstSet = mLastDescriptorSet;
+		mWriteDescriptorSet[6].pImageInfo = mDescriptorImageInfo;
+		mWriteDescriptorSet[7].dstSet = mLastDescriptorSet;
+		mWriteDescriptorSet[8].dstSet = mLastDescriptorSet;
+
+		mDevice->updateDescriptorSets(9, &mWriteDescriptorSet[0], 0, nullptr);
+		mCurrentDrawCommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, mPipelineLayout.get(), 0, 1, &mLastDescriptorSet, 0, nullptr);
+
+		deviceState.mCapturedAnySamplerState = false;
+		deviceState.mCapturedAnyTexture = false;
+
+		mDescriptorSetIndex++;
 	}
 
 	vk::RenderPassBeginInfo renderPassBeginInfo;
@@ -2408,7 +2698,21 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetRenderTargetData(IDirect3DSurface9 *pRend
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD* pValue)
 {
-	(*pValue) = mInternalDeviceState.mDeviceState.mSamplerState[Sampler][Type];
+	DWORD index = Sampler;
+
+	if (index < 16)
+	{
+		(*pValue) = mInternalDeviceState.mDeviceState.mSamplerState[index][Type];
+	}
+	else if (index >= D3DVERTEXTEXTURESAMPLER0)
+	{
+		index = 16 + (index - D3DVERTEXTEXTURESAMPLER0);
+		(*pValue) = mInternalDeviceState.mDeviceState.mSamplerState[index][Type];
+	}
+	//else
+	//{
+	//	(*pValue) = 0;
+	//}
 
 	return S_OK;
 }
@@ -3499,6 +3803,33 @@ RenderContainer::RenderContainer(vk::Device& device, CSurface9* depthStencilSurf
 }
 
 RenderContainer::~RenderContainer()
+{
+
+}
+
+SamplerContainer::SamplerContainer(vk::Device& device, std::array<DWORD, D3DSAMP_DMAPOFFSET + 1>& samplerState)
+	: mSamplerState(samplerState)
+{
+	const vk::SamplerCreateInfo samplerCreateInfo = vk::SamplerCreateInfo()
+		.setMagFilter(ConvertFilter((D3DTEXTUREFILTERTYPE)mSamplerState[D3DSAMP_MAGFILTER]))
+		.setMinFilter(ConvertFilter((D3DTEXTUREFILTERTYPE)mSamplerState[D3DSAMP_MINFILTER]))
+		.setAddressModeU(ConvertTextureAddress((D3DTEXTUREADDRESS)mSamplerState[D3DSAMP_ADDRESSU]))
+		.setAddressModeV(ConvertTextureAddress((D3DTEXTUREADDRESS)mSamplerState[D3DSAMP_ADDRESSV]))
+		.setAddressModeW(ConvertTextureAddress((D3DTEXTUREADDRESS)mSamplerState[D3DSAMP_ADDRESSW]))
+		.setMipmapMode(ConvertMipmapMode((D3DTEXTUREFILTERTYPE)mSamplerState[D3DSAMP_MIPFILTER]))
+		.setMipLodBias(bit_cast(mSamplerState[D3DSAMP_MIPMAPLODBIAS]))
+		.setBorderColor(vk::BorderColor::eFloatOpaqueWhite)
+		.setUnnormalizedCoordinates(VK_FALSE)
+		.setCompareOp(vk::CompareOp::eNever)
+		.setMinLod(0.0f)
+		.setMaxLod((mSamplerState[D3DSAMP_MIPFILTER] == D3DTEXF_NONE) ? 0.0f : bit_cast(mSamplerState[D3DSAMP_MAXMIPLEVEL]));
+
+	//TODO: handle anisotropy
+
+	mSampler = device.createSamplerUnique(samplerCreateInfo);
+}
+
+SamplerContainer::~SamplerContainer()
 {
 
 }
