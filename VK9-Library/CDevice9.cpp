@@ -1952,7 +1952,7 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 			auto& streamSource = deviceState.mStreamSource[i];
 			if (streamSource.vertexBuffer)
 			{
-				auto inputRate = (deviceState.mStreamSourceFrequency[i] == D3DSTREAMSOURCE_INDEXEDDATA) ? vk::VertexInputRate::eVertex : vk::VertexInputRate::eInstance;
+				auto inputRate = (deviceState.mStreamSourceFrequency[i] == D3DSTREAMSOURCE_INSTANCEDATA) ? vk::VertexInputRate::eInstance : vk::VertexInputRate::eVertex;
 				vertexInputBindingDescription.push_back(vk::VertexInputBindingDescription(i, streamSource.stride, inputRate));
 			}
 		}
