@@ -44,7 +44,6 @@ out gl_PerVertex
 void main() 
 {
 	gl_Position = vec4(position.xy,0.0,1.0);
-	gl_Position *= vec4(1.0,-1.0,1.0,1.0);
 
 	texcoord1 = t0.xy;
 	texcoord2 = t1.xy;

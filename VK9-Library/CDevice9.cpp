@@ -1051,6 +1051,7 @@ void CDevice9::ResetVulkanDevice()
 		const vk::DeviceQueueCreateInfo deviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), static_cast<uint32_t>(mC9->mGraphicsQueueFamilyIndex), 1, &queuePriority);
 		std::vector<char const*> deviceExtensionNames;
 		deviceExtensionNames.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+		deviceExtensionNames.push_back("VK_KHR_maintenance1");
 		mDevice = mC9->mPhysicalDevices[mC9->mPhysicalDeviceIndex].createDeviceUnique(vk::DeviceCreateInfo({}, 1, &deviceQueueCreateInfo, 0, nullptr, static_cast<uint32_t>(deviceExtensionNames.size()), deviceExtensionNames.data()));
 
 		mCommandPool = mDevice->createCommandPoolUnique(vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, deviceQueueCreateInfo.queueFamilyIndex));
@@ -1523,12 +1524,12 @@ void CDevice9::BeginRecordingCommands()
 
 	//Set the view because we don't know if the user will set a new one this frame.
 	const auto viewport = vk::Viewport()
-		.setX(((float)mInternalDeviceState.mDeviceState.mViewport.X) - 0.5f)
-		.setY(((float)mInternalDeviceState.mDeviceState.mViewport.Y) - 0.5f)
-		.setWidth(((float)mInternalDeviceState.mDeviceState.mViewport.Width) - 0.5f)
-		.setHeight(((float)mInternalDeviceState.mDeviceState.mViewport.Height) - 0.5f)
-		.setMinDepth((float)mInternalDeviceState.mDeviceState.mViewport.MinZ)
-		.setMaxDepth((float)mInternalDeviceState.mDeviceState.mViewport.MaxZ);
+		.setX(static_cast<float>(mInternalDeviceState.mDeviceState.mViewport.X) - 0.5f)
+		.setY((static_cast<float>(mInternalDeviceState.mDeviceState.mViewport.Height) - 0.5f) - (static_cast<float>(mInternalDeviceState.mDeviceState.mViewport.Y)))
+		.setWidth(static_cast<float>(mInternalDeviceState.mDeviceState.mViewport.Width) - 0.5f)
+		.setHeight(-(static_cast<float>(mInternalDeviceState.mDeviceState.mViewport.Height) - 0.5f))
+		.setMinDepth(static_cast<float>(mInternalDeviceState.mDeviceState.mViewport.MinZ))
+		.setMaxDepth(static_cast<float>(mInternalDeviceState.mDeviceState.mViewport.MaxZ));
 	mCurrentDrawCommandBuffer.setViewport(0, 1, &viewport);
 
 	//Set the depthBias because we don't know if they user will set a new one this frame.
@@ -3687,14 +3688,16 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetViewport(const D3DVIEWPORT9* pViewport)
 			We need to shift by 0.5 because D3D9 is offset by half a pixel.
 			It's the difference between measuring from the center versus measuring from the edge.
 			https://docs.microsoft.com/en-us/windows/desktop/direct3d9/directly-mapping-texels-to-pixels
+
+			We also need to use the -height and move y (VK_KHR_maintenance1) to handle the handedness of d3d9.
 			*/
 			const auto viewport = vk::Viewport()
-				.setX(((float)pViewport->X) - 0.5f)
-				.setY(((float)pViewport->Y) - 0.5f)
-				.setWidth(((float)pViewport->Width) - 0.5f)
-				.setHeight(((float)pViewport->Height) - 0.5f)
-				.setMinDepth((float)pViewport->MinZ)
-				.setMaxDepth((float)pViewport->MaxZ);
+				.setX(static_cast<float>(mInternalDeviceState.mDeviceState.mViewport.X) - 0.5f)
+				.setY((static_cast<float>(mInternalDeviceState.mDeviceState.mViewport.Height) - 0.5f) - (static_cast<float>(mInternalDeviceState.mDeviceState.mViewport.Y)))
+				.setWidth(static_cast<float>(mInternalDeviceState.mDeviceState.mViewport.Width) - 0.5f)
+				.setHeight(-(static_cast<float>(mInternalDeviceState.mDeviceState.mViewport.Height) - 0.5f))
+				.setMinDepth(static_cast<float>(mInternalDeviceState.mDeviceState.mViewport.MinZ))
+				.setMaxDepth(static_cast<float>(mInternalDeviceState.mDeviceState.mViewport.MaxZ));
 			mCurrentDrawCommandBuffer.setViewport(0, 1, &viewport);
 		}
 		else
