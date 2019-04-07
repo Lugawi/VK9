@@ -63,6 +63,7 @@ vk::BlendOp ConvertColorOperation(D3DBLENDOP input) noexcept;
 vk::Filter ConvertFilter(D3DTEXTUREFILTERTYPE input) noexcept;
 vk::SamplerAddressMode ConvertTextureAddress(D3DTEXTUREADDRESS input) noexcept;
 vk::SamplerMipmapMode ConvertMipmapMode(D3DTEXTUREFILTERTYPE input) noexcept;
+std::array<std::array<float, 4>, 4> ConvertRowMajorToColumnMajor(const D3DMATRIX& matrix);
 
 class CDevice9 : public IDirect3DDevice9Ex
 {	

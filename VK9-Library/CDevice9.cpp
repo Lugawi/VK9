@@ -635,6 +635,21 @@ vk::SamplerMipmapMode ConvertMipmapMode(D3DTEXTUREFILTERTYPE input) noexcept
 	return output;
 }
 
+std::array<std::array<float, 4>, 4> ConvertRowMajorToColumnMajor(const D3DMATRIX& matrix)
+{
+	std::array<std::array<float, 4>, 4> newMatrix;
+
+	for (size_t i = 0; i < 4; i++)
+	{
+		for (size_t j = 0; j < 4; j++)
+		{
+			newMatrix[i][j] = matrix.m[j][i];
+		}
+	}
+
+	return newMatrix;
+}
+
 CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode)
 	:
 	mC9(c9),
@@ -3539,7 +3554,9 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, co
 
 		if (pMatrix)
 		{
-			mCurrentDrawCommandBuffer.updateBuffer(mTransformationBuffer.get(), State * sizeof(D3DMATRIX), sizeof(D3DMATRIX), pMatrix);
+			const auto columnMajorMatrix = ConvertRowMajorToColumnMajor((*pMatrix));
+
+			mCurrentDrawCommandBuffer.updateBuffer(mTransformationBuffer.get(), State * sizeof(D3DMATRIX), sizeof(D3DMATRIX), &columnMajorMatrix);
 			mInternalDeviceState.SetTransform(State, pMatrix);
 		}
 		else
@@ -3549,22 +3566,24 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, co
 										 0, 1, 0, 0,
 										 0, 0, 1, 0,
 										 0, 0, 0, 1 };
-			mCurrentDrawCommandBuffer.updateBuffer(mTransformationBuffer.get(), State * sizeof(D3DMATRIX), sizeof(D3DMATRIX), &identity);
+			const auto columnMajorMatrix = ConvertRowMajorToColumnMajor(identity);
+
+			mCurrentDrawCommandBuffer.updateBuffer(mTransformationBuffer.get(), State * sizeof(D3DMATRIX), sizeof(D3DMATRIX), &columnMajorMatrix);
 			mInternalDeviceState.SetTransform(State, &identity);
 		}
 
 		//Update mvp matrix
 		//TODO: find out if 0 and 1 are really un-used or just undocumented.
 		//TODO: limit matrix multiply to when needs to happen. (Unless branch cost more than savings.)
-		const D3DMATRIX mvp =
+		const auto mvp = ConvertRowMajorToColumnMajor(
 			mInternalDeviceState.mDeviceState.mTransform[D3DTS_PROJECTION] *
 			mInternalDeviceState.mDeviceState.mTransform[D3DTS_VIEW] *
-			mInternalDeviceState.mDeviceState.mTransform[D3DTS_WORLD];
+			mInternalDeviceState.mDeviceState.mTransform[D3DTS_WORLD]);
 		mCurrentDrawCommandBuffer.updateBuffer(mTransformationBuffer.get(), 0, sizeof(D3DMATRIX), &mvp);
 
-		const D3DMATRIX mv =
+		const auto mv = ConvertRowMajorToColumnMajor(
 			mInternalDeviceState.mDeviceState.mTransform[D3DTS_VIEW] *
-			mInternalDeviceState.mDeviceState.mTransform[D3DTS_WORLD];
+			mInternalDeviceState.mDeviceState.mTransform[D3DTS_WORLD]);
 		mCurrentDrawCommandBuffer.updateBuffer(mTransformationBuffer.get(), sizeof(D3DMATRIX), sizeof(D3DMATRIX), &mv);
 	}
 
