@@ -18,9 +18,10 @@ misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#version 400
+#version 460
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
+#extension GL_EXT_scalar_block_layout : enable
 
 layout (location = 0) in vec4 diffuseColor;
 layout (location = 1) in vec4 specularColor;

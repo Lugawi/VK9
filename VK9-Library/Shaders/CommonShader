@@ -188,109 +188,216 @@ misrepresented as being the original software.
 struct RenderState
 {
 	//Render State
-	uint zEnable;
-	uint fillMode;
-	uint shadeMode;
-	uint zWriteEnable;
-	uint alphaTestEnable;
-	uint lastPixel;
-	uint sourceBlend;
-	uint destinationBlend;
-	uint cullMode;
-	uint zFunction;
-	uint alphaReference;
-	uint alphaFunction;
-	uint ditherEnable;
-	uint alphaBlendEnable;
-	uint fogEnable;
-	uint specularEnable;
-	uint fogColor;
-	uint fogTableMode;
-	float fogStart;
-	float fogEnd;
-	float fogDensity;
-	uint rangeFogEnable;
-	uint stencilEnable;
-	uint stencilFail;
-	uint stencilZFail;
-	uint stencilPass;
-	uint stencilFunction;
-	uint stencilReference;
-	uint stencilMask;
-	uint stencilWriteMask;
-	uint textureFactor;
-	uint wrap0;
-	uint wrap1;
-	uint wrap2;
-	uint wrap3;
-	uint wrap4;
-	uint wrap5;
-	uint wrap6;
-	uint wrap7;
-	uint clipping;
-	uint lighting;
-	uint ambient;
-	uint fogVertexMode;
-	uint colorVertex;
-	uint localViewer;
-	uint normalizeNormals;
-	uint diffuseMaterialSource;
-	uint specularMaterialSource;
-	uint ambientMaterialSource;
-	uint emissiveMaterialSource;
-	uint vertexBlend;
-	uint clipPlaneEnable;
-	float pointSize;
-	float pointSizeMinimum;
-	uint pointSpriteEnable;
-	uint pointScaleEnable;
-	float pointScaleA;
-	float pointScaleB;
-	float pointScaleC;
-	uint multisampleAntiAlias;
-	uint multisampleMask;
-	uint patchEdgeStyle;
-	uint debugMonitorToken;
-	float pointSizeMaximum;
-	uint indexedVertexBlendEnable;
-	uint colorWriteEnable;	
-	float tweenFactor;
-	uint blendOperation;
-	uint positionDegree;
-	uint normalDegree;
-	uint scissorTestEnable;
-	float slopeScaleDepthBias;
-	uint antiAliasedLineEnable;
-	float minimumTessellationLevel;
-	float maximumTessellationLevel;
-	float adaptivetessX;
-	float adaptivetessY;
-	float adaptivetessZ;
-	float adaptivetessW;
-	uint enableAdaptiveTessellation;
-	uint twoSidedStencilMode;
-	uint ccwStencilFail;
-	uint ccwStencilZFail;
-	uint ccwStencilPass;
-	uint ccwStencilFunction;
-	uint colorWriteEnable1;
-	uint colorWriteEnable2;
-	uint colorWriteEnable3;
-	uint blendFactor;
-	uint srgbWriteEnable;	
-	float depthBias;
-	uint wrap8;
-	uint wrap9;
-	uint wrap10;
-	uint wrap11;
-	uint wrap12;
-	uint wrap13;
-	uint wrap14;
-	uint wrap15;
-	uint separateAlphaBlendEnable;
-	uint sourceBlendAlpha;
-	uint destinationBlendAlpha;
-	uint blendOperationAlpha;	
+	uint filler0;
+	uint filler1;
+	uint filler2;
+	uint filler3;
+	uint filler4;
+	uint filler5;
+	uint filler6;
+	uint zEnable; //7
+	uint fillMode; //8
+	uint shadeMode; //9
+	uint filler10;
+	uint filler11;
+	uint filler12;
+	uint filler13;
+	uint zWriteEnable; //14
+	uint alphaTestEnable; //15
+	uint lastPixel; //16
+	uint filler17;
+	uint filler18;
+	uint sourceBlend; //19
+	uint destinationBlend; //20
+	uint filler21;
+	uint cullMode; //22
+	uint zFunction; //23
+	uint alphaReference; //24
+	uint alphaFunction; //25
+	uint ditherEnable; //26
+	uint alphaBlendEnable; //27
+	uint fogEnable; //28
+	uint specularEnable; //29
+	uint filler30;
+	uint filler31;
+	uint filler32;
+	uint filler33;
+	uint fogColor; //34
+	uint fogTableMode; //35
+	float fogStart; //36
+	float fogEnd; //37
+	float fogDensity; //38
+	uint filler39;
+	uint filler40;
+	uint filler41;
+	uint filler42;
+	uint filler43;
+	uint filler44;
+	uint filler45;
+	uint filler46;
+	uint filler47;
+	uint rangeFogEnable; //48
+	uint filler49;
+	uint filler50;
+	uint filler51;
+	uint stencilEnable; //52
+	uint stencilFail; //53
+	uint stencilZFail; //54
+	uint stencilPass; //55
+	uint stencilFunction; //56
+	uint stencilReference; //57
+	uint stencilMask; //58
+	uint stencilWriteMask; //59
+	uint textureFactor; //60
+	uint filler61;
+	uint filler62;
+	uint filler63;
+	uint filler64;
+	uint filler65;
+	uint filler66;
+	uint filler67;
+	uint filler68;
+	uint filler69;
+	uint filler70;
+	uint filler71;
+	uint filler72;
+	uint filler73;
+	uint filler74;
+	uint filler75;
+	uint filler76;
+	uint filler77;
+	uint filler78;
+	uint filler79;
+	uint filler80;
+	uint filler81;
+	uint filler82;
+	uint filler83;
+	uint filler84;
+	uint filler85;
+	uint filler86;
+	uint filler87;
+	uint filler88;
+	uint filler89;
+	uint filler90;
+	uint filler91;
+	uint filler92;
+	uint filler93;
+	uint filler94;
+	uint filler95;
+	uint filler96;
+	uint filler97;
+	uint filler98;
+	uint filler99;
+	uint filler100;
+	uint filler101;
+	uint filler102;
+	uint filler103;
+	uint filler104;
+	uint filler105;
+	uint filler106;
+	uint filler107;
+	uint filler108;
+	uint filler109;
+	uint filler110;
+	uint filler111;
+	uint filler112;
+	uint filler113;
+	uint filler114;
+	uint filler115;
+	uint filler116;
+	uint filler117;
+	uint filler118;
+	uint filler119;
+	uint filler120;
+	uint filler121;
+	uint filler122;
+	uint filler123;
+	uint filler124;
+	uint filler125;
+	uint filler126;
+	uint filler127;
+	uint wrap0; //128
+	uint wrap1; //129
+	uint wrap2; //130
+	uint wrap3; //131
+	uint wrap4; //132
+	uint wrap5; //133
+	uint wrap6; //134
+	uint wrap7; //135
+	uint clipping; //136
+	uint lighting; //137
+	uint filler138;
+	uint ambient; //139
+	uint fogVertexMode; //140
+	uint colorVertex; //141
+	uint localViewer; //142
+	uint normalizeNormals; //143
+	uint filler144;
+	uint diffuseMaterialSource; //145
+	uint specularMaterialSource; //146
+	uint ambientMaterialSource; //147
+	uint emissiveMaterialSource; //148
+	uint filler149;
+	uint filler150;
+	uint vertexBlend; //151
+	uint clipPlaneEnable; //152
+	uint filler153;
+	float pointSize; //154
+	float pointSizeMinimum; //155
+	uint pointSpriteEnable; //156
+	uint pointScaleEnable; //157
+	float pointScaleA; //158
+	float pointScaleB; //159
+	float pointScaleC; //160
+	uint multisampleAntiAlias; //161
+	uint multisampleMask; //162
+	uint patchEdgeStyle; //163
+	uint filler164;
+	uint debugMonitorToken; //165
+	float pointSizeMaximum; //166
+	uint indexedVertexBlendEnable; //167
+	uint colorWriteEnable; //168
+	uint filler169;
+	float tweenFactor; //170
+	uint blendOperation; //171
+	uint positionDegree; //172
+	uint normalDegree; //173
+	uint scissorTestEnable; //174
+	float slopeScaleDepthBias; //175
+	uint antiAliasedLineEnable; //176
+	uint filler177;
+	float minimumTessellationLevel; //178
+	float maximumTessellationLevel; //179
+	float adaptivetessX; //180
+	float adaptivetessY; //181
+	float adaptivetessZ; //182
+	float adaptivetessW; //183
+	uint enableAdaptiveTessellation; //184
+	uint twoSidedStencilMode; //185
+	uint ccwStencilFail; //186
+	uint ccwStencilZFail; //187
+	uint ccwStencilPass; //188
+	uint ccwStencilFunction; //189
+	uint colorWriteEnable1; //190
+	uint colorWriteEnable2; //191
+	uint colorWriteEnable3; //192
+	uint blendFactor; //193
+	uint srgbWriteEnable; //194
+	float depthBias; //195
+	uint filler196;
+	uint filler197;
+	uint wrap8; //198
+	uint wrap9; //199
+	uint wrap10; //200
+	uint wrap11; //201
+	uint wrap12; //202
+	uint wrap13; //203
+	uint wrap14; //204
+	uint wrap15; //205
+	uint separateAlphaBlendEnable; //206
+	uint sourceBlendAlpha; //207
+	uint destinationBlendAlpha; //208
+	uint blendOperationAlpha; //209
 
 	uint screenWidth;
 	uint screenHeight;
@@ -304,12 +411,12 @@ struct ShaderConstantSlots
 	float FloatConstants[1024];
 };
 
-layout(std140,binding = 0) uniform RenderStateBlock
+layout(std430,binding = 0) uniform RenderStateBlock
 {
 	RenderState renderState;
 };
 
-layout(std140,binding = 4) uniform TransformationBlock
+layout(std430,binding = 4) uniform TransformationBlock
 {
 	mat4 transformations[512];
 };

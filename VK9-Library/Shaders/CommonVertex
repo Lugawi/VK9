@@ -52,17 +52,17 @@ struct ColorPair
 	vec4   GlobalIllumination;
 };
 
-layout(std140,binding = 1) uniform LightBlock
+layout(std430,binding = 1) uniform LightBlock
 {
 	Light lights[8];
 };
 
-layout(std140,binding = 2) uniform LightEnableBlock
+layout(std430,binding = 2) uniform LightEnableBlock
 {
 	int lightEnables[8];
 };
 
-layout(std140,binding = 3) uniform MaterialBlock
+layout(std430,binding = 3) uniform MaterialBlock
 {
 	Material material;
 };

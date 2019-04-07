@@ -40,7 +40,7 @@ struct TextureStage
 	uint Constant;
 };
 
-layout(std140,binding = 5) uniform TextureStageBlock
+layout(std430,binding = 5) uniform TextureStageBlock
 {
 	TextureStage textureStages[16];
 };
