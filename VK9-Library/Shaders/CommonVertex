@@ -21,11 +21,6 @@ misrepresented as being the original software.
 struct Light
 {
 	uint       Type;            /* Type of light source */
-	vec4       Diffuse;         /* Diffuse color of light */
-	vec4       Specular;        /* Specular color of light */
-	vec4       Ambient;         /* Ambient color of light */
-	vec4       Position;        /* Position in world space */
-	vec4       Direction;       /* Direction in world space */
 	float      Range;           /* Cutoff range */
 	float      Falloff;         /* Falloff */
 	float      Attenuation0;    /* Constant attenuation */
@@ -33,6 +28,12 @@ struct Light
 	float      Attenuation2;    /* Quadratic attenuation */
 	float      Theta;           /* Inner angle of spotlight cone */
 	float      Phi;             /* Outer angle of spotlight cone */
+	vec4       Diffuse;         /* Diffuse color of light */
+	vec4       Specular;        /* Specular color of light */
+	vec4       Ambient;         /* Ambient color of light */
+	vec4       Position;        /* Position in world space */
+	vec4       Direction;       /* Direction in world space */
+
 };
 
 struct Material

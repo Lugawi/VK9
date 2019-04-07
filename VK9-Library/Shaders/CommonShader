@@ -416,7 +416,7 @@ layout(std430,binding = 0) uniform RenderStateBlock
 	RenderState renderState;
 };
 
-layout(std430,binding = 4) uniform TransformationBlock
+layout(row_major,std430,binding = 4) uniform TransformationBlock
 {
 	mat4 transformations[512];
 };

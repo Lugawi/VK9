@@ -26,7 +26,7 @@ misrepresented as being the original software.
 
 #include<vector>
 
-//On my test hardware this was 32.
+ //On my test hardware this was 32.
 #define MAX_VERTEX_INPUTS 32
 #define MAX_PIXEL_SHADER_CONST 256
 #define MAX_VERTEX_SHADER_CONST 256
@@ -38,6 +38,46 @@ class CPixelShader9;
 class CVertexShader9;
 class CVertexDeclaration9;
 class CSwapChain9;
+
+struct PaddedLight
+{
+	D3DLIGHTTYPE    Type;            /* Type of light source */
+	float           Range;            /* Cutoff range */
+	float           Falloff;          /* Falloff */
+	float           Attenuation0;     /* Constant attenuation */
+	float           Attenuation1;     /* Linear attenuation */
+	float           Attenuation2;     /* Quadratic attenuation */
+	float           Theta;            /* Inner angle of spotlight cone */
+	float           Phi;              /* Outer angle of spotlight cone */
+	D3DCOLORVALUE   Diffuse;         /* Diffuse color of light */
+	D3DCOLORVALUE   Specular;        /* Specular color of light */
+	D3DCOLORVALUE   Ambient;         /* Ambient color of light */
+	D3DVECTOR       Position;         /* Position in world space */
+	int filler1;
+	D3DVECTOR       Direction;        /* Direction in world space */
+	int filler2;
+
+	PaddedLight() {}
+
+	PaddedLight(const D3DLIGHT9& light)
+	{
+		
+		this->Type = light.Type;
+		this->Diffuse = light.Diffuse;
+		this->Specular = light.Specular;
+		this->Ambient = light.Ambient;
+		this->Position = light.Position;
+		this->Direction = light.Direction;
+		this->Range = light.Range;
+		this->Falloff = light.Falloff;
+		this->Attenuation0 = light.Attenuation0;
+		this->Attenuation1 = light.Attenuation1;
+		this->Attenuation2 = light.Attenuation2;
+		this->Theta = light.Theta;
+		this->Phi = light.Phi;	
+	}
+
+};
 
 struct DeviceState
 {
@@ -59,14 +99,14 @@ struct DeviceState
 
 	//A device can have only 8 textures.
 	//https://docs.microsoft.com/en-us/windows/desktop/api/d3d9helper/nf-d3d9helper-idirect3ddevice9-settexturestagestate
-	
+
 	bool mCapturedAnyTextureStageState = false;
 	bool mCapturedTextureStageState[8][D3DTSS_CONSTANT + 1];
 	unsigned long mTextureStageState[8][D3DTSS_CONSTANT + 1];
 
 	bool mCapturedAnySamplerState = false;
-	bool mCapturedSamplerState[16 + 4][D3DSAMP_DMAPOFFSET + 1];	
-	std::array< std::array<DWORD, D3DSAMP_DMAPOFFSET + 1> , 16 + 4> mSamplerState = {};
+	bool mCapturedSamplerState[16 + 4][D3DSAMP_DMAPOFFSET + 1];
+	std::array< std::array<DWORD, D3DSAMP_DMAPOFFSET + 1>, 16 + 4> mSamplerState = {};
 
 	bool mCapturedAnyStreamSource = false;
 	bool mCapturedStreamSource[MAX_VERTEX_INPUTS] = {};
