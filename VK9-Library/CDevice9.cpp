@@ -3572,14 +3572,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, co
 		//TODO: find out if 0 and 1 are really un-used or just undocumented.
 		//TODO: limit matrix multiply to when needs to happen. (Unless branch cost more than savings.)
 		const auto mvp =
-			mInternalDeviceState.mDeviceState.mTransform[D3DTS_PROJECTION] *
+			mInternalDeviceState.mDeviceState.mTransform[D3DTS_WORLD] *
 			mInternalDeviceState.mDeviceState.mTransform[D3DTS_VIEW] *
-			mInternalDeviceState.mDeviceState.mTransform[D3DTS_WORLD];
+			mInternalDeviceState.mDeviceState.mTransform[D3DTS_PROJECTION];
 		mCurrentDrawCommandBuffer.updateBuffer(mTransformationBuffer.get(), 0, sizeof(D3DMATRIX), &mvp);
 
 		const auto mv =
-			mInternalDeviceState.mDeviceState.mTransform[D3DTS_VIEW] *
-			mInternalDeviceState.mDeviceState.mTransform[D3DTS_WORLD];
+			mInternalDeviceState.mDeviceState.mTransform[D3DTS_WORLD] *
+			mInternalDeviceState.mDeviceState.mTransform[D3DTS_VIEW];
 		mCurrentDrawCommandBuffer.updateBuffer(mTransformationBuffer.get(), sizeof(D3DMATRIX), sizeof(D3DMATRIX), &mv);
 	}
 
