@@ -100,9 +100,10 @@ struct DeviceState
 	//A device can have only 8 textures.
 	//https://docs.microsoft.com/en-us/windows/desktop/api/d3d9helper/nf-d3d9helper-idirect3ddevice9-settexturestagestate
 
+	//+ 2 is for alignment
 	bool mCapturedAnyTextureStageState = false;
-	bool mCapturedTextureStageState[8][D3DTSS_CONSTANT + 1];
-	unsigned long mTextureStageState[8][D3DTSS_CONSTANT + 1];
+	bool mCapturedTextureStageState[8][D3DTSS_CONSTANT + 1 + 7];
+	unsigned long mTextureStageState[8][D3DTSS_CONSTANT + 1 + 7];
 
 	bool mCapturedAnySamplerState = false;
 	bool mCapturedSamplerState[16 + 4][D3DSAMP_DMAPOFFSET + 1];

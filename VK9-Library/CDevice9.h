@@ -107,7 +107,7 @@ public:
 	std::vector<vk::UniqueCommandBuffer> mUtilityCommandBuffers;
 	std::vector<vk::UniqueFence> mUtilityFences;
 	uint32_t mUtilityIndex = 0;
-	bool mIsRecordingUtility = false;
+	int32_t mUtilityRecordingCount = 0;
 	bool mIsDrawing = false;
 
 	std::array<std::vector<vk::UniquePipeline>, 3> mPipelines;

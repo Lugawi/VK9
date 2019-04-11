@@ -20,6 +20,7 @@ misrepresented as being the original software.
 
 struct TextureStage
 {
+	uint filler1;
 	uint colorOperation; 
 	uint colorArgument1; 
 	uint colorArgument2; 

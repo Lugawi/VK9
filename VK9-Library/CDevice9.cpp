@@ -919,13 +919,13 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 	SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
 	SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
 	SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
-	SetTextureStageState(0, D3DTSS_BUMPENVMAT00, bit_cast(0.0f));
-	SetTextureStageState(0, D3DTSS_BUMPENVMAT01, bit_cast(0.0f));
-	SetTextureStageState(0, D3DTSS_BUMPENVMAT10, bit_cast(0.0f));
-	SetTextureStageState(0, D3DTSS_BUMPENVMAT11, bit_cast(0.0f));
+	SetTextureStageState(0, D3DTSS_BUMPENVMAT00, 0); //bit_cast(0.0f)
+	SetTextureStageState(0, D3DTSS_BUMPENVMAT01, 0); //bit_cast(0.0f)
+	SetTextureStageState(0, D3DTSS_BUMPENVMAT10, 0); //bit_cast(0.0f)
+	SetTextureStageState(0, D3DTSS_BUMPENVMAT11, 0); //bit_cast(0.0f)
 	SetTextureStageState(0, D3DTSS_TEXCOORDINDEX, 0);
-	SetTextureStageState(0, D3DTSS_BUMPENVLSCALE, bit_cast(0.0f));
-	SetTextureStageState(0, D3DTSS_BUMPENVLOFFSET, bit_cast(0.0f));
+	SetTextureStageState(0, D3DTSS_BUMPENVLSCALE, 0); //bit_cast(0.0f)
+	SetTextureStageState(0, D3DTSS_BUMPENVLOFFSET, 0); //bit_cast(0.0f)
 	SetTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
 	SetTextureStageState(0, D3DTSS_COLORARG0, D3DTA_CURRENT);
 	SetTextureStageState(0, D3DTSS_ALPHAARG0, D3DTA_CURRENT);
@@ -954,13 +954,13 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 		SetTextureStageState(i, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
 		SetTextureStageState(i, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
 		SetTextureStageState(i, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
-		SetTextureStageState(i, D3DTSS_BUMPENVMAT00, bit_cast(0.0f));
-		SetTextureStageState(i, D3DTSS_BUMPENVMAT01, bit_cast(0.0f));
-		SetTextureStageState(i, D3DTSS_BUMPENVMAT10, bit_cast(0.0f));
-		SetTextureStageState(i, D3DTSS_BUMPENVMAT11, bit_cast(0.0f));
+		SetTextureStageState(i, D3DTSS_BUMPENVMAT00, 0); //bit_cast(0.0f)
+		SetTextureStageState(i, D3DTSS_BUMPENVMAT01, 0); //bit_cast(0.0f)
+		SetTextureStageState(i, D3DTSS_BUMPENVMAT10, 0); //bit_cast(0.0f)
+		SetTextureStageState(i, D3DTSS_BUMPENVMAT11, 0); //bit_cast(0.0f)
 		SetTextureStageState(i, D3DTSS_TEXCOORDINDEX, i);
-		SetTextureStageState(i, D3DTSS_BUMPENVLSCALE, bit_cast(0.0f));
-		SetTextureStageState(i, D3DTSS_BUMPENVLOFFSET, bit_cast(0.0f));
+		SetTextureStageState(i, D3DTSS_BUMPENVLSCALE, 0); //bit_cast(0.0f)
+		SetTextureStageState(i, D3DTSS_BUMPENVLOFFSET, 0); //bit_cast(0.0f)
 		SetTextureStageState(i, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
 		SetTextureStageState(i, D3DTSS_COLORARG0, D3DTA_CURRENT);
 		SetTextureStageState(i, D3DTSS_ALPHAARG0, D3DTA_CURRENT);
@@ -1140,7 +1140,7 @@ void CDevice9::ResetVulkanDevice()
 
 	//Light
 	{
-		auto const lightBufferInfo = vk::BufferCreateInfo().setSize(sizeof(PaddedLight)*8).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		auto const lightBufferInfo = vk::BufferCreateInfo().setSize(sizeof(PaddedLight) * 8).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
 		mLightBuffer = mDevice->createBufferUnique(lightBufferInfo);
 		vk::MemoryRequirements lightMemoryRequirements;
 		mDevice->getBufferMemoryRequirements(mLightBuffer.get(), &lightMemoryRequirements);
@@ -1495,6 +1495,13 @@ void CDevice9::ResetVulkanDevice()
 	depth->Release();
 
 	mBlankTexture = std::make_unique<CTexture9>(this, 1, 1, 1, D3DUSAGE_RENDERTARGET, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, nullptr);
+
+	vk::ClearColorValue clearColorValue;
+	for (size_t i = 0; i < 4; i++)
+	{
+		clearColorValue.float32[i] = 1.0f;
+	}
+	mBlankTexture->Clear(clearColorValue);
 }
 
 void CDevice9::BeginRecordingCommands()
@@ -1585,7 +1592,9 @@ void CDevice9::StopRecordingCommands()
 
 void CDevice9::BeginRecordingUtilityCommands()
 {
-	if (mIsRecordingUtility)
+	mUtilityRecordingCount++;
+
+	if (mUtilityRecordingCount > 1)
 	{
 		return;
 	}
@@ -1599,13 +1608,13 @@ void CDevice9::BeginRecordingUtilityCommands()
 
 	vk::CommandBufferBeginInfo beginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 	mCurrentUtilityCommandBuffer.begin(&beginInfo);
-
-	mIsRecordingUtility = true;
 }
 
 void CDevice9::StopRecordingUtilityCommands()
 {
-	if (!mIsRecordingUtility)
+	mUtilityRecordingCount--;
+
+	if (mUtilityRecordingCount > 0)
 	{
 		return;
 	}
@@ -1619,7 +1628,7 @@ void CDevice9::StopRecordingUtilityCommands()
 	submitInfo.pCommandBuffers = &mCurrentUtilityCommandBuffer;
 	mQueue.submit(1, &submitInfo, mUtilityFences[mUtilityIndex].get());
 
-	mIsRecordingUtility = false;
+	mUtilityRecordingCount = 0;
 }
 
 void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
@@ -3531,7 +3540,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTextureStageState(DWORD Stage, D3DTEXTURE
 	{
 		BeginRecordingCommands();
 
-		mCurrentDrawCommandBuffer.updateBuffer(mTextureStageBuffer.get(), Stage * Type * sizeof(DWORD), sizeof(DWORD), &Value);
+		mCurrentDrawCommandBuffer.updateBuffer(mTextureStageBuffer.get(), (Stage * (D3DTSS_CONSTANT + 1 + 7)) + (Type * sizeof(DWORD)), sizeof(DWORD), &Value);
 
 		mInternalDeviceState.SetTextureStageState(Stage, Type, Value);
 	}

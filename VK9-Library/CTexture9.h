@@ -67,6 +67,8 @@ public:
 
 	//Helper Functions
 	void SetImageLayout(vk::ImageLayout newLayout);
+	void Clear(const vk::ClearColorValue& clearValue);
+	void Clear(const vk::ClearDepthStencilValue& clearValue);
 public:
 	//IUnknown
 	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid,void  **ppv);

@@ -47,7 +47,7 @@ CTexture9::CTexture9(CDevice9* device, UINT Width, UINT Height, UINT Levels, DWO
 
 	if (!mLevels)
 	{
-		mLevels = (UINT)std::log2( std::max(mWidth, mHeight) ) + 1;
+		mLevels = (UINT)std::log2(std::max(mWidth, mHeight)) + 1;
 	}
 
 	if (mUsage == 0)
@@ -205,6 +205,48 @@ void CTexture9::SetImageLayout(vk::ImageLayout newLayout)
 	mImageLayout = newLayout;
 }
 
+void CTexture9::Clear(const vk::ClearColorValue& clearValue)
+{
+	vk::ImageLayout originalLayout = mImageLayout;
+
+	mDevice->BeginRecordingUtilityCommands();
+	{
+		SetImageLayout(vk::ImageLayout::eTransferDstOptimal);
+
+		const vk::ImageSubresourceRange subResourceRange = vk::ImageSubresourceRange()
+			.setBaseMipLevel(0)
+			.setLevelCount(1)
+			.setBaseArrayLayer(0)
+			.setLayerCount(1)
+			.setAspectMask(vk::ImageAspectFlagBits::eColor);
+		mDevice->mCurrentUtilityCommandBuffer.clearColorImage(mImage.get(), vk::ImageLayout::eTransferDstOptimal, &clearValue, 1, &subResourceRange);
+
+		SetImageLayout(originalLayout);
+	}
+	mDevice->StopRecordingUtilityCommands();
+}
+
+void CTexture9::Clear(const vk::ClearDepthStencilValue& clearValue)
+{
+	vk::ImageLayout originalLayout = mImageLayout;
+
+	mDevice->BeginRecordingUtilityCommands();
+	{
+		SetImageLayout(vk::ImageLayout::eTransferDstOptimal);
+
+		const vk::ImageSubresourceRange subResourceRange = vk::ImageSubresourceRange()
+			.setBaseMipLevel(0)
+			.setLevelCount(1)
+			.setBaseArrayLayer(0)
+			.setLayerCount(1)
+			.setAspectMask(vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil);
+		mDevice->mCurrentUtilityCommandBuffer.clearDepthStencilImage(mImage.get(), vk::ImageLayout::eTransferDstOptimal, &clearValue, 1, &subResourceRange);
+
+		SetImageLayout(originalLayout);
+	}
+	mDevice->StopRecordingUtilityCommands();
+}
+
 ULONG STDMETHODCALLTYPE CTexture9::AddRef(void)
 {
 	return InterlockedIncrement(&mReferenceCount);
@@ -261,10 +303,10 @@ ULONG STDMETHODCALLTYPE CTexture9::Release(void)
 }
 
 HRESULT STDMETHODCALLTYPE CTexture9::GetDevice(IDirect3DDevice9** ppDevice)
-{ 
-	mDevice->AddRef(); 
-	(*ppDevice) = (IDirect3DDevice9*)mDevice; 
-	return S_OK; 
+{
+	mDevice->AddRef();
+	(*ppDevice) = (IDirect3DDevice9*)mDevice;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CTexture9::FreePrivateData(REFGUID refguid)
@@ -404,7 +446,7 @@ HRESULT STDMETHODCALLTYPE CTexture9::GetSurfaceLevel(UINT Level, IDirect3DSurfac
 }
 
 HRESULT STDMETHODCALLTYPE CTexture9::LockRect(UINT Level, D3DLOCKED_RECT* pLockedRect, const RECT* pRect, DWORD Flags)
-{	
+{
 	HRESULT result = mSurfaces[Level]->LockRect(pLockedRect, pRect, Flags);
 
 	if ((Flags & D3DLOCK_DISCARD) == D3DLOCK_DISCARD)
