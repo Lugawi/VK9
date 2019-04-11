@@ -39,7 +39,7 @@ out gl_PerVertex
 
 void main() 
 {
-	gl_Position = transformations[D3DTS_MVP] * vec4(position.xyz,1.0);
+	gl_Position = vec4(position.xyz,1.0) * transformations[D3DTS_MVP];
 
 	ColorPair color = CalculateGlobalIllumination(position, vec4(0.0), vec4(1.0), vec4(0.0));
 
