@@ -537,7 +537,7 @@ void CStateBlock9::CapturePixelRenderStates()
 
 void CStateBlock9::CapturePixelTextureStates()
 {
-	for (int stage = 0; stage < 8; stage++)
+	for (int stage = 0; stage < 16; stage++)
 	{
 		CaptureTextureStageState(stage, D3DTSS_COLOROP);
 		CaptureTextureStageState(stage, D3DTSS_COLORARG1);

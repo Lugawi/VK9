@@ -159,11 +159,11 @@ struct DeviceState
 
 	//+ 2 is for alignment
 	bool mCapturedAnyTextureStageState = false;
-	bool mCapturedTextureStageState[16][D3DTSS_CONSTANT + 1 + 3];
+	bool mCapturedTextureStageState[16][D3DTSS_CONSTANT + 1 + 3] = {};
 	std::array< std::array<DWORD, D3DTSS_CONSTANT + 1>, 16> mTextureStageState = {};
 
 	bool mCapturedAnySamplerState = false;
-	bool mCapturedSamplerState[16 + 4][D3DSAMP_DMAPOFFSET + 1];
+	bool mCapturedSamplerState[16 + 4][D3DSAMP_DMAPOFFSET + 1] = {};
 	std::array< std::array<DWORD, D3DSAMP_DMAPOFFSET + 1>, 16 + 4> mSamplerState = {};
 
 	bool mCapturedAnyStreamSource = false;
@@ -213,6 +213,6 @@ struct DeviceState
 	bool mCapturedScissorRect = false;
 	RECT mScissorRect = {};
 
-	bool mCapturedPaletteNumber;
-	unsigned int mPaletteNumber;
+	bool mCapturedPaletteNumber = false;
+	unsigned int mPaletteNumber = 0;
 };
