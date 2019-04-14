@@ -1061,11 +1061,16 @@ void CDevice9::ResetVulkanDevice()
 	{
 		float queuePriority = 0.0f;
 		const vk::DeviceQueueCreateInfo deviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), static_cast<uint32_t>(mC9->mGraphicsQueueFamilyIndex), 1, &queuePriority);
+		
+		auto device = mC9->mPhysicalDevices[mC9->mPhysicalDeviceIndex];
+		vk::PhysicalDeviceFeatures features;
+		device.getFeatures(&features);
+
 		std::vector<char const*> deviceExtensionNames;
 		deviceExtensionNames.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 		deviceExtensionNames.push_back("VK_KHR_maintenance1");
-		mDevice = mC9->mPhysicalDevices[mC9->mPhysicalDeviceIndex].createDeviceUnique(vk::DeviceCreateInfo({}, 1, &deviceQueueCreateInfo, 0, nullptr, static_cast<uint32_t>(deviceExtensionNames.size()), deviceExtensionNames.data()));
 
+		mDevice = mC9->mPhysicalDevices[mC9->mPhysicalDeviceIndex].createDeviceUnique(vk::DeviceCreateInfo({}, 1, &deviceQueueCreateInfo, 0, nullptr, static_cast<uint32_t>(deviceExtensionNames.size()), deviceExtensionNames.data(),&features));
 		mCommandPool = mDevice->createCommandPoolUnique(vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, deviceQueueCreateInfo.queueFamilyIndex));
 	}
 
@@ -1651,28 +1656,6 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 		return;
 	}
 
-	//Check to see if the index buffer has been changed and if so bind the current buffer if not null.
-	if (mInternalDeviceState.mDeviceState.mCapturedIndexBuffer)
-	{
-		if (mInternalDeviceState.mDeviceState.mIndexBuffer)
-		{
-			switch (mInternalDeviceState.mDeviceState.mIndexBuffer->mFormat)
-			{
-			case D3DFMT_INDEX16:
-				mCurrentDrawCommandBuffer.bindIndexBuffer(mInternalDeviceState.mDeviceState.mIndexBuffer->mCurrentIndexBuffer, 0, vk::IndexType::eUint16);
-				break;
-			case D3DFMT_INDEX32:
-				mCurrentDrawCommandBuffer.bindIndexBuffer(mInternalDeviceState.mDeviceState.mIndexBuffer->mCurrentIndexBuffer, 0, vk::IndexType::eUint32);
-				break;
-			default:
-				Log(warning) << "CDevice9::BeginDraw unknown index format! - " << mInternalDeviceState.mDeviceState.mIndexBuffer->mFormat << std::endl;
-				break;
-			}
-		}
-
-		mInternalDeviceState.mDeviceState.mCapturedIndexBuffer = false;
-	}
-
 	//Check to see if the pipeline is stale. If so create a new one and bind it.
 	auto& deviceState = mInternalDeviceState.mDeviceState;
 	if ((mLastPrimitiveType != primitiveType)
@@ -2099,6 +2082,28 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 		mCurrentDrawCommandBuffer.bindVertexBuffers(0, vertexBuffers.size(), vertexBuffers.data(), offsets.data());
 
 		mInternalDeviceState.mDeviceState.mCapturedAnyStreamSource = false;
+	}
+
+	//Check to see if the index buffer has been changed and if so bind the current buffer if not null.
+	if (mInternalDeviceState.mDeviceState.mCapturedIndexBuffer)
+	{
+		if (mInternalDeviceState.mDeviceState.mIndexBuffer)
+		{
+			switch (mInternalDeviceState.mDeviceState.mIndexBuffer->mFormat)
+			{
+			case D3DFMT_INDEX16:
+				mCurrentDrawCommandBuffer.bindIndexBuffer(mInternalDeviceState.mDeviceState.mIndexBuffer->mCurrentIndexBuffer, 0, vk::IndexType::eUint16);
+				break;
+			case D3DFMT_INDEX32:
+				mCurrentDrawCommandBuffer.bindIndexBuffer(mInternalDeviceState.mDeviceState.mIndexBuffer->mCurrentIndexBuffer, 0, vk::IndexType::eUint32);
+				break;
+			default:
+				Log(warning) << "CDevice9::BeginDraw unknown index format! - " << mInternalDeviceState.mDeviceState.mIndexBuffer->mFormat << std::endl;
+				break;
+			}
+		}
+
+		mInternalDeviceState.mDeviceState.mCapturedIndexBuffer = false;
 	}
 
 	//Check to see if the texture stuff has changed and if so update the descriptor set.
@@ -2999,7 +3004,25 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetSwapChain(UINT iSwapChain, IDirect3DSwapC
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetTexture(DWORD Stage, IDirect3DBaseTexture9** ppTexture)
 {
-	(*ppTexture) = mInternalDeviceState.mDeviceState.mTexture[Stage];
+	if (!ppTexture)
+	{
+		return D3DERR_INVALIDCALL;
+	}
+
+	if ((Stage >= 16 && Stage <= D3DDMAPSAMPLER) || Stage > D3DVERTEXTEXTURESAMPLER3)
+	{
+		return D3DERR_INVALIDCALL;
+	}
+
+	//TODO: revisit
+	if (Stage < 16)
+	{
+		(*ppTexture) = mInternalDeviceState.mDeviceState.mTexture[Stage];
+	}
+	else
+	{
+		(*ppTexture) = nullptr;
+	}
 
 	if ((*ppTexture) != nullptr)
 	{
@@ -3197,6 +3220,8 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetDepthStencilSurface(IDirect3DSurface9* pN
 		{
 			mDepthStencilSurface->PrivateRelease();
 		}
+
+		mDepthStencilSurface = nullptr;
 
 		return S_OK;
 	}
@@ -3449,11 +3474,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetRenderTarget(DWORD RenderTargetIndex, IDi
 	}
 
 	//Set the viewport to the size of the new render target.
-	D3DVIEWPORT9 viewport = {};
-	viewport.Width = surface->mWidth;
-	viewport.Height = surface->mHeight;
-	viewport.MaxZ = 1;
-	SetViewport(&viewport);
+	if (surface != nullptr)
+	{
+		D3DVIEWPORT9 viewport = {};
+		viewport.Width = surface->mWidth;
+		viewport.Height = surface->mHeight;
+		viewport.MaxZ = 1;
+		SetViewport(&viewport);
+	}
 
 	RebuildRenderPass();
 

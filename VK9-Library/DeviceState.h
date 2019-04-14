@@ -129,6 +129,13 @@ struct PaddedTextureStage
 	}
 };
 
+struct StreamSource
+{
+	CVertexBuffer9* vertexBuffer;
+	unsigned int offset;
+	unsigned int stride;
+};
+
 struct DeviceState
 {
 	bool mCapturedVertexDeclaration = false;
@@ -161,33 +168,27 @@ struct DeviceState
 
 	bool mCapturedAnyStreamSource = false;
 	bool mCapturedStreamSource[MAX_VERTEX_INPUTS] = {};
-	struct StreamSource
-	{
-		CVertexBuffer9* vertexBuffer;
-		unsigned int offset;
-		unsigned int stride;
-	};
-	StreamSource mStreamSource[MAX_VERTEX_INPUTS] = {};
+	std::array<StreamSource, MAX_VERTEX_INPUTS> mStreamSource = {};
 
 	bool mCapturedAnyStreamFrequency = false;
 	bool mCapturedStreamSourceFrequency[MAX_VERTEX_INPUTS] = {};
-	unsigned int mStreamSourceFrequency[MAX_VERTEX_INPUTS] = {};
+	std::array<unsigned int, MAX_VERTEX_INPUTS> mStreamSourceFrequency = {};
 
 	bool mCapturedAnyTexture = false;
 	bool mCapturedTexture[16 + 4] = {};
-	IDirect3DBaseTexture9* mTexture[16 + 4] = {};
+	std::array<IDirect3DBaseTexture9*, 16 + 4> mTexture = {};
 
 	bool mCapturedTransform[512] = {};
-	D3DMATRIX mTransform[512] = {};
+	std::array<D3DMATRIX, 512> mTransform = {};
 
 	bool mCapturedMaterial = false;
 	D3DMATERIAL9 mMaterial = {};
 
 	bool mCapturedLight[8] = {};
-	D3DLIGHT9 mLight[8] = {};
+	std::array<D3DLIGHT9, 8> mLight = {};
 
 	bool mCapturedLightEnable[8] = {};
-	int mLightEnableState[8] = {};
+	std::array<int, 8> mLightEnableState = {};
 
 	bool mCapturedPixelShader = false;
 	CPixelShader9* mPixelShader = nullptr;
@@ -195,8 +196,8 @@ struct DeviceState
 	bool mCapturedVertexShader = false;
 	CVertexShader9* mVertexShader = nullptr;
 
-	bool mCapturedViewport;
-	D3DVIEWPORT9 mViewport;
+	bool mCapturedViewport = false;
+	D3DVIEWPORT9 mViewport = {};
 
 	float mPixelShaderConstantF[MAX_PIXEL_SHADER_CONST][4] = {};
 	int mPixelShaderConstantI[16][4] = {};

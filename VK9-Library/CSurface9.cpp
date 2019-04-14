@@ -576,6 +576,7 @@ size_t SizeOf(vk::Format format) noexcept
 
 CSurface9::CSurface9(CDevice9* Device, CTexture9* Texture, UINT Width, UINT Height, DWORD Usage, UINT Levels, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, BOOL Lockable, D3DPOOL pool, HANDLE *pSharedHandle)
 	: mDevice(Device),
+	mCubeTexture(nullptr),
 	mTexture(Texture),
 	mWidth(Width),
 	mHeight(Height),
@@ -645,6 +646,7 @@ CSurface9::CSurface9(CDevice9* Device, CTexture9* Texture, UINT Width, UINT Heig
 CSurface9::CSurface9(CDevice9* Device, CCubeTexture9* Texture, UINT Width, UINT Height, DWORD Usage, UINT Levels, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, BOOL Lockable, D3DPOOL pool, HANDLE *pSharedHandle)
 	: mDevice(Device),
 	mCubeTexture(Texture),
+	mTexture(nullptr),
 	mWidth(Width),
 	mHeight(Height),
 	mUsage(Usage),
@@ -747,13 +749,16 @@ CSurface9::CSurface9(CDevice9* Device, vk::Image& image, UINT Width, UINT Height
 
 CSurface9::~CSurface9()
 {
-	if (mCubeTexture != nullptr)
+	if (mUsage != D3DUSAGE_DEPTHSTENCIL) //Depth stencil doesn't have a texture.
 	{
-		mCubeTexture->Release();
-	}
-	else if (mTexture != nullptr)
-	{
-		mTexture->Release();
+		if (mCubeTexture != nullptr)
+		{
+			mCubeTexture->Release();
+		}
+		else if (mTexture != nullptr)
+		{
+			mTexture->Release();
+		}
 	}
 }
 
