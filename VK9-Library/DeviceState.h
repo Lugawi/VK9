@@ -26,6 +26,8 @@ misrepresented as being the original software.
 
 #include<vector>
 
+#include "BitCast.h"
+
  //On my test hardware this was 32.
 #define MAX_VERTEX_INPUTS 32
 #define MAX_PIXEL_SHADER_CONST 256
@@ -53,9 +55,9 @@ struct PaddedLight
 	D3DCOLORVALUE   Specular;        /* Specular color of light */
 	D3DCOLORVALUE   Ambient;         /* Ambient color of light */
 	D3DVECTOR       Position;         /* Position in world space */
-	int filler1;
+	int32_t filler1;
 	D3DVECTOR       Direction;        /* Direction in world space */
-	int filler2;
+	int32_t filler2;
 
 	PaddedLight() {}
 
@@ -79,6 +81,54 @@ struct PaddedLight
 
 };
 
+struct PaddedTextureStage
+{
+	uint32_t colorOperation;
+	uint32_t colorArgument1;
+	uint32_t colorArgument2;
+	uint32_t alphaOperation;
+	uint32_t alphaArgument1;
+	uint32_t alphaArgument2;
+	float bumpMapMatrix00;
+	float bumpMapMatrix01;
+	float bumpMapMatrix10;
+	float bumpMapMatrix11;
+	uint32_t texureCoordinateIndex;
+	float bumpMapScale;
+	float bumpMapOffset;
+	uint32_t textureTransformationFlags;
+	uint32_t colorArgument0;
+	uint32_t alphaArgument0;
+	uint32_t Result;
+	uint32_t Constant;
+	int32_t fillter1;
+	int32_t fillter2;
+
+	PaddedTextureStage(){}
+
+	PaddedTextureStage(std::array<DWORD, D3DTSS_CONSTANT + 1>& textureStage)
+	{
+		colorOperation = textureStage[D3DTSS_COLOROP];
+		colorArgument1 = textureStage[D3DTSS_COLORARG1];
+		colorArgument2 = textureStage[D3DTSS_COLORARG2];
+		alphaOperation = textureStage[D3DTSS_ALPHAOP];
+		alphaArgument1 = textureStage[D3DTSS_ALPHAARG1];
+		alphaArgument2 = textureStage[D3DTSS_ALPHAARG2];
+		bumpMapMatrix00 = bit_cast(textureStage[D3DTSS_BUMPENVMAT00]);
+		bumpMapMatrix01 = bit_cast(textureStage[D3DTSS_BUMPENVMAT01]);
+		bumpMapMatrix10 = bit_cast(textureStage[D3DTSS_BUMPENVMAT10]);
+		bumpMapMatrix11 = bit_cast(textureStage[D3DTSS_BUMPENVMAT11]);
+		texureCoordinateIndex = textureStage[D3DTSS_TEXCOORDINDEX];
+		bumpMapScale = bit_cast(textureStage[D3DTSS_BUMPENVLSCALE]);
+		bumpMapOffset = bit_cast(textureStage[D3DTSS_BUMPENVLOFFSET]);
+		textureTransformationFlags = textureStage[D3DTSS_TEXTURETRANSFORMFLAGS];
+		colorArgument0 = textureStage[D3DTSS_COLORARG0];
+		alphaArgument0 = textureStage[D3DTSS_ALPHAARG0];
+		Result = textureStage[D3DTSS_RESULTARG];
+		Constant = textureStage[D3DTSS_CONSTANT];
+	}
+};
+
 struct DeviceState
 {
 	bool mCapturedVertexDeclaration = false;
@@ -92,7 +142,7 @@ struct DeviceState
 
 	// + 3 is for extra state I'm sticking on the end.
 	bool mCapturedRenderState[D3DRS_BLENDOPALPHA + 1 + 3] = {};
-	unsigned long mRenderState[D3DRS_BLENDOPALPHA + 1 + 3] = {};
+	std::array<DWORD, D3DRS_BLENDOPALPHA + 1 + 3> mRenderState = {};
 
 	bool mCapturedNPatchMode = false;
 	float mNPatchMode = 0.0f;
@@ -102,8 +152,8 @@ struct DeviceState
 
 	//+ 2 is for alignment
 	bool mCapturedAnyTextureStageState = false;
-	bool mCapturedTextureStageState[8][D3DTSS_CONSTANT + 1 + 7];
-	unsigned long mTextureStageState[8][D3DTSS_CONSTANT + 1 + 7];
+	bool mCapturedTextureStageState[16][D3DTSS_CONSTANT + 1 + 3];
+	std::array< std::array<DWORD, D3DTSS_CONSTANT + 1>, 16> mTextureStageState = {};
 
 	bool mCapturedAnySamplerState = false;
 	bool mCapturedSamplerState[16 + 4][D3DSAMP_DMAPOFFSET + 1];

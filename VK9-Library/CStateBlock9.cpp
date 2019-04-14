@@ -922,7 +922,7 @@ HRESULT STDMETHODCALLTYPE CStateBlock9::Capture()
 		mDeviceState.mNPatchMode = mDevice->GetNPatchMode();
 	}
 
-	for (int stage = 0; stage < 8; stage++)
+	for (int stage = 0; stage < 16; stage++)
 	{
 		for (int state = 0; state < D3DTSS_CONSTANT + 1; state++)
 		{
@@ -1184,7 +1184,7 @@ HRESULT STDMETHODCALLTYPE CStateBlock9::Apply()
 		mDevice->SetNPatchMode(mDeviceState.mNPatchMode);
 	}
 
-	for (int stage = 0; stage < 8; stage++)
+	for (int stage = 0; stage < 16; stage++)
 	{
 		for (int state = D3DTSS_COLOROP; state <= D3DTSS_CONSTANT; state++)
 		{

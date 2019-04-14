@@ -148,7 +148,7 @@ ULONG CTexture9::PrivateRelease(void)
 
 void CTexture9::SetImageLayout(vk::ImageLayout newLayout)
 {
-	Log(info) << "CTexture9::SetImageLayout test1" << std::endl;
+	//Log(info) << "CTexture9::SetImageLayout test1" << std::endl;
 
 	mDevice->BeginRecordingUtilityCommands();
 	{

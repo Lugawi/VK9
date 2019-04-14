@@ -52,18 +52,5 @@ vec2 getTextureCoord(uint index)
 
 void main() 
 {
-	vec4 temp = vec4(1.0,1.0,1.0,1.0);
-	vec4 result = diffuseColor; //On stage 0 CURRENT is the same as DIFFUSE
-
-	for(int i = 0; i < max(1,renderState.textureCount); i++) 
-	{
-		processStage(textures[i],textureStages[i].texureCoordinateIndex, textureStages[i].Constant, textureStages[i].Result,
-		result, temp, result, temp,
-		textureStages[i].colorOperation, textureStages[i].colorArgument1, textureStages[i].colorArgument2, textureStages[i].colorArgument0,
-		textureStages[i].alphaOperation, textureStages[i].alphaArgument1, textureStages[i].alphaArgument2, textureStages[i].alphaArgument0);
-	}
-		
-	uFragColor = result;
-
-	uFragColor.rgb *= globalIllumination.rgb;
+	uFragColor = processStages();
 }

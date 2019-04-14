@@ -1047,19 +1047,11 @@ HRESULT STDMETHODCALLTYPE CSurface9::UnlockRect()
 		mData = nullptr;
 	}
 
-	if (mTexture)
-	{
-		mTexture->SetImageLayout(vk::ImageLayout::eTransferDstOptimal);
-	}
-	else if (mCubeTexture)
-	{
-		mCubeTexture->SetImageLayout(vk::ImageLayout::eTransferDstOptimal);
-	}
-
-	//TODO: tweak this so it all goes into one command buffer. (the result should be correct but submit is expensive.)
 	mDevice->BeginRecordingUtilityCommands();
 	{
 		{
+			this->SetImageLayout(vk::ImageLayout::eTransferDstOptimal);
+
 			auto const subresource = vk::ImageSubresourceLayers()
 				.setAspectMask(vk::ImageAspectFlagBits::eColor)
 				.setMipLevel(0)
@@ -1076,10 +1068,14 @@ HRESULT STDMETHODCALLTYPE CSurface9::UnlockRect()
 				.setImageExtent({ mWidth, mHeight, 1 });
 
 			mDevice->mCurrentUtilityCommandBuffer.copyBufferToImage(mStagingBuffer.get(), mImage.get(), vk::ImageLayout::eTransferDstOptimal, 1, &copy_region);
+
+			SetImageLayout(((mUsage == D3DUSAGE_DEPTHSTENCIL) ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal));
 		}
 
 		if (mTexture)
 		{
+			mTexture->SetImageLayout(vk::ImageLayout::eTransferDstOptimal);
+
 			auto const subresource = vk::ImageSubresourceLayers()
 				.setAspectMask(vk::ImageAspectFlagBits::eColor)
 				.setMipLevel(mMipIndex)
@@ -1096,9 +1092,13 @@ HRESULT STDMETHODCALLTYPE CSurface9::UnlockRect()
 				.setImageExtent({ mWidth, mHeight, 1 });
 
 			mDevice->mCurrentUtilityCommandBuffer.copyBufferToImage(mStagingBuffer.get(), mTexture->mImage.get(), vk::ImageLayout::eTransferDstOptimal, 1, &copy_region);
+
+			mTexture->SetImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 		}
 		else if (mCubeTexture)
 		{
+			mCubeTexture->SetImageLayout(vk::ImageLayout::eTransferDstOptimal);
+
 			auto const subresource = vk::ImageSubresourceLayers()
 				.setAspectMask(vk::ImageAspectFlagBits::eColor)
 				.setMipLevel(mMipIndex)
@@ -1115,19 +1115,11 @@ HRESULT STDMETHODCALLTYPE CSurface9::UnlockRect()
 				.setImageExtent({ mWidth, mHeight, 1 });
 
 			mDevice->mCurrentUtilityCommandBuffer.copyBufferToImage(mStagingBuffer.get(), mCubeTexture->mImage.get(), vk::ImageLayout::eTransferDstOptimal, 1, &copy_region);
-		}
 
+			mCubeTexture->SetImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+		}
 	}
 	mDevice->StopRecordingUtilityCommands();
-
-	if (mTexture)
-	{
-		mTexture->SetImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-	}
-	else if (mCubeTexture)
-	{
-		mCubeTexture->SetImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-	}
 
 	return S_OK;
 }

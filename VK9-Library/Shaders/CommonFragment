@@ -20,7 +20,6 @@ misrepresented as being the original software.
 
 struct TextureStage
 {
-	uint filler1;
 	uint colorOperation; 
 	uint colorArgument1; 
 	uint colorArgument2; 
@@ -31,14 +30,16 @@ struct TextureStage
 	float bumpMapMatrix01; 
 	float bumpMapMatrix10; 
 	float bumpMapMatrix11; 
-	uint texureCoordinateIndex; 
-	float bumpMapScale; 
+	uint texureCoordinateIndex;
+	float bumpMapScale;
 	float bumpMapOffset;
-	uint textureTransformationFlags; 
+	uint textureTransformationFlags;
 	uint colorArgument0; 
-	uint alphaArgument0; 
-	uint Result; 
+	uint alphaArgument0;
+	uint Result;
 	uint Constant;
+	uint fillter1;
+	uint fillter2;
 };
 
 layout(std140,binding = 5) uniform TextureStageBlock
@@ -145,7 +146,7 @@ vec4 calculateResult(uint operation, vec4 argument1, vec4 argument2, vec4 argume
 	return result;
 }
 
-vec4 getStageArgument(uint argument,vec4 temp,uint constant,vec4 result,sampler2D tex,vec2 texcoord)
+vec4 getStageArgument(uint argument,vec4 temp,uint constant,vec4 result,uint textureIndex,vec2 texcoord)
 {
 	vec4 realResult;
 	switch(argument & D3DTA_SELECTMASK)
@@ -166,7 +167,7 @@ vec4 getStageArgument(uint argument,vec4 temp,uint constant,vec4 result,sampler2
 			realResult = temp;
 		break;
 		case D3DTA_TEXTURE:
-			realResult = texture(tex, texcoord.xy);
+			realResult = texture(textures[textureIndex], texcoord.xy);
 		break;
 		case D3DTA_TFACTOR:
 			realResult = vec4(0);
@@ -189,116 +190,83 @@ vec4 getStageArgument(uint argument,vec4 temp,uint constant,vec4 result,sampler2
 	return realResult;
 }
 
-vec4 getStageArgument(uint argument,vec4 temp,uint constant,vec4 result)
+void processStage(uint i,vec4 resultIn, vec4 tempIn, out vec4 resultOut, out vec4 tempOut)
 {
-	vec4 realResult;
-	switch(argument & D3DTA_SELECTMASK)
-	{
-		case D3DTA_CONSTANT:
-			realResult = Convert(constant);
-		break;
-		case D3DTA_CURRENT:
-			realResult = result;
-		break;
-		case D3DTA_DIFFUSE:
-			realResult = diffuseColor;
-		break;
-		case D3DTA_SPECULAR:
-			realResult = specularColor;
-		break;
-		case D3DTA_TEMP:
-			realResult = temp;
-		break;
-		case D3DTA_TEXTURE:
-			realResult = vec4(1,1,1,1);
-		break;
-		case D3DTA_TFACTOR:
-			realResult = vec4(1,1,1,1);
-		break;
-		default:
-			realResult = vec4(1,1,1,1);
-		break;
-	}
-		
-	if((argument & D3DTA_ALPHAREPLICATE) != 0)
-	{
-		realResult.rgb = vec3(realResult.a,realResult.a,realResult.a);
-	}
+	//Grab current texture stage
+	uint texureCoordinateIndex = textureStages[i].texureCoordinateIndex;
+	uint constant = textureStages[i].Constant;
+	uint resultArgument = textureStages[i].Result;
+	uint colorOperation = textureStages[i].colorOperation;
+	uint colorArgument1 = textureStages[i].colorArgument1;
+	uint colorArgument2 = textureStages[i].colorArgument2;
+	uint colorArgument0 = textureStages[i].colorArgument0;
+	uint alphaOperation = textureStages[i].alphaOperation;
+	uint alphaArgument1 = textureStages[i].alphaArgument1;
+	uint alphaArgument2 = textureStages[i].alphaArgument2;
+	uint alphaArgument0 = textureStages[i].alphaArgument0;
 
-	if((argument & D3DTA_COMPLEMENT) != 0)
-	{
-		realResult = (1.0 - realResult);
-	}
-	
-	return realResult;
-}
-
-void processStage(sampler2D tex,uint textureIndex, uint constant, uint resultArgument,
-vec4 resultIn, vec4 tempIn, out vec4 resultOut, out vec4 tempOut,
-uint colorOperation, uint colorArgument1, uint colorArgument2, uint colorArgument0,
-uint alphaOperation, uint alphaArgument1, uint alphaArgument2, uint alphaArgument0)
-{
+	//Setup locals.
 	vec4 temp = tempIn;
 	vec4 result = resultIn;
 	vec4 tempResult = resultIn; //This is the result regardless if selected target.
-	vec2 texcoord = getTextureCoord(textureIndex);
+	vec2 texcoord = getTextureCoord(texureCoordinateIndex);
 
-	vec4 colorArg1 = getStageArgument(colorArgument1,tempIn,constant,resultIn, tex, texcoord);
-	vec4 colorArg2 = getStageArgument(colorArgument2,tempIn,constant,resultIn, tex, texcoord);
-	vec4 colorArg0 = getStageArgument(colorArgument0,tempIn,constant,resultIn, tex, texcoord);
-
-	vec4 alphaArg1 = getStageArgument(alphaArgument1,tempIn,constant,resultIn, tex, texcoord);
-	vec4 alphaArg2 = getStageArgument(alphaArgument2,tempIn,constant,resultIn, tex, texcoord);
-	vec4 alphaArg0 = getStageArgument(alphaArgument0,tempIn,constant,resultIn, tex, texcoord);
-	
-	float alpha = calculateResult(alphaOperation,alphaArg1,alphaArg2,alphaArg0,1.0,1.0).a;
-
-	if(renderState.alphaTestEnable==1)
-	{
-		float ref = renderState.alphaReference / 255.0f;
-								
-		switch(renderState.alphaFunction)
-		{
-		    case D3DCMP_NEVER:
-				discard;
-			break;
-			case D3DCMP_LESS:
-			if(alpha < ref){}else{discard;}
-			break;
-			case D3DCMP_EQUAL:
-			if(alpha == ref){}else{discard;}
-			break;
-			case D3DCMP_LESSEQUAL:
-			if(alpha <= ref){}else{discard;}
-			break;
-			case D3DCMP_GREATER:
-			if(alpha > ref){}else{discard;}
-			break;
-			case D3DCMP_NOTEQUAL:
-			if(alpha != ref){}else{discard;}
-			break;
-			case D3DCMP_GREATEREQUAL:
-			if(alpha>= ref){}else{discard;}
-			break;
-			case D3DCMP_ALWAYS:		
-			break;
-		}
-	}	
-	
 	if(colorOperation != D3DTOP_DISABLE)
 	{
-		tempResult.rgb = calculateResult(colorOperation,colorArg1,colorArg2,colorArg0,tempResult.a,tempResult.a).rgb;	
+		vec4 colorArg1 = getStageArgument(colorArgument1,tempIn,constant,resultIn, i, texcoord);
+		vec4 colorArg2 = getStageArgument(colorArgument2,tempIn,constant,resultIn, i, texcoord);
+		vec4 colorArg0 = getStageArgument(colorArgument0,tempIn,constant,resultIn, i, texcoord);
+		vec3 rgb = calculateResult(colorOperation,colorArg1,colorArg2,colorArg0,tempResult.a,tempResult.a).rgb;	
+
+		tempResult.rgb = rgb;
 	}
 
-	if(renderState.alphaBlendEnable==0)
+	if(alphaOperation != D3DTOP_DISABLE)
 	{
-		tempResult.a = 1.0f;
-	}
-	else
-	{
-		if(alphaOperation != D3DTOP_DISABLE)
+		vec4 alphaArg1 = getStageArgument(alphaArgument1,tempIn,constant,resultIn, i, texcoord);
+		vec4 alphaArg2 = getStageArgument(alphaArgument2,tempIn,constant,resultIn, i, texcoord);
+		vec4 alphaArg0 = getStageArgument(alphaArgument0,tempIn,constant,resultIn, i, texcoord);
+		float alpha = calculateResult(alphaOperation,alphaArg1,alphaArg2,alphaArg0,1.0,1.0).a;
+
+		if(renderState.alphaBlendEnable==0)
+		{
+			tempResult.a = 1.0f;
+		}
+		else
 		{
 			tempResult.a = alpha;
+		}
+
+		if(renderState.alphaTestEnable==1)
+		{
+			float ref = renderState.alphaReference / 255.0f;
+								
+			switch(renderState.alphaFunction)
+			{
+				case D3DCMP_NEVER:
+					discard;
+				break;
+				case D3DCMP_LESS:
+				if(alpha < ref){}else{discard;}
+				break;
+				case D3DCMP_EQUAL:
+				if(alpha == ref){}else{discard;}
+				break;
+				case D3DCMP_LESSEQUAL:
+				if(alpha <= ref){}else{discard;}
+				break;
+				case D3DCMP_GREATER:
+				if(alpha > ref){}else{discard;}
+				break;
+				case D3DCMP_NOTEQUAL:
+				if(alpha != ref){}else{discard;}
+				break;
+				case D3DCMP_GREATEREQUAL:
+				if(alpha>= ref){}else{discard;}
+				break;
+				case D3DCMP_ALWAYS:		
+				break;
+			}
 		}
 	}
 
@@ -319,87 +287,17 @@ uint alphaOperation, uint alphaArgument1, uint alphaArgument2, uint alphaArgumen
 	tempOut = temp;
 }
 
-void processStage(uint constant, uint resultArgument,
-vec4 resultIn, vec4 tempIn, out vec4 resultOut, out vec4 tempOut,
-uint colorOperation, uint colorArgument1, uint colorArgument2, uint colorArgument0,
-uint alphaOperation, uint alphaArgument1, uint alphaArgument2, uint alphaArgument0)
+vec4 processStages()
 {
-	vec4 temp = tempIn;
-	vec4 result = resultIn;
-	vec4 tempResult = resultIn; //This is the result regardless if selected target.
+	vec4 temp = vec4(1.0,1.0,1.0,1.0);
+	vec4 result = diffuseColor; //On stage 0 CURRENT is the same as DIFFUSE
 
-	vec4 colorArg1 = getStageArgument(colorArgument1,tempIn,constant,resultIn);
-	vec4 colorArg2 = getStageArgument(colorArgument2,tempIn,constant,resultIn);
-	vec4 colorArg0 = getStageArgument(colorArgument0,tempIn,constant,resultIn);
-
-	vec4 alphaArg1 = getStageArgument(alphaArgument1,tempIn,constant,resultIn);
-	vec4 alphaArg2 = getStageArgument(alphaArgument2,tempIn,constant,resultIn);
-	vec4 alphaArg0 = getStageArgument(alphaArgument0,tempIn,constant,resultIn);
-
-	float alpha = calculateResult(alphaOperation,alphaArg1,alphaArg2,alphaArg0,1.0,1.0).a;
-
-	if(renderState.alphaTestEnable==1)
+	for(int i = 0; i < 16; i++) 
 	{
-		float ref = renderState.alphaReference / 255.0f;
-								
-		switch(renderState.alphaFunction)
-		{
-		    case D3DCMP_NEVER:
-				discard;
-			break;
-			case D3DCMP_LESS:
-			if(alpha < ref){}else{discard;}
-			break;
-			case D3DCMP_EQUAL:
-			if(alpha == ref){}else{discard;}
-			break;
-			case D3DCMP_LESSEQUAL:
-			if(alpha <= ref){}else{discard;}
-			break;
-			case D3DCMP_GREATER:
-			if(alpha > ref){}else{discard;}
-			break;
-			case D3DCMP_NOTEQUAL:
-			if(alpha != ref){}else{discard;}
-			break;
-			case D3DCMP_GREATEREQUAL:
-			if(alpha>= ref){}else{discard;}
-			break;
-			case D3DCMP_ALWAYS:		
-			break;
-		}
-	}	
-	
-	if(colorOperation != D3DTOP_DISABLE)
-	{
-		tempResult.rgb = calculateResult(colorOperation,colorArg1,colorArg2,colorArg0,tempResult.a,tempResult.a).rgb;	
+		processStage(i,result, temp, result, temp);
 	}
 
-	if(renderState.alphaBlendEnable==0)
-	{
-		tempResult.a = 1.0f;
-	}
-	else
-	{
-		if(alphaOperation != D3DTOP_DISABLE)
-		{
-			tempResult.a = alpha;
-		}
-	}
+	result.rgb *= globalIllumination.rgb;
 
-	switch(resultArgument)
-	{
-		case D3DTA_CURRENT:
-			result = tempResult;
-		break;
-		case D3DTA_TEMP:
-			temp = tempResult;
-		break;
-		default:
-			result = tempResult;
-		break;
-	}
-
-	resultOut = result;
-	tempOut = temp;
+	return result;
 }

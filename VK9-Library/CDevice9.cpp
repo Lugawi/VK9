@@ -988,6 +988,18 @@ CDevice9::~CDevice9()
 {
 	mDevice->waitIdle();
 
+	for (size_t i = 1; i < 16; i++)
+	{
+		SetTexture(i, nullptr);
+	}
+
+	SetDepthStencilSurface(nullptr);
+
+	for (size_t i = 1; i < 4; i++)
+	{
+		SetRenderTarget(i, nullptr);
+	}
+
 	for (auto& swapChain : mSwapChains)
 	{
 		swapChain->Release();
@@ -1128,7 +1140,7 @@ void CDevice9::ResetVulkanDevice()
 
 	//TextureStage
 	{
-		auto const textureStageBufferInfo = vk::BufferCreateInfo().setSize(sizeof(mInternalDeviceState.mDeviceState.mTextureStageState)).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		auto const textureStageBufferInfo = vk::BufferCreateInfo().setSize(sizeof(PaddedTextureStage) * 16).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
 		mTextureStageBuffer = mDevice->createBufferUnique(textureStageBufferInfo);
 		vk::MemoryRequirements textureStageMemoryRequirements;
 		mDevice->getBufferMemoryRequirements(mTextureStageBuffer.get(), &textureStageMemoryRequirements);
@@ -1152,7 +1164,8 @@ void CDevice9::ResetVulkanDevice()
 
 	//Light Enable
 	{
-		auto const lightEnableBufferInfo = vk::BufferCreateInfo().setSize(sizeof(mInternalDeviceState.mDeviceState.mLightEnableState)).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		//Padding on the GPU side makes it 4 times as big.
+		auto const lightEnableBufferInfo = vk::BufferCreateInfo().setSize(sizeof(mInternalDeviceState.mDeviceState.mLightEnableState) * 4).setUsage(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
 		mLightEnableBuffer = mDevice->createBufferUnique(lightEnableBufferInfo);
 		vk::MemoryRequirements lightEnableMemoryRequirements;
 		mDevice->getBufferMemoryRequirements(mLightEnableBuffer.get(), &lightEnableMemoryRequirements);
@@ -1305,7 +1318,7 @@ void CDevice9::ResetVulkanDevice()
 		//Light Enable
 		mDescriptorBufferInfo[2].buffer = mLightEnableBuffer.get();
 		mDescriptorBufferInfo[2].offset = 0;
-		mDescriptorBufferInfo[2].range = sizeof(mInternalDeviceState.mDeviceState.mLightEnableState);
+		mDescriptorBufferInfo[2].range = sizeof(mInternalDeviceState.mDeviceState.mLightEnableState) * 4;
 
 		mWriteDescriptorSet[2].dstBinding = 2;
 		mWriteDescriptorSet[2].dstArrayElement = 0;
@@ -1338,7 +1351,7 @@ void CDevice9::ResetVulkanDevice()
 		//Texture Stages
 		mDescriptorBufferInfo[5].buffer = mTextureStageBuffer.get();
 		mDescriptorBufferInfo[5].offset = 0;
-		mDescriptorBufferInfo[5].range = sizeof(mInternalDeviceState.mDeviceState.mTextureStageState);
+		mDescriptorBufferInfo[5].range = sizeof(PaddedTextureStage) * 16;
 
 		mWriteDescriptorSet[5].dstBinding = 5;
 		mWriteDescriptorSet[5].dstArrayElement = 0;
@@ -3068,7 +3081,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::LightEnable(DWORD LightIndex, BOOL bEnable)
 	{
 		BeginRecordingCommands();
 
-		mCurrentDrawCommandBuffer.updateBuffer(mLightEnableBuffer.get(), 0, sizeof(BOOL), &bEnable);
+		mCurrentDrawCommandBuffer.updateBuffer(mLightEnableBuffer.get(), LightIndex * (sizeof(BOOL)*4), sizeof(BOOL), &bEnable);
 
 		mInternalDeviceState.LightEnable(LightIndex, bEnable);
 	}
@@ -3176,6 +3189,12 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetDepthStencilSurface(IDirect3DSurface9* pN
 	if (pNewZStencil == nullptr)
 	{
 		Log(warning) << "CDevice9::SetDepthStencilSurface passing null should disable the stencil operation but this isn't supported yet." << std::endl;
+
+		if (mDepthStencilSurface != nullptr)
+		{
+			mDepthStencilSurface->PrivateRelease();
+		}
+
 		return S_OK;
 	}
 
@@ -3540,9 +3559,11 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTextureStageState(DWORD Stage, D3DTEXTURE
 	{
 		BeginRecordingCommands();
 
-		mCurrentDrawCommandBuffer.updateBuffer(mTextureStageBuffer.get(), (Stage * (D3DTSS_CONSTANT + 1 + 7)) + (Type * sizeof(DWORD)), sizeof(DWORD), &Value);
-
 		mInternalDeviceState.SetTextureStageState(Stage, Type, Value);
+
+		PaddedTextureStage textureStage(mInternalDeviceState.mDeviceState.mTextureStageState[Stage]);
+		mCurrentDrawCommandBuffer.updateBuffer(mTextureStageBuffer.get(), (Stage * sizeof(PaddedTextureStage)), sizeof(PaddedTextureStage), &textureStage);
+
 	}
 
 	return S_OK;
