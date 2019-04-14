@@ -1651,26 +1651,6 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 		return;
 	}
 
-	//Check to see if the stream sources have been changed and if so bind the current buffers.
-	if (mInternalDeviceState.mDeviceState.mCapturedAnyStreamSource)
-	{
-		const VkDeviceSize offsetInBytes = 0;
-		std::vector<vk::Buffer> vertexBuffers;
-		vertexBuffers.reserve(MAX_VERTEX_INPUTS);
-
-		for (auto& streamSource : mInternalDeviceState.mDeviceState.mStreamSource)
-		{
-			if (streamSource.vertexBuffer)
-			{
-				vertexBuffers.push_back(streamSource.vertexBuffer->mCurrentVertexBuffer);
-			}
-		}
-
-		mCurrentDrawCommandBuffer.bindVertexBuffers(0, vertexBuffers.size(), vertexBuffers.data(), &offsetInBytes);
-
-		mInternalDeviceState.mDeviceState.mCapturedAnyStreamSource = false;
-	}
-
 	//Check to see if the index buffer has been changed and if so bind the current buffer if not null.
 	if (mInternalDeviceState.mDeviceState.mCapturedIndexBuffer)
 	{
@@ -2068,7 +2048,7 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 		deviceState.mCapturedVertexShader = false;
 		deviceState.mCapturedPixelShader = false;
 		deviceState.mCapturedAnyStreamFrequency = false;
-		deviceState.mCapturedAnyStreamSource = false;
+		//deviceState.mCapturedAnyStreamSource = false; //leave it on for vertex bind.
 		deviceState.mCapturedFVF = false;
 		deviceState.mCapturedVertexDeclaration = false;
 		deviceState.mCapturedRenderState[D3DRS_CULLMODE] = false;
@@ -2096,6 +2076,29 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 		deviceState.mCapturedRenderState[D3DRS_POINTSPRITEENABLE] = false;
 
 		mLastPrimitiveType = primitiveType;
+	}
+
+	//Check to see if the stream sources have been changed and if so bind the current buffers.
+	if (deviceState.mCapturedAnyStreamSource)
+	{
+		std::vector<VkDeviceSize> offsets;
+		offsets.reserve(MAX_VERTEX_INPUTS);
+
+		std::vector<vk::Buffer> vertexBuffers;
+		vertexBuffers.reserve(MAX_VERTEX_INPUTS);	
+
+		for (auto& streamSource : deviceState.mStreamSource)
+		{
+			if (streamSource.vertexBuffer)
+			{
+				vertexBuffers.push_back(streamSource.vertexBuffer->mCurrentVertexBuffer);
+				offsets.push_back(streamSource.offset);
+			}
+		}
+
+		mCurrentDrawCommandBuffer.bindVertexBuffers(0, vertexBuffers.size(), vertexBuffers.data(), offsets.data());
+
+		mInternalDeviceState.mDeviceState.mCapturedAnyStreamSource = false;
 	}
 
 	//Check to see if the texture stuff has changed and if so update the descriptor set.
@@ -3509,7 +3512,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetStreamSource(UINT StreamNumber, IDirect3D
 	}
 	else
 	{
-		BeginRecordingCommands();
+		//BeginRecordingCommands();
 
 		mInternalDeviceState.SetStreamSource(StreamNumber, pStreamData, OffsetInBytes, Stride);
 	}
