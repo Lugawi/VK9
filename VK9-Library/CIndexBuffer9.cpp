@@ -256,12 +256,12 @@ HRESULT STDMETHODCALLTYPE CIndexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLock
 
 	if (mIndex > mStagingBuffers.size() - 1)
 	{
-		AddStagingBuffer();
+		//AddStagingBuffer();
 		AddIndexBuffer();
 	}
 
-	mCurrentStagingBuffer = mStagingBuffers[mIndex].get();
-	mCurrentStagingBufferMemory = mStagingBufferMemories[mIndex].get();
+	mCurrentStagingBuffer = mStagingBuffers[0].get(); //mIndex
+	mCurrentStagingBufferMemory = mStagingBufferMemories[0].get(); //mIndex
 
 	mCurrentIndexBuffer = mIndexBuffers[mIndex].get();
 	mCurrentIndexBufferMemory = mIndexBufferMemories[mIndex].get();

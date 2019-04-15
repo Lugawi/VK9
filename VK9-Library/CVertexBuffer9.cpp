@@ -250,19 +250,18 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLoc
 	{
 		if ((Flags & D3DLOCK_NOOVERWRITE) != D3DLOCK_NOOVERWRITE && (Flags & D3DLOCK_READONLY) != D3DLOCK_READONLY)
 		{
-			//mLastIndex = mIndex;
 			mIndex++;
 		}
 	}
 
 	if (mIndex > mStagingBuffers.size() - 1)
 	{
-		AddStagingBuffer();
+		//AddStagingBuffer();
 		AddVertexBuffer();
 	}
 
-	mCurrentStagingBuffer = mStagingBuffers[mIndex].get();
-	mCurrentStagingBufferMemory = mStagingBufferMemories[mIndex].get();
+	mCurrentStagingBuffer = mStagingBuffers[0].get(); //mIndex
+	mCurrentStagingBufferMemory = mStagingBufferMemories[0].get(); //mIndex
 
 	mCurrentVertexBuffer = mVertexBuffers[mIndex].get();
 	mCurrentVertexBufferMemory = mVertexBufferMemories[mIndex].get();
