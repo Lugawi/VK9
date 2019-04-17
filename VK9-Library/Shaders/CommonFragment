@@ -221,54 +221,55 @@ void processStage(uint i,vec4 resultIn, vec4 tempIn, out vec4 resultOut, out vec
 		tempResult.rgb = rgb;
 	}
 
-	if(alphaOperation != D3DTOP_DISABLE)
-	{
-		vec4 alphaArg1 = getStageArgument(alphaArgument1,tempIn,constant,resultIn, i, texcoord);
-		vec4 alphaArg2 = getStageArgument(alphaArgument2,tempIn,constant,resultIn, i, texcoord);
-		vec4 alphaArg0 = getStageArgument(alphaArgument0,tempIn,constant,resultIn, i, texcoord);
-		float alpha = calculateResult(alphaOperation,alphaArg1,alphaArg2,alphaArg0,1.0,1.0).a;
+	vec4 alphaArg1 = getStageArgument(alphaArgument1,tempIn,constant,resultIn, i, texcoord);
+	vec4 alphaArg2 = getStageArgument(alphaArgument2,tempIn,constant,resultIn, i, texcoord);
+	vec4 alphaArg0 = getStageArgument(alphaArgument0,tempIn,constant,resultIn, i, texcoord);
+	float alpha = calculateResult(alphaOperation,alphaArg1,alphaArg2,alphaArg0,1.0,1.0).a;
 
-		if(renderState.alphaBlendEnable==0)
+	if(renderState.alphaTestEnable==1)
+	{
+		float ref = renderState.alphaReference / 255.0f;
+								
+		switch(renderState.alphaFunction)
 		{
-			tempResult.a = 1.0f;
+			case D3DCMP_NEVER:
+				discard;
+			break;
+			case D3DCMP_LESS:
+			if(alpha < ref){}else{discard;}
+			break;
+			case D3DCMP_EQUAL:
+			if(alpha == ref){}else{discard;}
+			break;
+			case D3DCMP_LESSEQUAL:
+			if(alpha <= ref){}else{discard;}
+			break;
+			case D3DCMP_GREATER:
+			if(alpha > ref){}else{discard;}
+			break;
+			case D3DCMP_NOTEQUAL:
+			if(alpha != ref){}else{discard;}
+			break;
+			case D3DCMP_GREATEREQUAL:
+			if(alpha>= ref){}else{discard;}
+			break;
+			case D3DCMP_ALWAYS:		
+			break;
 		}
-		else
+	}
+
+	if(renderState.alphaBlendEnable==0)
+	{
+		tempResult.a = 1.0f;
+	}
+	else
+	{
+		if(alphaOperation != D3DTOP_DISABLE)
 		{
 			tempResult.a = alpha;
 		}
-
-		if(renderState.alphaTestEnable==1)
-		{
-			float ref = renderState.alphaReference / 255.0f;
-								
-			switch(renderState.alphaFunction)
-			{
-				case D3DCMP_NEVER:
-					discard;
-				break;
-				case D3DCMP_LESS:
-				if(alpha < ref){}else{discard;}
-				break;
-				case D3DCMP_EQUAL:
-				if(alpha == ref){}else{discard;}
-				break;
-				case D3DCMP_LESSEQUAL:
-				if(alpha <= ref){}else{discard;}
-				break;
-				case D3DCMP_GREATER:
-				if(alpha > ref){}else{discard;}
-				break;
-				case D3DCMP_NOTEQUAL:
-				if(alpha != ref){}else{discard;}
-				break;
-				case D3DCMP_GREATEREQUAL:
-				if(alpha>= ref){}else{discard;}
-				break;
-				case D3DCMP_ALWAYS:		
-				break;
-			}
-		}
 	}
+	
 
 	switch(resultArgument)
 	{

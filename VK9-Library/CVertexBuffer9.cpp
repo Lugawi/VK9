@@ -254,7 +254,7 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLoc
 		}
 	}
 
-	if (mIndex > mStagingBuffers.size() - 1)
+	if (mIndex > mVertexBuffers.size() - 1)
 	{
 		//AddStagingBuffer();
 		AddVertexBuffer();

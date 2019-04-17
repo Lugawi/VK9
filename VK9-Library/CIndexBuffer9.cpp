@@ -254,7 +254,7 @@ HRESULT STDMETHODCALLTYPE CIndexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLock
 		}
 	}
 
-	if (mIndex > mStagingBuffers.size() - 1)
+	if (mIndex > mIndexBuffers.size() - 1)
 	{
 		//AddStagingBuffer();
 		AddIndexBuffer();
