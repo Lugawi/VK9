@@ -988,16 +988,22 @@ CDevice9::~CDevice9()
 {
 	mDevice->waitIdle();
 
-	for (size_t i = 1; i < 16; i++)
+	for (size_t i = 0; i < 16; i++)
 	{
 		SetTexture(i, nullptr);
+		mInternalDeviceState.mDeviceState.mTexture[i]->Release();
 	}
 
+	if (mDepthStencilSurface)
+	{
+		mDepthStencilSurface->Release(); //delete
+	}
 	SetDepthStencilSurface(nullptr);
 
-	for (size_t i = 1; i < 4; i++)
+	for (size_t i = 0; i < 4; i++)
 	{
 		SetRenderTarget(i, nullptr);
+		mRenderTargets[i]->Release();
 	}
 
 	for (auto& swapChain : mSwapChains)
@@ -1006,13 +1012,6 @@ CDevice9::~CDevice9()
 	}
 	mSwapChains.clear();
 
-	//if (mDepthStencilSurface)
-	//{
-	//	mDepthStencilSurface->Release();
-	//	mDepthStencilSurface = nullptr;
-	//}
-
-	delete mDepthStencilSurface;
 
 	mC9->Release();
 }
@@ -1061,7 +1060,7 @@ void CDevice9::ResetVulkanDevice()
 	{
 		float queuePriority = 0.0f;
 		const vk::DeviceQueueCreateInfo deviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), static_cast<uint32_t>(mC9->mGraphicsQueueFamilyIndex), 1, &queuePriority);
-		
+
 		auto device = mC9->mPhysicalDevices[mC9->mPhysicalDeviceIndex];
 		vk::PhysicalDeviceFeatures features;
 		device.getFeatures(&features);
@@ -1070,7 +1069,7 @@ void CDevice9::ResetVulkanDevice()
 		deviceExtensionNames.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 		deviceExtensionNames.push_back("VK_KHR_maintenance1");
 
-		mDevice = mC9->mPhysicalDevices[mC9->mPhysicalDeviceIndex].createDeviceUnique(vk::DeviceCreateInfo({}, 1, &deviceQueueCreateInfo, 0, nullptr, static_cast<uint32_t>(deviceExtensionNames.size()), deviceExtensionNames.data(),&features));
+		mDevice = mC9->mPhysicalDevices[mC9->mPhysicalDeviceIndex].createDeviceUnique(vk::DeviceCreateInfo({}, 1, &deviceQueueCreateInfo, 0, nullptr, static_cast<uint32_t>(deviceExtensionNames.size()), deviceExtensionNames.data(), &features));
 		mCommandPool = mDevice->createCommandPoolUnique(vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, deviceQueueCreateInfo.queueFamilyIndex));
 	}
 
@@ -1651,11 +1650,6 @@ void CDevice9::StopRecordingUtilityCommands()
 
 void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 {
-	if (mIsDrawing)
-	{
-		return;
-	}
-
 	//Check to see if the pipeline is stale. If so create a new one and bind it.
 	auto& deviceState = mInternalDeviceState.mDeviceState;
 	if ((mLastPrimitiveType != primitiveType)
@@ -1688,6 +1682,7 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 		|| deviceState.mCapturedRenderState[D3DRS_SRCBLENDALPHA]
 		|| deviceState.mCapturedRenderState[D3DRS_DESTBLENDALPHA]
 		|| deviceState.mCapturedRenderState[D3DRS_POINTSPRITEENABLE]
+		|| deviceState.mCapturedRenderState[D3DRS_POINTSIZE]
 		)
 	{
 		auto& vertexDeclaration = (*mInternalDeviceState.mDeviceState.mVertexDeclaration); //If this is null we can't do anything anyway.
@@ -2057,6 +2052,7 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 		deviceState.mCapturedRenderState[D3DRS_SRCBLENDALPHA] = false;
 		deviceState.mCapturedRenderState[D3DRS_DESTBLENDALPHA] = false;
 		deviceState.mCapturedRenderState[D3DRS_POINTSPRITEENABLE] = false;
+		deviceState.mCapturedRenderState[D3DRS_POINTSIZE] = true;
 
 		mLastPrimitiveType = primitiveType;
 	}
@@ -2068,7 +2064,7 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 		offsets.reserve(MAX_VERTEX_INPUTS);
 
 		std::vector<vk::Buffer> vertexBuffers;
-		vertexBuffers.reserve(MAX_VERTEX_INPUTS);	
+		vertexBuffers.reserve(MAX_VERTEX_INPUTS);
 
 		for (auto& streamSource : deviceState.mStreamSource)
 		{
@@ -2188,6 +2184,11 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 		mDescriptorSetIndex++;
 	}
 
+	if (mIsDrawing)
+	{
+		return;
+	}
+
 	vk::RenderPassBeginInfo renderPassBeginInfo;
 	renderPassBeginInfo.renderPass = mCurrentRenderContainer->mRenderPass.get();
 	renderPassBeginInfo.framebuffer = mCurrentRenderContainer->mFrameBuffers[mFrameIndex].get();
@@ -2235,6 +2236,7 @@ void CDevice9::RebuildRenderPass()
 HRESULT STDMETHODCALLTYPE CDevice9::Clear(DWORD Count, const D3DRECT *pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
 {
 	BeginRecordingCommands();
+	StopDraw(); //Stop render pass if there is one open.
 
 	/*
 	https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkRenderPassBeginInfo.html
@@ -2589,7 +2591,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitive(D3DPRIMITIVETYPE Type, 
 	{
 		mCurrentDrawCommandBuffer.drawIndexed(ConvertPrimitiveCountToVertexCount(Type, PrimitiveCount), 1, StartIndex, BaseVertexIndex, 0);
 	}
-	StopDraw();
+	//StopDraw();
 
 	return S_OK;
 }
@@ -2600,6 +2602,13 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE Prim
 
 	mCurrentDrawCommandBuffer.updateBuffer(mUpVertexBuffer.get(), 0, ConvertPrimitiveCountToBufferSize(PrimitiveType, PrimitiveCount, VertexStreamZeroStride), pVertexStreamZeroData);
 	mCurrentDrawCommandBuffer.updateBuffer(mUpIndexBuffer.get(), 0, ConvertPrimitiveCountToBufferSize(PrimitiveType, PrimitiveCount, (IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4), pIndexData);
+
+	{
+		const auto uboBarrier = vk::MemoryBarrier() 
+			.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite)
+			.setDstAccessMask(vk::AccessFlagBits::eVertexAttributeRead);
+		mCurrentDrawCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexInput, vk::DependencyFlags(), 1, &uboBarrier, 0, nullptr, 0, nullptr);
+	}
 
 	BeginDraw(PrimitiveType);
 	{
@@ -2626,7 +2635,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE Prim
 
 		mCurrentDrawCommandBuffer.drawIndexed(ConvertPrimitiveCountToVertexCount(PrimitiveType, PrimitiveCount), 1, 0, 0, 0);
 	}
-	StopDraw();
+	//StopDraw();
 
 	return S_OK;
 }
@@ -2639,7 +2648,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType
 	{
 		mCurrentDrawCommandBuffer.draw(ConvertPrimitiveCountToVertexCount(PrimitiveType, PrimitiveCount), 1, StartVertex, 0);
 	}
-	StopDraw();
+	//StopDraw();
 
 	return S_OK;
 }
@@ -2649,6 +2658,13 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveTy
 	BeginRecordingCommands();
 
 	mCurrentDrawCommandBuffer.updateBuffer(mUpVertexBuffer.get(), 0, ConvertPrimitiveCountToBufferSize(PrimitiveType, PrimitiveCount, VertexStreamZeroStride), pVertexStreamZeroData);
+
+	{
+		const auto uboBarrier = vk::MemoryBarrier()
+			.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite)
+			.setDstAccessMask(vk::AccessFlagBits::eVertexAttributeRead);
+		mCurrentDrawCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexInput, vk::DependencyFlags(), 1, &uboBarrier, 0, nullptr, 0, nullptr);
+	}
 
 	BeginDraw(PrimitiveType);
 	{
@@ -2661,7 +2677,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveTy
 
 		mCurrentDrawCommandBuffer.draw(ConvertPrimitiveCountToVertexCount(PrimitiveType, PrimitiveCount), 1, 0, 0);
 	}
-	StopDraw();
+	//StopDraw();
 
 	return S_OK;
 }
@@ -3106,8 +3122,16 @@ HRESULT STDMETHODCALLTYPE CDevice9::LightEnable(DWORD LightIndex, BOOL bEnable)
 	else
 	{
 		BeginRecordingCommands();
+		StopDraw(); //Stop render pass if there is one open.
 
-		mCurrentDrawCommandBuffer.updateBuffer(mLightEnableBuffer.get(), LightIndex * (sizeof(BOOL)*4), sizeof(BOOL), &bEnable);
+		mCurrentDrawCommandBuffer.updateBuffer(mLightEnableBuffer.get(), LightIndex * (sizeof(BOOL) * 4), sizeof(BOOL), &bEnable);
+
+		{
+			const auto uboBarrier = vk::MemoryBarrier()
+				.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite)
+				.setDstAccessMask(vk::AccessFlagBits::eVertexAttributeRead);
+			mCurrentDrawCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexInput, vk::DependencyFlags(), 1, &uboBarrier, 0, nullptr, 0, nullptr);
+		}
 
 		mInternalDeviceState.LightEnable(LightIndex, bEnable);
 	}
@@ -3144,6 +3168,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationPa
 		memcpy(&mPresentationParameters, pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS));
 	}
 
+	StopDraw(); //Stop render pass if there is one open.
 	StopRecordingCommands();
 	mDevice->waitIdle();
 	ResetVulkanDevice();
@@ -3319,9 +3344,17 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetLight(DWORD Index, const D3DLIGHT9* pLigh
 	else
 	{
 		BeginRecordingCommands();
+		StopDraw(); //Stop render pass if there is one open.
 
 		PaddedLight light = (*pLight);
 		mCurrentDrawCommandBuffer.updateBuffer(mLightBuffer.get(), Index * sizeof(PaddedLight), sizeof(PaddedLight), &light);
+
+		{
+			const auto uboBarrier = vk::MemoryBarrier()
+				.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite)
+				.setDstAccessMask(vk::AccessFlagBits::eVertexAttributeRead);
+			mCurrentDrawCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexInput, vk::DependencyFlags(), 1, &uboBarrier, 0, nullptr, 0, nullptr);
+		}
 
 		mInternalDeviceState.SetLight(Index, pLight);
 	}
@@ -3338,8 +3371,16 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetMaterial(const D3DMATERIAL9* pMaterial)
 	else
 	{
 		BeginRecordingCommands();
+		StopDraw(); //Stop render pass if there is one open.
 
 		mCurrentDrawCommandBuffer.updateBuffer(mMaterialBuffer.get(), 0, sizeof(D3DMATERIAL9), pMaterial);
+
+		{
+			const auto uboBarrier = vk::MemoryBarrier()
+				.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite)
+				.setDstAccessMask(vk::AccessFlagBits::eVertexAttributeRead);
+			mCurrentDrawCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexInput, vk::DependencyFlags(), 1, &uboBarrier, 0, nullptr, 0, nullptr);
+		}
 
 		mInternalDeviceState.SetMaterial(pMaterial);
 	}
@@ -3397,8 +3438,16 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantB(UINT StartRegister, 
 	else
 	{
 		BeginRecordingCommands();
+		StopDraw(); //Stop render pass if there is one open.
 
 		mCurrentDrawCommandBuffer.updateBuffer(mPixelConstantBuffer.get(), sizeof(mInternalDeviceState.mDeviceState.mPixelShaderConstantI) + StartRegister * sizeof(int), BoolCount * sizeof(int), pConstantData);
+
+		{
+			const auto uboBarrier = vk::MemoryBarrier()
+				.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite)
+				.setDstAccessMask(vk::AccessFlagBits::eVertexAttributeRead);
+			mCurrentDrawCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexInput, vk::DependencyFlags(), 1, &uboBarrier, 0, nullptr, 0, nullptr);
+		}
 
 		mInternalDeviceState.SetPixelShaderConstantB(StartRegister, pConstantData, BoolCount);
 	}
@@ -3415,8 +3464,16 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantF(UINT StartRegister, 
 	else
 	{
 		BeginRecordingCommands();
+		StopDraw(); //Stop render pass if there is one open.
 
 		mCurrentDrawCommandBuffer.updateBuffer(mPixelConstantBuffer.get(), sizeof(mInternalDeviceState.mDeviceState.mPixelShaderConstantI) + sizeof(mInternalDeviceState.mDeviceState.mPixelShaderConstantB) + StartRegister * sizeof(float[4]), Vector4fCount * sizeof(float[4]), pConstantData);
+
+		{
+			const auto uboBarrier = vk::MemoryBarrier()
+				.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite)
+				.setDstAccessMask(vk::AccessFlagBits::eVertexAttributeRead);
+			mCurrentDrawCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexInput, vk::DependencyFlags(), 1, &uboBarrier, 0, nullptr, 0, nullptr);
+		}
 
 		mInternalDeviceState.SetPixelShaderConstantF(StartRegister, pConstantData, Vector4fCount);
 	}
@@ -3433,8 +3490,16 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantI(UINT StartRegister, 
 	else
 	{
 		BeginRecordingCommands();
+		StopDraw(); //Stop render pass if there is one open.
 
 		mCurrentDrawCommandBuffer.updateBuffer(mPixelConstantBuffer.get(), StartRegister * sizeof(int[4]), Vector4iCount * sizeof(int[4]), pConstantData);
+
+		{
+			const auto uboBarrier = vk::MemoryBarrier()
+				.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite)
+				.setDstAccessMask(vk::AccessFlagBits::eVertexAttributeRead);
+			mCurrentDrawCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexInput, vk::DependencyFlags(), 1, &uboBarrier, 0, nullptr, 0, nullptr);
+		}
 
 		mInternalDeviceState.SetPixelShaderConstantI(StartRegister, pConstantData, Vector4iCount);
 	}
@@ -3451,8 +3516,16 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetRenderState(D3DRENDERSTATETYPE State, DWO
 	else
 	{
 		BeginRecordingCommands();
+		StopDraw(); //Stop render pass if there is one open.
 
 		mCurrentDrawCommandBuffer.updateBuffer(mRenderStateBuffer.get(), State * sizeof(DWORD), sizeof(DWORD), &Value);
+
+		{
+			const auto uboBarrier = vk::MemoryBarrier()
+				.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite)
+				.setDstAccessMask(vk::AccessFlagBits::eVertexAttributeRead);
+			mCurrentDrawCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexInput, vk::DependencyFlags(), 1, &uboBarrier, 0, nullptr, 0, nullptr);
+		}
 
 		mInternalDeviceState.SetRenderState(State, Value);
 	}
@@ -3589,11 +3662,19 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTextureStageState(DWORD Stage, D3DTEXTURE
 	else
 	{
 		BeginRecordingCommands();
+		StopDraw(); //Stop render pass if there is one open.
 
 		mInternalDeviceState.SetTextureStageState(Stage, Type, Value);
 
 		PaddedTextureStage textureStage(mInternalDeviceState.mDeviceState.mTextureStageState[Stage]);
 		mCurrentDrawCommandBuffer.updateBuffer(mTextureStageBuffer.get(), (Stage * sizeof(PaddedTextureStage)), sizeof(PaddedTextureStage), &textureStage);
+
+		{
+			const auto uboBarrier = vk::MemoryBarrier()
+				.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite)
+				.setDstAccessMask(vk::AccessFlagBits::eVertexAttributeRead);
+			mCurrentDrawCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexInput, vk::DependencyFlags(), 1, &uboBarrier, 0, nullptr, 0, nullptr);
+		}
 
 	}
 
@@ -3609,6 +3690,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, co
 	else
 	{
 		BeginRecordingCommands();
+		StopDraw(); //Stop render pass if there is one open.
 
 		if (pMatrix)
 		{
@@ -3642,6 +3724,13 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, co
 			mInternalDeviceState.mDeviceState.mTransform[D3DTS_WORLD] *
 			mInternalDeviceState.mDeviceState.mTransform[D3DTS_VIEW];
 		mCurrentDrawCommandBuffer.updateBuffer(mTransformationBuffer.get(), sizeof(D3DMATRIX), sizeof(D3DMATRIX), &mv);
+
+		{
+			const auto uboBarrier = vk::MemoryBarrier()
+				.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite)
+				.setDstAccessMask(vk::AccessFlagBits::eVertexAttributeRead);
+			mCurrentDrawCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexInput, vk::DependencyFlags(), 1, &uboBarrier, 0, nullptr, 0, nullptr);
+		}
 	}
 
 	return S_OK;
@@ -3688,8 +3777,16 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantB(UINT StartRegister,
 	else
 	{
 		BeginRecordingCommands();
+		StopDraw(); //Stop render pass if there is one open.
 
 		mCurrentDrawCommandBuffer.updateBuffer(mVertexConstantBuffer.get(), sizeof(mInternalDeviceState.mDeviceState.mVertexShaderConstantI) + StartRegister * sizeof(int), BoolCount * sizeof(int), pConstantData);
+
+		{
+			const auto uboBarrier = vk::MemoryBarrier()
+				.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite)
+				.setDstAccessMask(vk::AccessFlagBits::eVertexAttributeRead);
+			mCurrentDrawCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexInput, vk::DependencyFlags(), 1, &uboBarrier, 0, nullptr, 0, nullptr);
+		}
 
 		mInternalDeviceState.SetVertexShaderConstantB(StartRegister, pConstantData, BoolCount);
 	}
@@ -3706,8 +3803,16 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantF(UINT StartRegister,
 	else
 	{
 		BeginRecordingCommands();
+		StopDraw(); //Stop render pass if there is one open.
 
 		mCurrentDrawCommandBuffer.updateBuffer(mVertexConstantBuffer.get(), sizeof(mInternalDeviceState.mDeviceState.mVertexShaderConstantI) + sizeof(mInternalDeviceState.mDeviceState.mVertexShaderConstantB) + StartRegister * sizeof(float[4]), Vector4fCount * sizeof(float[4]), pConstantData);
+
+		{
+			const auto uboBarrier = vk::MemoryBarrier()
+				.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite)
+				.setDstAccessMask(vk::AccessFlagBits::eVertexAttributeRead);
+			mCurrentDrawCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexInput, vk::DependencyFlags(), 1, &uboBarrier, 0, nullptr, 0, nullptr);
+		}
 
 		mInternalDeviceState.SetVertexShaderConstantF(StartRegister, pConstantData, Vector4fCount);
 	}
@@ -3724,8 +3829,16 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantI(UINT StartRegister,
 	else
 	{
 		BeginRecordingCommands();
+		StopDraw(); //Stop render pass if there is one open.
 
 		mCurrentDrawCommandBuffer.updateBuffer(mVertexConstantBuffer.get(), StartRegister * sizeof(int[4]), Vector4iCount * sizeof(int[4]), pConstantData);
+
+		{
+			const auto uboBarrier = vk::MemoryBarrier()
+				.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite)
+				.setDstAccessMask(vk::AccessFlagBits::eVertexAttributeRead);
+			mCurrentDrawCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexInput, vk::DependencyFlags(), 1, &uboBarrier, 0, nullptr, 0, nullptr);
+		}
 
 		mInternalDeviceState.SetVertexShaderConstantI(StartRegister, pConstantData, Vector4iCount);
 	}
@@ -3763,7 +3876,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetViewport(const D3DVIEWPORT9* pViewport)
 		}
 		else
 		{
-			BeginRecordingCommands();
+			//BeginRecordingCommands();
 		}
 	}
 
@@ -3940,6 +4053,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::ResetEx(D3DPRESENT_PARAMETERS *pPresentation
 		memcpy(&mPresentationParameters, pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS));
 	}
 
+	StopDraw(); //Stop render pass if there is one open.
 	StopRecordingCommands();
 	mDevice->waitIdle();
 	ResetVulkanDevice();
@@ -3980,11 +4094,11 @@ RenderContainer::RenderContainer(vk::Device& device, CSurface9* depthStencilSurf
 			height = renderTarget->mHeight;
 
 			frameAttachments.push_back(renderTarget->mImageView.get());
-			attachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(renderTarget->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal));
+			attachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(renderTarget->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal));
 
-			clearColorAttachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(renderTarget->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal));
-			clearDepthAttachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(renderTarget->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal));
-			clearBothAttachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(renderTarget->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal));
+			clearColorAttachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(renderTarget->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal));
+			clearDepthAttachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(renderTarget->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal));
+			clearBothAttachments.push_back(vk::AttachmentDescription(vk::AttachmentDescriptionFlags(), ConvertFormat(renderTarget->mFormat), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal));
 
 			colorReference.push_back(vk::AttachmentReference(index, vk::ImageLayout::eColorAttachmentOptimal));
 

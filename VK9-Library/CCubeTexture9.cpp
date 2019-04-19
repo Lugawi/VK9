@@ -95,11 +95,43 @@ CCubeTexture9::CCubeTexture9(CDevice9* device, UINT EdgeLength, UINT Levels, DWO
 	//Now transition this thing from init to shader ready.
 	SetImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
+	/*
+	This block handles the luminance & x formats. They are converted to color formats but need a little mapping to make them work correctly.
+	*/
+	vk::ComponentMapping componentMapping;
+	switch (mFormat)
+	{
+	case D3DFMT_R5G6B5:
+		//Vulkan has a matching format but nvidia doesn't support using it as a color attachment so we just use the other one and re-map the components.
+		componentMapping = vk::ComponentMapping(vk::ComponentSwizzle::eB, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eOne);
+		break;
+	case D3DFMT_A8:
+		//TODO: Revisit A8 mapping.
+		componentMapping = vk::ComponentMapping(vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eR);
+		break;
+	case D3DFMT_L8:
+		componentMapping = vk::ComponentMapping(vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eOne);
+		break;
+	case D3DFMT_L16:
+		componentMapping = vk::ComponentMapping(vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eOne);
+		break;
+	case D3DFMT_A8L8:
+		componentMapping = vk::ComponentMapping(vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eG);
+		break;
+	case D3DFMT_X8R8G8B8:
+	case D3DFMT_X8B8G8R8:
+		componentMapping = vk::ComponentMapping(vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eB, vk::ComponentSwizzle::eOne);
+		break;
+	default:
+		break;
+	}
+
 	auto const viewInfo = vk::ImageViewCreateInfo()
 		.setImage(mImage.get())
 		.setViewType(vk::ImageViewType::e2D)
 		.setFormat(ConvertFormat(mFormat))
-		.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, mLevels, 0, 6));
+		.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, mLevels, 0, 6))
+		.setComponents(componentMapping);
 	mImageView = mDevice->mDevice->createImageViewUnique(viewInfo);
 }
 

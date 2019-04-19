@@ -311,6 +311,8 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::Present(const RECT *pSourceRect, const RE
 		Log(warning) << "CSwapChain9::Present dwFlags are not implemented!" << std::endl;
 	}
 
+	mDevice->StopDraw(); //Stop render pass if there is one open.
+
 	mDevice->BeginRecordingCommands(); //recording should already be running by this point.
 
 	vk::ImageMemoryBarrier prePresentBarrier;
