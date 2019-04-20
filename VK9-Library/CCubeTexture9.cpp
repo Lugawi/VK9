@@ -344,7 +344,79 @@ HRESULT STDMETHODCALLTYPE CCubeTexture9::SetPrivateData(REFGUID refguid, const v
 
 VOID STDMETHODCALLTYPE CCubeTexture9::GenerateMipSubLevels()
 {
+	//TODO: this needs to be updated to handle all of the faces.
 
+	mDevice->BeginRecordingUtilityCommands();
+	{
+		vk::PipelineStageFlags sourceStages = vk::PipelineStageFlagBits::eTopOfPipe;
+		vk::PipelineStageFlags destinationStages = vk::PipelineStageFlagBits::eTopOfPipe;
+		vk::Filter realFilter = ConvertFilter(mMipFilter);
+
+		vk::ImageMemoryBarrier imageMemoryBarrier;
+		//imageMemoryBarrier.srcAccessMask = 0;
+		//imageMemoryBarrier.dstAccessMask = 0;
+
+		vk::ImageSubresourceRange mipSubRange;
+		mipSubRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+		mipSubRange.levelCount = 1;
+		mipSubRange.layerCount = 1;
+
+		//Transition zero mip level to transfer source
+		mipSubRange.baseMipLevel = 0;
+
+		imageMemoryBarrier.oldLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+		imageMemoryBarrier.newLayout = vk::ImageLayout::eTransferSrcOptimal;
+		imageMemoryBarrier.image = mImage.get();
+		imageMemoryBarrier.subresourceRange = mipSubRange;
+		mDevice->mCurrentUtilityCommandBuffer.pipelineBarrier(sourceStages, destinationStages, vk::DependencyFlags(), 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+
+		for (UINT i = 1; i < mLevels; i++) //Changed to match mLevels datatype
+		{
+			vk::ImageBlit imageBlit;
+
+			// Source
+			imageBlit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+			imageBlit.srcSubresource.layerCount = 1;
+			imageBlit.srcSubresource.mipLevel = 0;
+			imageBlit.srcOffsets[1].x = int32_t(mEdgeLength);
+			imageBlit.srcOffsets[1].y = int32_t(mEdgeLength);
+			imageBlit.srcOffsets[1].z = 1;
+
+			// Destination
+			imageBlit.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+			imageBlit.dstSubresource.layerCount = 1;
+			imageBlit.dstSubresource.mipLevel = i;
+			imageBlit.dstOffsets[1].x = int32_t(mEdgeLength >> i);
+			imageBlit.dstOffsets[1].y = int32_t(mEdgeLength >> i);
+			imageBlit.dstOffsets[1].z = 1;
+
+			//Transition current mip level to transfer dest
+			mipSubRange.baseMipLevel = i;
+
+			imageMemoryBarrier.oldLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+			imageMemoryBarrier.newLayout = vk::ImageLayout::eTransferDstOptimal;
+			imageMemoryBarrier.image = mImage.get();
+			imageMemoryBarrier.subresourceRange = mipSubRange;
+			mDevice->mCurrentUtilityCommandBuffer.pipelineBarrier(sourceStages, destinationStages, vk::DependencyFlags(), 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+
+			// Blit from zero level
+			mDevice->mCurrentUtilityCommandBuffer.blitImage(mImage.get(), vk::ImageLayout::eTransferSrcOptimal, mImage.get(), vk::ImageLayout::eTransferDstOptimal, 1, &imageBlit, realFilter /*vk::Filter::eLinear*/);
+
+			//Transition back
+			imageMemoryBarrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
+			imageMemoryBarrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+			imageMemoryBarrier.image = mImage.get();
+			imageMemoryBarrier.subresourceRange = mipSubRange;
+			mDevice->mCurrentUtilityCommandBuffer.pipelineBarrier(sourceStages, destinationStages, vk::DependencyFlags(), 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+		}
+
+		imageMemoryBarrier.oldLayout = vk::ImageLayout::eTransferSrcOptimal;
+		imageMemoryBarrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+		imageMemoryBarrier.image = mImage.get();
+		imageMemoryBarrier.subresourceRange = mipSubRange;
+		mDevice->mCurrentUtilityCommandBuffer.pipelineBarrier(sourceStages, destinationStages, vk::DependencyFlags(), 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+	}
+	mDevice->StopRecordingUtilityCommands();
 }
 
 D3DTEXTUREFILTERTYPE STDMETHODCALLTYPE CCubeTexture9::GetAutoGenFilterType()

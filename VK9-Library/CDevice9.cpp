@@ -2121,44 +2121,89 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 
 		for (size_t i = 0; i < 16; i++)
 		{
-			mDescriptorImageInfo[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-			mDescriptorImageInfo[i].sampler = vk::Sampler();
-
-			//Look for an existing sampler.
-			for (auto& samplerContainer : mSamplerContainers)
-			{
-				if (samplerContainer->mSamplerState == deviceState.mSamplerState[i])
-				{
-					mDescriptorImageInfo[i].sampler = samplerContainer->mSampler.get();
-				}
-			}
-
-			//If no matching sampler was found then make one.
-			if (mDescriptorImageInfo[i].sampler == vk::Sampler())
-			{
-				mSamplerContainers.push_back(std::make_unique<SamplerContainer>(mDevice.get(), deviceState.mSamplerState[i]));
-				mDescriptorImageInfo[i].sampler = mSamplerContainers[mSamplerContainers.size() - 1]->mSampler.get();
-			}
-
 			//Bind the current set texture or if null bind a dummy texture.
 			if (deviceState.mTexture[i])
 			{
 				switch (deviceState.mTexture[i]->GetType())
 				{
 				case D3DRTYPE_TEXTURE:
-					mDescriptorImageInfo[i].imageView = reinterpret_cast <CTexture9*>(deviceState.mTexture[i])->mImageView.get();
-					break;
+				{
+					CTexture9* texture = reinterpret_cast <CTexture9*>(deviceState.mTexture[i]);
+
+					mDescriptorImageInfo[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+					mDescriptorImageInfo[i].sampler = vk::Sampler();
+					mDescriptorImageInfo[i].imageView = texture->mImageView.get();
+
+					//Look for an existing sampler.
+					for (auto& samplerContainer : mSamplerContainers)
+					{
+						if (samplerContainer->mSamplerState == deviceState.mSamplerState[i] && samplerContainer->mTextureLOD == texture->mLevels)
+						{
+							mDescriptorImageInfo[i].sampler = samplerContainer->mSampler.get();
+						}
+					}
+
+					//If no matching sampler was found then make one.
+					if (mDescriptorImageInfo[i].sampler == vk::Sampler())
+					{
+						mSamplerContainers.push_back(std::make_unique<SamplerContainer>(mDevice.get(), deviceState.mSamplerState[i], texture->mLevels));
+						mDescriptorImageInfo[i].sampler = mSamplerContainers[mSamplerContainers.size() - 1]->mSampler.get();
+					}
+				}
+				break;
 				case D3DRTYPE_VOLUMETEXTURE:
+				{
 					//mDescriptorImageInfo[i].imageView = reinterpret_cast <CVolumeTexture9*>(deviceState.mTexture[i])->mImageView.get();
-					break;
+				}
+				break;
 				case D3DRTYPE_CUBETEXTURE:
-					mDescriptorImageInfo[i].imageView = reinterpret_cast <CCubeTexture9*>(deviceState.mTexture[i])->mImageView.get();
-					break;
+				{
+					CCubeTexture9* texture = reinterpret_cast <CCubeTexture9*>(deviceState.mTexture[i]);
+
+					mDescriptorImageInfo[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+					mDescriptorImageInfo[i].sampler = vk::Sampler();
+					mDescriptorImageInfo[i].imageView = texture->mImageView.get();
+
+					//Look for an existing sampler.
+					for (auto& samplerContainer : mSamplerContainers)
+					{
+						if (samplerContainer->mSamplerState == deviceState.mSamplerState[i] && samplerContainer->mTextureLOD == texture->mLevels)
+						{
+							mDescriptorImageInfo[i].sampler = samplerContainer->mSampler.get();
+						}
+					}
+
+					//If no matching sampler was found then make one.
+					if (mDescriptorImageInfo[i].sampler == vk::Sampler())
+					{
+						mSamplerContainers.push_back(std::make_unique<SamplerContainer>(mDevice.get(), deviceState.mSamplerState[i], texture->mLevels));
+						mDescriptorImageInfo[i].sampler = mSamplerContainers[mSamplerContainers.size() - 1]->mSampler.get();
+					}
+				}
+				break;
 				}
 			}
 			else
 			{
+				mDescriptorImageInfo[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+				mDescriptorImageInfo[i].sampler = vk::Sampler();
 				mDescriptorImageInfo[i].imageView = mBlankTexture->mImageView.get();
+
+				//Look for an existing sampler.
+				for (auto& samplerContainer : mSamplerContainers)
+				{
+					if (samplerContainer->mSamplerState == deviceState.mSamplerState[i] && samplerContainer->mTextureLOD == 0)
+					{
+						mDescriptorImageInfo[i].sampler = samplerContainer->mSampler.get();
+					}
+				}
+
+				//If no matching sampler was found then make one.
+				if (mDescriptorImageInfo[i].sampler == vk::Sampler())
+				{
+					mSamplerContainers.push_back(std::make_unique<SamplerContainer>(mDevice.get(), deviceState.mSamplerState[i], 0));
+					mDescriptorImageInfo[i].sampler = mSamplerContainers[mSamplerContainers.size() - 1]->mSampler.get();
+				}
 			}
 		}
 
@@ -2604,7 +2649,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE Prim
 	mCurrentDrawCommandBuffer.updateBuffer(mUpIndexBuffer.get(), 0, ConvertPrimitiveCountToBufferSize(PrimitiveType, PrimitiveCount, (IndexDataFormat == D3DFMT_INDEX16) ? 2 : 4), pIndexData);
 
 	{
-		const auto uboBarrier = vk::MemoryBarrier() 
+		const auto uboBarrier = vk::MemoryBarrier()
 			.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite)
 			.setDstAccessMask(vk::AccessFlagBits::eVertexAttributeRead);
 		mCurrentDrawCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexInput, vk::DependencyFlags(), 1, &uboBarrier, 0, nullptr, 0, nullptr);
@@ -4238,8 +4283,9 @@ RenderContainer::~RenderContainer()
 
 }
 
-SamplerContainer::SamplerContainer(vk::Device& device, std::array<DWORD, D3DSAMP_DMAPOFFSET + 1>& samplerState)
-	: mSamplerState(samplerState)
+SamplerContainer::SamplerContainer(vk::Device& device, std::array<DWORD, D3DSAMP_DMAPOFFSET + 1>& samplerState, uint32_t textureLOD)
+	: mSamplerState(samplerState),
+	mTextureLOD(textureLOD)
 {
 	const vk::SamplerCreateInfo samplerCreateInfo = vk::SamplerCreateInfo()
 		.setMagFilter(ConvertFilter((D3DTEXTUREFILTERTYPE)mSamplerState[D3DSAMP_MAGFILTER]))
@@ -4253,7 +4299,7 @@ SamplerContainer::SamplerContainer(vk::Device& device, std::array<DWORD, D3DSAMP
 		.setUnnormalizedCoordinates(VK_FALSE)
 		.setCompareOp(vk::CompareOp::eNever)
 		.setMinLod(0.0f)
-		.setMaxLod((mSamplerState[D3DSAMP_MIPFILTER] == D3DTEXF_NONE) ? 0.0f : bit_cast(mSamplerState[D3DSAMP_MAXMIPLEVEL]));
+		.setMaxLod((mSamplerState[D3DSAMP_MIPFILTER] == D3DTEXF_NONE) ? 0.0f : std::max(bit_cast(mSamplerState[D3DSAMP_MAXMIPLEVEL]), (float)textureLOD));
 
 	//TODO: handle anisotropy
 

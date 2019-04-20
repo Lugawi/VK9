@@ -913,10 +913,10 @@ ULONG STDMETHODCALLTYPE CSurface9::Release(void)
 }
 
 HRESULT STDMETHODCALLTYPE CSurface9::GetDevice(IDirect3DDevice9** ppDevice)
-{ 
-	mDevice->AddRef(); 
-	(*ppDevice) = (IDirect3DDevice9*)mDevice; 
-	return S_OK; 
+{
+	mDevice->AddRef();
+	(*ppDevice) = (IDirect3DDevice9*)mDevice;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CSurface9::FreePrivateData(REFGUID refguid)
@@ -1099,6 +1099,11 @@ HRESULT STDMETHODCALLTYPE CSurface9::UnlockRect()
 			mDevice->mCurrentUtilityCommandBuffer.copyBufferToImage(mStagingBuffer.get(), mTexture->mImage.get(), vk::ImageLayout::eTransferDstOptimal, 1, &copy_region);
 
 			mTexture->SetImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+
+			if (mMipIndex == 0 && (mTexture->mUsage & D3DUSAGE_AUTOGENMIPMAP) == D3DUSAGE_AUTOGENMIPMAP)
+			{
+				mTexture->GenerateMipSubLevels();
+			}
 		}
 		else if (mCubeTexture)
 		{
@@ -1122,6 +1127,11 @@ HRESULT STDMETHODCALLTYPE CSurface9::UnlockRect()
 			mDevice->mCurrentUtilityCommandBuffer.copyBufferToImage(mStagingBuffer.get(), mCubeTexture->mImage.get(), vk::ImageLayout::eTransferDstOptimal, 1, &copy_region);
 
 			mCubeTexture->SetImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+
+			if (mMipIndex == 0 && (mCubeTexture->mUsage & D3DUSAGE_AUTOGENMIPMAP) == D3DUSAGE_AUTOGENMIPMAP)
+			{
+				mCubeTexture->GenerateMipSubLevels();
+			}
 		}
 	}
 	mDevice->StopRecordingUtilityCommands();

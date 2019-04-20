@@ -413,10 +413,11 @@ public:
 class SamplerContainer
 {
 public:
-	SamplerContainer(vk::Device& device, std::array<DWORD, D3DSAMP_DMAPOFFSET + 1>& samplerState);
+	SamplerContainer(vk::Device& device, std::array<DWORD, D3DSAMP_DMAPOFFSET + 1>& samplerState, uint32_t textureLOD);
 	~SamplerContainer();
 
 	std::array<DWORD, D3DSAMP_DMAPOFFSET + 1> mSamplerState = {};
+	uint32_t mTextureLOD = {};
 	vk::UniqueSampler mSampler;
 
 };
