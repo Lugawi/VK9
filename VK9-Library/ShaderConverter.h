@@ -199,6 +199,8 @@ public:
 	ShaderConverter(vk::Device& device);
 	~ShaderConverter();
 
+	uint32_t mSize = 0;
+
 	vk::UniqueShaderModule Convert(uint32_t* shader);
 private:
 	std::vector<uint32_t> mInstructions; //used to store the combined instructions for creating a module.

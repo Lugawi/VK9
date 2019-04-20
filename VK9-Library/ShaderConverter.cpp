@@ -474,6 +474,7 @@ Token ShaderConverter::GetNextToken()
 
 	mPreviousToken++;
 	token.i = *(mNextToken++);
+	mSize++;
 
 	return token;
 }

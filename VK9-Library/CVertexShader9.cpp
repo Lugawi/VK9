@@ -32,10 +32,10 @@ CVertexShader9::CVertexShader9(CDevice9* device, const DWORD* pFunction)
 {
 	Log(info) << "CVertexShader9::CVertexShader9" << std::endl;
 
-	mSize = _msize((void*)pFunction); //This is MSVC only but the only other way to get the size is to walk the shader byte code.
-
 	ShaderConverter converter(mDevice->mDevice.get());
 	mShader = converter.Convert((uint32_t*)pFunction);
+
+	mSize = converter.mSize;
 
 	if (mSize)
 	{
