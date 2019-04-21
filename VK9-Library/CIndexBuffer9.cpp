@@ -36,6 +36,12 @@ CIndexBuffer9::CIndexBuffer9(CDevice9* device, UINT Length, DWORD Usage, D3DFORM
 {
 	AddStagingBuffer();
 	AddIndexBuffer();
+
+	mCurrentStagingBuffer = mStagingBuffers[0].get();
+	mCurrentStagingBufferMemory = mStagingBufferMemories[0].get();
+
+	mCurrentIndexBuffer = mIndexBuffers[0].get();
+	mCurrentIndexBufferMemory = mIndexBufferMemories[0].get();
 }
 
 CIndexBuffer9::~CIndexBuffer9()

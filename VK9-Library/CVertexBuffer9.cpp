@@ -36,6 +36,12 @@ CVertexBuffer9::CVertexBuffer9(CDevice9* device, UINT Length, DWORD Usage, DWORD
 {
 	AddStagingBuffer();
 	AddVertexBuffer();
+
+	mCurrentStagingBuffer = mStagingBuffers[0].get();
+	mCurrentStagingBufferMemory = mStagingBufferMemories[0].get();
+
+	mCurrentVertexBuffer = mVertexBuffers[0].get();
+	mCurrentVertexBufferMemory = mVertexBufferMemories[0].get();
 }
 
 CVertexBuffer9::~CVertexBuffer9()
