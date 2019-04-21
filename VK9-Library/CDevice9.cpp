@@ -986,6 +986,11 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 
 CDevice9::~CDevice9()
 {
+	for (size_t i = 0; i < mDrawCommandBuffers.size(); i++)
+	{
+		mDevice->waitForFences(1, &mDrawFences[mFrameIndex].get(), VK_TRUE, UINT64_MAX);
+	}
+
 	mDevice->waitIdle();
 
 	for (size_t i = 0; i < 16; i++)
@@ -2346,7 +2351,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::Clear(DWORD Count, const D3DRECT *pRects, DW
 		mCurrentDrawCommandBuffer.endRenderPass();
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::BeginScene() //
@@ -2386,14 +2391,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::QueryInterface(REFIID riid, void  **ppv)
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IUnknown))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	return E_NOINTERFACE;
@@ -2417,7 +2422,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::BeginStateBlock()
 
 	mRecordedDeviceState->PrivateAddRef();
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::ColorFill(IDirect3DSurface9 *pSurface, const RECT *pRect, D3DCOLOR color)
@@ -2437,12 +2442,12 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateAdditionalSwapChain(D3DPRESENT_PARAMET
 
 	(*ppSwapChain) = ptr;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreateCubeTexture(UINT EdgeLength, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DCubeTexture9 **ppCubeTexture, HANDLE *pSharedHandle)
 {
-	HRESULT result = S_OK;
+	HRESULT result = D3D_OK;
 
 	CCubeTexture9* obj = new CCubeTexture9(this, EdgeLength, Levels, Usage, Format, Pool, pSharedHandle);
 
@@ -2453,7 +2458,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateCubeTexture(UINT EdgeLength, UINT Leve
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreateDepthStencilSurface(UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, IDirect3DSurface9 **ppSurface, HANDLE *pSharedHandle)
 {
-	HRESULT result = S_OK;
+	HRESULT result = D3D_OK;
 
 	CSurface9* obj = new CSurface9(this, (CTexture9*)nullptr, Width, Height, D3DUSAGE_DEPTHSTENCIL, 1 /*Levels*/, Format, MultiSample, MultisampleQuality, Discard, false /*Lockable*/, D3DPOOL_DEFAULT, pSharedHandle);
 
@@ -2464,7 +2469,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateDepthStencilSurface(UINT Width, UINT H
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreateIndexBuffer(UINT Length, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DIndexBuffer9 **ppIndexBuffer, HANDLE *pSharedHandle)
 {
-	HRESULT result = S_OK;
+	HRESULT result = D3D_OK;
 
 	CIndexBuffer9* obj = new CIndexBuffer9(this, Length, Usage, Format, Pool, pSharedHandle);
 
@@ -2475,7 +2480,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateIndexBuffer(UINT Length, DWORD Usage, 
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreateOffscreenPlainSurface(UINT Width, UINT Height, D3DFORMAT Format, D3DPOOL Pool, IDirect3DSurface9 **ppSurface, HANDLE *pSharedHandle)
 {
-	HRESULT result = S_OK;
+	HRESULT result = D3D_OK;
 
 	CSurface9* ptr = new CSurface9(this, (CTexture9*)nullptr, Width, Height, D3DUSAGE_RENDERTARGET, 1, Format, D3DMULTISAMPLE_NONE, 0, false, false, Pool, pSharedHandle);
 
@@ -2486,7 +2491,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateOffscreenPlainSurface(UINT Width, UINT
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreatePixelShader(const DWORD *pFunction, IDirect3DPixelShader9 **ppShader)
 {
-	HRESULT result = S_OK;
+	HRESULT result = D3D_OK;
 
 	CPixelShader9* obj = new CPixelShader9(this, pFunction);
 
@@ -2513,7 +2518,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateQuery(D3DQUERYTYPE Type, IDirect3DQuer
 	{
 		if (Type == D3DQUERYTYPE_OCCLUSION || Type == D3DQUERYTYPE_TIMESTAMP || Type == D3DQUERYTYPE_TIMESTAMPDISJOINT || Type == D3DQUERYTYPE_TIMESTAMPFREQ)
 		{
-			return S_OK;
+			return D3D_OK;
 		}
 		else
 		{
@@ -2527,7 +2532,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateQuery(D3DQUERYTYPE Type, IDirect3DQuer
 
 		(*ppQuery) = (IDirect3DQuery9*)obj;
 
-		return S_OK;
+		return D3D_OK;
 	}
 	else
 	{
@@ -2537,7 +2542,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateQuery(D3DQUERYTYPE Type, IDirect3DQuer
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreateRenderTarget(UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, IDirect3DSurface9 **ppSurface, HANDLE *pSharedHandle)
 {
-	HRESULT result = S_OK;
+	HRESULT result = D3D_OK;
 
 	CSurface9* ptr = new CSurface9(this, (CTexture9*)nullptr, Width, Height, D3DUSAGE_RENDERTARGET, 1, Format, MultiSample, MultisampleQuality, false, Lockable, D3DPOOL_DEFAULT, pSharedHandle);
 
@@ -2548,7 +2553,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateRenderTarget(UINT Width, UINT Height, 
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreateStateBlock(D3DSTATEBLOCKTYPE Type, IDirect3DStateBlock9 **ppSB)
 {
-	HRESULT result = S_OK;
+	HRESULT result = D3D_OK;
 
 	CStateBlock9* obj = new CStateBlock9(this, Type);
 
@@ -2561,7 +2566,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateStateBlock(D3DSTATEBLOCKTYPE Type, IDi
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreateTexture(UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DTexture9 **ppTexture, HANDLE *pSharedHandle)
 {
-	HRESULT result = S_OK;
+	HRESULT result = D3D_OK;
 
 	CTexture9* obj = new CTexture9(this, Width, Height, Levels, Usage, Format, Pool, pSharedHandle);
 
@@ -2572,7 +2577,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateTexture(UINT Width, UINT Height, UINT 
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreateVertexBuffer(UINT Length, DWORD Usage, DWORD FVF, D3DPOOL Pool, IDirect3DVertexBuffer9 **ppVertexBuffer, HANDLE *pSharedHandle)
 {
-	HRESULT result = S_OK;
+	HRESULT result = D3D_OK;
 
 	CVertexBuffer9* obj = new CVertexBuffer9(this, Length, Usage, FVF, Pool, pSharedHandle);
 
@@ -2583,7 +2588,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateVertexBuffer(UINT Length, DWORD Usage,
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreateVertexDeclaration(const D3DVERTEXELEMENT9 *pVertexElements, IDirect3DVertexDeclaration9 **ppDecl)
 {
-	HRESULT result = S_OK;
+	HRESULT result = D3D_OK;
 
 	CVertexDeclaration9* obj = new CVertexDeclaration9(this, pVertexElements);
 
@@ -2594,7 +2599,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateVertexDeclaration(const D3DVERTEXELEME
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreateVertexShader(const DWORD *pFunction, IDirect3DVertexShader9 **ppShader)
 {
-	HRESULT result = S_OK;
+	HRESULT result = D3D_OK;
 
 	CVertexShader9* obj = new CVertexShader9(this, pFunction);
 
@@ -2616,7 +2621,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateVolumeTexture(UINT Width, UINT Height,
 
 	(*ppVolumeTexture) = (IDirect3DVolumeTexture9*)obj;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::DeletePatch(UINT Handle)
@@ -2638,7 +2643,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitive(D3DPRIMITIVETYPE Type, 
 	}
 	//StopDraw();
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, const void *pIndexData, D3DFORMAT IndexDataFormat, const void *pVertexStreamZeroData, UINT VertexStreamZeroStride)
@@ -2682,7 +2687,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE Prim
 	}
 	//StopDraw();
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
@@ -2695,7 +2700,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType
 	}
 	//StopDraw();
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, const void *pVertexStreamZeroData, UINT VertexStreamZeroStride)
@@ -2724,7 +2729,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveTy
 	}
 	//StopDraw();
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawRectPatch(UINT Handle, const float *pNumSegs, const D3DRECTPATCH_INFO *pRectPatchInfo)
@@ -2738,7 +2743,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawRectPatch(UINT Handle, const float *pNum
 	}
 	//StopDraw();
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::DrawTriPatch(UINT Handle, const float *pNumSegs, const D3DTRIPATCH_INFO *pTriPatchInfo)
@@ -2752,7 +2757,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::DrawTriPatch(UINT Handle, const float *pNumS
 	}
 	//StopDraw();
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::EndStateBlock(IDirect3DStateBlock9** ppSB)
@@ -2763,7 +2768,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::EndStateBlock(IDirect3DStateBlock9** ppSB)
 	mRecordedDeviceState->PrivateRelease();
 	mRecordedDeviceState = nullptr;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::EvictManagedResources()
@@ -2772,7 +2777,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::EvictManagedResources()
 
 	Log(warning) << "CDevice9::EvictManagedResources is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 UINT STDMETHODCALLTYPE CDevice9::GetAvailableTextureMem()
@@ -2791,7 +2796,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetClipPlane(DWORD Index, float* pPlane)
 {
 	memcpy(pPlane, &mInternalDeviceState.mDeviceState.mClipPlane[Index], 4 * sizeof(float));
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetClipStatus(D3DCLIPSTATUS9 *pClipStatus)
@@ -2810,14 +2815,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetCreationParameters(D3DDEVICE_CREATION_PAR
 	pParameters->hFocusWindow = this->mFocusWindow;
 	pParameters->BehaviorFlags = this->mBehaviorFlags;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetCurrentTexturePalette(UINT *pPaletteNumber)
 {
 	(*pPaletteNumber) = mInternalDeviceState.mDeviceState.mPaletteNumber;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetDepthStencilSurface(IDirect3DSurface9 **ppZStencilSurface)
@@ -2829,14 +2834,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetDepthStencilSurface(IDirect3DSurface9 **p
 		mDepthStencilSurface->AddRef();
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetDeviceCaps(D3DCAPS9 *pCaps)
 {
 	mC9->GetDeviceCaps(mAdapter, mDeviceType, pCaps);
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetDirect3D(IDirect3D9 **ppD3D9)
@@ -2845,14 +2850,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetDirect3D(IDirect3D9 **ppD3D9)
 
 	mC9->AddRef();
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetDisplayMode(UINT  iSwapChain, D3DDISPLAYMODE *pMode)
 {
 	Log(warning) << "CDevice9::GetDisplayMode is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetFrontBufferData(UINT  iSwapChain, IDirect3DSurface9 *pDestSurface)
@@ -2864,7 +2869,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetFVF(DWORD *pFVF)
 {
 	(*pFVF) = mInternalDeviceState.mDeviceState.mFVF;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 void STDMETHODCALLTYPE CDevice9::GetGammaRamp(UINT  iSwapChain, D3DGAMMARAMP *pRamp)
@@ -2888,28 +2893,28 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetIndices(IDirect3DIndexBuffer9 **ppIndexDa
 		(*ppIndexData)->AddRef();
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetLight(DWORD Index, D3DLIGHT9 *pLight)
 {
 	(*pLight) = mInternalDeviceState.mDeviceState.mLight[Index];
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetLightEnable(DWORD Index, BOOL *pEnable)
 {
 	(*pEnable) = mInternalDeviceState.mDeviceState.mLightEnableState[Index];
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetMaterial(D3DMATERIAL9 *pMaterial)
 {
 	(*pMaterial) = mInternalDeviceState.mDeviceState.mMaterial;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 FLOAT STDMETHODCALLTYPE CDevice9::GetNPatchMode()
@@ -2943,28 +2948,28 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetPixelShader(IDirect3DPixelShader9 **ppSha
 	{
 		(*ppShader)->AddRef();
 	}
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetPixelShaderConstantB(UINT StartRegister, BOOL *pConstantData, UINT BoolCount)
 {
 	memcpy(pConstantData, &mInternalDeviceState.mDeviceState.mPixelShaderConstantB[StartRegister], BoolCount * sizeof(int));
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetPixelShaderConstantF(UINT StartRegister, float *pConstantData, UINT Vector4fCount)
 {
 	memcpy(pConstantData, &mInternalDeviceState.mDeviceState.mPixelShaderConstantF[StartRegister], Vector4fCount * sizeof(float[4]));
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetPixelShaderConstantI(UINT StartRegister, int *pConstantData, UINT Vector4iCount)
 {
 	memcpy(pConstantData, &mInternalDeviceState.mDeviceState.mPixelShaderConstantI[StartRegister], Vector4iCount * sizeof(int[4]));
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetRasterStatus(UINT  iSwapChain, D3DRASTER_STATUS *pRasterStatus)
@@ -2976,7 +2981,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetRenderState(D3DRENDERSTATETYPE State, DWO
 {
 	(*pValue) = mInternalDeviceState.mDeviceState.mRenderState[State];
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetRenderTarget(DWORD RenderTargetIndex, IDirect3DSurface9** ppRenderTarget)
@@ -2985,7 +2990,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetRenderTarget(DWORD RenderTargetIndex, IDi
 
 	(*ppRenderTarget) = mRenderTargets[RenderTargetIndex];
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetRenderTargetData(IDirect3DSurface9 *pRenderTarget, IDirect3DSurface9 *pDestSurface)
@@ -2994,7 +2999,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetRenderTargetData(IDirect3DSurface9 *pRend
 
 	Log(warning) << "CDevice9::GetRenderTargetData is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD* pValue)
@@ -3015,14 +3020,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetSamplerState(DWORD Sampler, D3DSAMPLERSTA
 	//	(*pValue) = 0;
 	//}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetScissorRect(RECT* pRect)
 {
 	(*pRect) = mInternalDeviceState.mDeviceState.mScissorRect;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 BOOL STDMETHODCALLTYPE CDevice9::GetSoftwareVertexProcessing()
@@ -3042,14 +3047,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetStreamSource(UINT StreamNumber, IDirect3D
 	(*pOffsetInBytes) = entry.offset;
 	(*pStride) = entry.stride;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetStreamSourceFreq(UINT StreamNumber, UINT *pDivider)
 {
 	(*pDivider) = mInternalDeviceState.mDeviceState.mStreamSourceFrequency[StreamNumber];
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetSwapChain(UINT iSwapChain, IDirect3DSwapChain9** ppSwapChain)
@@ -3060,7 +3065,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetSwapChain(UINT iSwapChain, IDirect3DSwapC
 	{
 		(*ppSwapChain)->AddRef();
 	}
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetTexture(DWORD Stage, IDirect3DBaseTexture9** ppTexture)
@@ -3090,21 +3095,21 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetTexture(DWORD Stage, IDirect3DBaseTexture
 		(*ppTexture)->AddRef();
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetTextureStageState(DWORD Stage, D3DTEXTURESTAGESTATETYPE Type, DWORD* pValue)
 {
 	(*pValue) = mInternalDeviceState.mDeviceState.mTextureStageState[Stage][Type];
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetTransform(D3DTRANSFORMSTATETYPE State, D3DMATRIX* pMatrix)
 {
 	(*pMatrix) = mInternalDeviceState.mDeviceState.mTransform[State];
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetVertexDeclaration(IDirect3DVertexDeclaration9** ppDecl)
@@ -3116,7 +3121,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetVertexDeclaration(IDirect3DVertexDeclarat
 		(*ppDecl)->AddRef();
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetVertexShader(IDirect3DVertexShader9** ppShader)
@@ -3127,35 +3132,35 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetVertexShader(IDirect3DVertexShader9** ppS
 	{
 		(*ppShader)->AddRef();
 	}
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetVertexShaderConstantB(UINT StartRegister, BOOL* pConstantData, UINT BoolCount)
 {
 	memcpy(pConstantData, &mInternalDeviceState.mDeviceState.mVertexShaderConstantB[StartRegister], BoolCount * sizeof(int));
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetVertexShaderConstantF(UINT StartRegister, float* pConstantData, UINT Vector4fCount)
 {
 	memcpy(pConstantData, &mInternalDeviceState.mDeviceState.mVertexShaderConstantF[StartRegister], Vector4fCount * sizeof(float[4]));
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetVertexShaderConstantI(UINT StartRegister, int* pConstantData, UINT Vector4iCount)
 {
 	memcpy(pConstantData, &mInternalDeviceState.mDeviceState.mVertexShaderConstantI[StartRegister], Vector4iCount * sizeof(int[4]));
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetViewport(D3DVIEWPORT9* pViewport)
 {
 	(*pViewport) = mInternalDeviceState.mDeviceState.mViewport;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::LightEnable(DWORD LightIndex, BOOL bEnable)
@@ -3181,7 +3186,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::LightEnable(DWORD LightIndex, BOOL bEnable)
 		mInternalDeviceState.LightEnable(LightIndex, bEnable);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::MultiplyTransform(D3DTRANSFORMSTATETYPE State, const D3DMATRIX *pMatrix)
@@ -3190,7 +3195,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::MultiplyTransform(D3DTRANSFORMSTATETYPE Stat
 
 	Log(warning) << "CDevice9::MultiplyTransform is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::ProcessVertices(UINT SrcStartIndex, UINT DestIndex, UINT VertexCount, IDirect3DVertexBuffer9 *pDestBuffer, IDirect3DVertexDeclaration9 *pVertexDecl, DWORD Flags)
@@ -3199,7 +3204,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::ProcessVertices(UINT SrcStartIndex, UINT Des
 
 	Log(warning) << "CDevice9::ProcessVertices is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationParameters)
@@ -3218,7 +3223,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationPa
 	mDevice->waitIdle();
 	ResetVulkanDevice();
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT CDevice9::SetClipPlane(DWORD Index, const float *pPlane)
@@ -3234,7 +3239,7 @@ HRESULT CDevice9::SetClipPlane(DWORD Index, const float *pPlane)
 		mInternalDeviceState.SetClipPlane(Index, pPlane);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetClipStatus(const D3DCLIPSTATUS9 *pClipStatus)
@@ -3243,7 +3248,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetClipStatus(const D3DCLIPSTATUS9 *pClipSta
 
 	Log(warning) << "CDevice9::SetClipStatus is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetCurrentTexturePalette(UINT PaletteNumber)
@@ -3259,7 +3264,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetCurrentTexturePalette(UINT PaletteNumber)
 		mInternalDeviceState.SetCurrentTexturePalette(PaletteNumber);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 void STDMETHODCALLTYPE CDevice9::SetCursorPosition(INT X, INT Y, DWORD Flags)
@@ -3277,7 +3282,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetCursorProperties(UINT XHotSpot, UINT YHot
 
 	Log(warning) << "CDevice9::SetCursorProperties is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetDepthStencilSurface(IDirect3DSurface9* pNewZStencil)
@@ -3293,7 +3298,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetDepthStencilSurface(IDirect3DSurface9* pN
 
 		mDepthStencilSurface = nullptr;
 
-		return S_OK;
+		return D3D_OK;
 	}
 
 	((CSurface9*)pNewZStencil)->PrivateAddRef();
@@ -3307,7 +3312,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetDepthStencilSurface(IDirect3DSurface9* pN
 
 	RebuildRenderPass();
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetDialogBoxMode(BOOL bEnableDialogs)
@@ -3316,7 +3321,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetDialogBoxMode(BOOL bEnableDialogs)
 
 	Log(warning) << "CDevice9::SetDialogBoxMode is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetFVF(DWORD FVF)
@@ -3347,7 +3352,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetFVF(DWORD FVF)
 		}
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 void STDMETHODCALLTYPE CDevice9::SetGammaRamp(UINT  iSwapChain, DWORD Flags, const D3DGAMMARAMP *pRamp)
@@ -3377,7 +3382,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetIndices(IDirect3DIndexBuffer9* pIndexData
 		mInternalDeviceState.SetIndices(pIndexData);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetLight(DWORD Index, const D3DLIGHT9* pLight)
@@ -3404,7 +3409,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetLight(DWORD Index, const D3DLIGHT9* pLigh
 		mInternalDeviceState.SetLight(Index, pLight);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetMaterial(const D3DMATERIAL9* pMaterial)
@@ -3430,7 +3435,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetMaterial(const D3DMATERIAL9* pMaterial)
 		mInternalDeviceState.SetMaterial(pMaterial);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetNPatchMode(float nSegments)
@@ -3446,7 +3451,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetNPatchMode(float nSegments)
 		mInternalDeviceState.SetNPatchMode(nSegments);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetPaletteEntries(UINT PaletteNumber, const PALETTEENTRY *pEntries)
@@ -3455,7 +3460,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPaletteEntries(UINT PaletteNumber, const 
 
 	Log(warning) << "CDevice9::SetPaletteEntries is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShader(IDirect3DPixelShader9* pShader)
@@ -3471,7 +3476,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShader(IDirect3DPixelShader9* pShade
 		mInternalDeviceState.SetPixelShader(pShader);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantB(UINT StartRegister, const BOOL* pConstantData, UINT BoolCount)
@@ -3497,7 +3502,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantB(UINT StartRegister, 
 		mInternalDeviceState.SetPixelShaderConstantB(StartRegister, pConstantData, BoolCount);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantF(UINT StartRegister, const float *pConstantData, UINT Vector4fCount)
@@ -3523,7 +3528,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantF(UINT StartRegister, 
 		mInternalDeviceState.SetPixelShaderConstantF(StartRegister, pConstantData, Vector4fCount);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantI(UINT StartRegister, const int *pConstantData, UINT Vector4iCount)
@@ -3549,7 +3554,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetPixelShaderConstantI(UINT StartRegister, 
 		mInternalDeviceState.SetPixelShaderConstantI(StartRegister, pConstantData, Vector4iCount);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetRenderState(D3DRENDERSTATETYPE State, DWORD Value)
@@ -3575,7 +3580,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetRenderState(D3DRENDERSTATETYPE State, DWO
 		mInternalDeviceState.SetRenderState(State, Value);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetRenderTarget(DWORD RenderTargetIndex, IDirect3DSurface9* pRenderTarget)
@@ -3603,7 +3608,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetRenderTarget(DWORD RenderTargetIndex, IDi
 
 	RebuildRenderPass();
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value)
@@ -3619,7 +3624,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetSamplerState(DWORD Sampler, D3DSAMPLERSTA
 		mInternalDeviceState.SetSamplerState(Sampler, Type, Value);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetScissorRect(const RECT* pRect)
@@ -3638,7 +3643,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetScissorRect(const RECT* pRect)
 		mInternalDeviceState.SetScissorRect(pRect);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetSoftwareVertexProcessing(BOOL bSoftware)
@@ -3647,7 +3652,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetSoftwareVertexProcessing(BOOL bSoftware)
 
 	Log(warning) << "CDevice9::SetSoftwareVertexProcessing is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetStreamSource(UINT StreamNumber, IDirect3DVertexBuffer9* pStreamData, UINT OffsetInBytes, UINT Stride)
@@ -3663,7 +3668,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetStreamSource(UINT StreamNumber, IDirect3D
 		mInternalDeviceState.SetStreamSource(StreamNumber, pStreamData, OffsetInBytes, Stride);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetStreamSourceFreq(UINT StreamNumber, UINT FrequencyParameter)
@@ -3679,7 +3684,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetStreamSourceFreq(UINT StreamNumber, UINT 
 		mInternalDeviceState.SetStreamSourceFreq(StreamNumber, FrequencyParameter);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetTexture(DWORD Sampler, IDirect3DBaseTexture9* pTexture)
@@ -3695,7 +3700,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTexture(DWORD Sampler, IDirect3DBaseTextu
 		mInternalDeviceState.SetTexture(Sampler, pTexture);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetTextureStageState(DWORD Stage, D3DTEXTURESTAGESTATETYPE Type, DWORD Value)
@@ -3723,7 +3728,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTextureStageState(DWORD Stage, D3DTEXTURE
 
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, const D3DMATRIX* pMatrix)
@@ -3778,7 +3783,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, co
 		}
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetVertexDeclaration(IDirect3DVertexDeclaration9* pDecl)
@@ -3794,7 +3799,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexDeclaration(IDirect3DVertexDeclarat
 		mInternalDeviceState.SetVertexDeclaration(pDecl);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShader(IDirect3DVertexShader9* pShader)
@@ -3810,7 +3815,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShader(IDirect3DVertexShader9* pSha
 		mInternalDeviceState.SetVertexShader(pShader);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantB(UINT StartRegister, const BOOL* pConstantData, UINT BoolCount)
@@ -3836,7 +3841,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantB(UINT StartRegister,
 		mInternalDeviceState.SetVertexShaderConstantB(StartRegister, pConstantData, BoolCount);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantF(UINT StartRegister, const float* pConstantData, UINT Vector4fCount)
@@ -3862,7 +3867,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantF(UINT StartRegister,
 		mInternalDeviceState.SetVertexShaderConstantF(StartRegister, pConstantData, Vector4fCount);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantI(UINT StartRegister, const int* pConstantData, UINT Vector4iCount)
@@ -3888,7 +3893,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetVertexShaderConstantI(UINT StartRegister,
 		mInternalDeviceState.SetVertexShaderConstantI(StartRegister, pConstantData, Vector4iCount);
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetViewport(const D3DVIEWPORT9* pViewport)
@@ -3925,7 +3930,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetViewport(const D3DVIEWPORT9* pViewport)
 		}
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 BOOL STDMETHODCALLTYPE CDevice9::ShowCursor(BOOL bShow)
@@ -3941,30 +3946,30 @@ HRESULT STDMETHODCALLTYPE CDevice9::StretchRect(IDirect3DSurface9 *pSourceSurfac
 {
 	Log(warning) << "CDevice9::StretchRect is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::TestCooperativeLevel()
 {
-	Log(warning) << "CDevice9::TestCooperativeLevel is not implemented!" << std::endl;
+	//D3DERR_DEVICENOTRESET
+	//D3DERR_DEVICELOST
+	//D3DERR_DRIVERINTERNALERROR
 
-	//if (mCommandStreamManager->mResult == vk::Result::eErrorDeviceLost) { return D3DERR_DEVICELOST; }
-
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::UpdateSurface(IDirect3DSurface9* pSourceSurface, const RECT* pSourceRect, IDirect3DSurface9* pDestinationSurface, const POINT* pDestinationPoint)
 {
 	Log(warning) << "CDevice9::UpdateSurface is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::UpdateTexture(IDirect3DBaseTexture9* pSourceTexture, IDirect3DBaseTexture9* pDestinationTexture)
 {
 	Log(warning) << "CDevice9::UpdateTexture is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::ValidateDevice(DWORD *pNumPasses)
@@ -3973,7 +3978,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::ValidateDevice(DWORD *pNumPasses)
 
 	Log(warning) << "CDevice9::ValidateDevice is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetConvolutionMonoKernel(UINT width, UINT height, float *rows, float *columns)
@@ -3982,7 +3987,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetConvolutionMonoKernel(UINT width, UINT he
 
 	Log(warning) << "CDevice9::SetConvolutionMonoKernel is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::ComposeRects(IDirect3DSurface9 *pSrc, IDirect3DSurface9 *pDst, IDirect3DVertexBuffer9 *pSrcRectDescs, UINT NumRects, IDirect3DVertexBuffer9 *pDstRectDescs, D3DCOMPOSERECTSOP Operation, int Xoffset, int Yoffset)
@@ -3991,7 +3996,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::ComposeRects(IDirect3DSurface9 *pSrc, IDirec
 
 	Log(warning) << "CDevice9::ComposeRects is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::PresentEx(const RECT *pSourceRect, const RECT *pDestRect, HWND hDestWindowOverride, const RGNDATA *pDirtyRegion, DWORD dwFlags)
@@ -4003,14 +4008,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetGPUThreadPriority(INT *pPriority)
 {
 	(*pPriority) = mPriority;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetGPUThreadPriority(INT Priority)
 {
 	mPriority = Priority;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::WaitForVBlank(UINT iSwapChain)
@@ -4019,7 +4024,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::WaitForVBlank(UINT iSwapChain)
 
 	Log(warning) << "CDevice9::WaitForVBlank is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::CheckResourceResidency(IDirect3DResource9 **pResourceArray, UINT32 NumResources)
@@ -4035,14 +4040,14 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetMaximumFrameLatency(UINT MaxLatency)
 {
 	mMaxLatency = MaxLatency;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetMaximumFrameLatency(UINT *pMaxLatency)
 {
 	(*pMaxLatency) = mMaxLatency;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::CheckDeviceState(HWND hDestinationWindow)
@@ -4051,12 +4056,12 @@ HRESULT STDMETHODCALLTYPE CDevice9::CheckDeviceState(HWND hDestinationWindow)
 
 	Log(warning) << "CDevice9::CheckDeviceState is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreateRenderTargetEx(UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, IDirect3DSurface9 **ppSurface, HANDLE *pSharedHandle, DWORD Usage)
 {
-	HRESULT result = S_OK;
+	HRESULT result = D3D_OK;
 
 	CSurface9* ptr = new CSurface9(this, (CTexture9*)nullptr, Width, Height, Usage, 1, Format, MultiSample, MultisampleQuality, false, Lockable, D3DPOOL_DEFAULT, pSharedHandle);
 
@@ -4067,7 +4072,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateRenderTargetEx(UINT Width, UINT Height
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreateOffscreenPlainSurfaceEx(UINT Width, UINT Height, D3DFORMAT Format, D3DPOOL Pool, IDirect3DSurface9 **ppSurface, HANDLE *pSharedHandle, DWORD Usage)
 {
-	HRESULT result = S_OK;
+	HRESULT result = D3D_OK;
 
 	CSurface9* ptr = new CSurface9(this, (CTexture9*)nullptr, Width, Height, Usage, 1, Format, D3DMULTISAMPLE_NONE, 0, false, false, Pool, pSharedHandle);
 
@@ -4078,7 +4083,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::CreateOffscreenPlainSurfaceEx(UINT Width, UI
 
 HRESULT STDMETHODCALLTYPE CDevice9::CreateDepthStencilSurfaceEx(UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, IDirect3DSurface9 **ppSurface, HANDLE *pSharedHandle, DWORD Usage)
 {
-	HRESULT result = S_OK;
+	HRESULT result = D3D_OK;
 
 	CSurface9* obj = new CSurface9(this, (CTexture9*)nullptr, Width, Height, Usage, 1, Format, MultiSample, MultisampleQuality, Discard, false, D3DPOOL_DEFAULT, pSharedHandle);
 
@@ -4105,7 +4110,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::ResetEx(D3DPRESENT_PARAMETERS *pPresentation
 
 	Log(warning) << "CDevice9::ResetEx does not handle D3DDISPLAYMODEEX!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDevice9::GetDisplayModeEx(UINT iSwapChain, D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation)
@@ -4114,7 +4119,7 @@ HRESULT STDMETHODCALLTYPE CDevice9::GetDisplayModeEx(UINT iSwapChain, D3DDISPLAY
 
 	(*pRotation) = D3DDISPLAYROTATION_IDENTITY;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 RenderContainer::RenderContainer(vk::Device& device, CSurface9* depthStencilSurface, std::array<CSurface9*, 4>& renderTargets)

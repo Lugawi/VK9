@@ -195,21 +195,21 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::QueryInterface(REFIID riid, void  **ppv)
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IDirect3DResource9))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IUnknown))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	return E_NOINTERFACE;
@@ -234,7 +234,7 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::GetBackBuffer(UINT BackBuffer, D3DBACKBUF
 	case D3DBACKBUFFER_TYPE_MONO:
 		(*ppBackBuffer) = mBackBuffer;
 		mBackBuffer->AddRef();
-		return S_OK;
+		return D3D_OK;
 		break;
 	case D3DBACKBUFFER_TYPE_LEFT:
 		Log(warning) << "CSwapChain9::GetBackBuffer left type is not implemented!" << std::endl;
@@ -252,7 +252,7 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::GetDevice(IDirect3DDevice9** ppDevice)
 {
 	mDevice->AddRef();
 	(*ppDevice) = (IDirect3DDevice9*)mDevice;
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CSwapChain9::GetDisplayMode(D3DDISPLAYMODE *pMode)
@@ -262,7 +262,7 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::GetDisplayMode(D3DDISPLAYMODE *pMode)
 	pMode->Width = mPresentationParameters.BackBufferWidth;
 	pMode->RefreshRate = mPresentationParameters.FullScreen_RefreshRateInHz; //Revsit
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CSwapChain9::GetFrontBufferData(IDirect3DSurface9 *pDestSurface)
@@ -276,7 +276,7 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::GetPresentParameters(D3DPRESENT_PARAMETER
 {
 	memcpy(pPresentationParameters, &mPresentationParameters, sizeof(D3DPRESENT_PARAMETERS)); //Revsit
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CSwapChain9::GetRasterStatus(D3DRASTER_STATUS *pRasterStatus)
@@ -285,7 +285,7 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::GetRasterStatus(D3DRASTER_STATUS *pRaster
 
 	Log(warning) << "CSurface9::GetRasterStatus is not implemented!" << std::endl;
 
-	return S_OK; //TODO: Implement.
+	return D3D_OK; //TODO: Implement.
 }
 
 HRESULT STDMETHODCALLTYPE CSwapChain9::Present(const RECT *pSourceRect, const RECT *pDestRect, HWND hDestWindowOverride, const RGNDATA *pDirtyRegion, DWORD dwFlags)
@@ -386,7 +386,7 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::Present(const RECT *pSourceRect, const RE
 	presentInfo.pImageIndices = &mImageIndex;
 	mQueue.presentKHR(&presentInfo); //use present queue.
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CSwapChain9::GetLastPresentCount(UINT *pLastPresentCount)
@@ -395,7 +395,7 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::GetLastPresentCount(UINT *pLastPresentCou
 
 	Log(warning) << "CSurface9::GetLastPresentCount is not implemented!" << std::endl;
 
-	return S_OK; //TODO: Implement.
+	return D3D_OK; //TODO: Implement.
 }
 
 HRESULT STDMETHODCALLTYPE CSwapChain9::GetPresentStats(D3DPRESENTSTATS *pPresentationStatistics)
@@ -404,7 +404,7 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::GetPresentStats(D3DPRESENTSTATS *pPresent
 
 	Log(warning) << "CSurface9::GetPresentStats is not implemented!" << std::endl;
 
-	return S_OK; //TODO: Implement.
+	return D3D_OK; //TODO: Implement.
 }
 
 HRESULT STDMETHODCALLTYPE CSwapChain9::GetDisplayModeEx(D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation)
@@ -416,5 +416,5 @@ HRESULT STDMETHODCALLTYPE CSwapChain9::GetDisplayModeEx(D3DDISPLAYMODEEX *pMode,
 
 	(*pRotation) = D3DDISPLAYROTATION_IDENTITY;
 
-	return S_OK;
+	return D3D_OK;
 }

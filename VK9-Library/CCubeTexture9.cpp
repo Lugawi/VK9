@@ -242,28 +242,28 @@ HRESULT STDMETHODCALLTYPE CCubeTexture9::QueryInterface(REFIID riid,void  **ppv)
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IDirect3DBaseTexture9))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IDirect3DResource9))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IUnknown))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	return E_NOINTERFACE;
@@ -285,7 +285,7 @@ HRESULT STDMETHODCALLTYPE CCubeTexture9::GetDevice(IDirect3DDevice9** ppDevice)
 {
 	mDevice->AddRef(); 
 	(*ppDevice) = (IDirect3DDevice9*)mDevice; 
-	return S_OK; 
+	return D3D_OK; 
 }
 
 HRESULT STDMETHODCALLTYPE CCubeTexture9::FreePrivateData(REFGUID refguid)
@@ -442,7 +442,7 @@ HRESULT STDMETHODCALLTYPE CCubeTexture9::SetAutoGenFilterType(D3DTEXTUREFILTERTY
 {
 	mMipFilter = FilterType; //revisit
 
-	return S_OK;
+	return D3D_OK;
 }
 
 DWORD STDMETHODCALLTYPE CCubeTexture9::SetLOD(DWORD LODNew)
@@ -482,7 +482,7 @@ HRESULT STDMETHODCALLTYPE CCubeTexture9::GetCubeMapSurface(D3DCUBEMAP_FACES Face
 
 	(*ppCubeMapSurface) = surface;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CCubeTexture9::GetLevelDesc(UINT Level, D3DSURFACE_DESC* pDesc)

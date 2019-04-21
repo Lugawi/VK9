@@ -52,21 +52,21 @@ HRESULT STDMETHODCALLTYPE CQuery9::QueryInterface(REFIID riid,void  **ppv)
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IDirect3DResource9))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IUnknown))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	return E_NOINTERFACE;
@@ -88,7 +88,7 @@ HRESULT STDMETHODCALLTYPE CQuery9::GetData(void* pData, DWORD dwSize, DWORD dwGe
 {
 
 
-	return S_OK;
+	return D3D_OK;
 }
 
 
@@ -103,7 +103,7 @@ HRESULT STDMETHODCALLTYPE CQuery9::GetDevice(IDirect3DDevice9** ppDevice)
 { 
 	mDevice->AddRef(); 
 	(*ppDevice) = (IDirect3DDevice9*)mDevice; 
-	return S_OK; 
+	return D3D_OK; 
 }
 
 D3DQUERYTYPE STDMETHODCALLTYPE CQuery9::GetType()
@@ -116,5 +116,5 @@ HRESULT STDMETHODCALLTYPE CQuery9::Issue(DWORD dwIssueFlags)
 {
 
 
-	return S_OK;
+	return D3D_OK;
 }

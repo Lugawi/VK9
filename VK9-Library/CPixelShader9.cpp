@@ -82,21 +82,21 @@ HRESULT STDMETHODCALLTYPE CPixelShader9::QueryInterface(REFIID riid,void  **ppv)
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IDirect3DResource9))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IUnknown))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	return E_NOINTERFACE;
@@ -118,7 +118,7 @@ HRESULT STDMETHODCALLTYPE CPixelShader9::GetDevice(IDirect3DDevice9** ppDevice)
 { 
 	mDevice->AddRef(); 
 	(*ppDevice) = (IDirect3DDevice9*)mDevice; 
-	return S_OK; 
+	return D3D_OK; 
 }
 
 HRESULT STDMETHODCALLTYPE CPixelShader9::FreePrivateData(REFGUID refguid)
@@ -190,12 +190,12 @@ HRESULT STDMETHODCALLTYPE CPixelShader9::GetFunction(void* pData, UINT* pSizeOfD
 
 	if (pData == nullptr)
 	{
-		return S_OK;
+		return D3D_OK;
 	}
 
 	//Log(warn) << "CPixelShader9::GetFunction" << std::endl;
 
 	memcpy(pData, mFunction, mSize);
 
-	return S_OK;
+	return D3D_OK;
 }

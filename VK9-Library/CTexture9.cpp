@@ -295,28 +295,28 @@ HRESULT STDMETHODCALLTYPE CTexture9::QueryInterface(REFIID riid, void  **ppv)
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IDirect3DBaseTexture9))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IDirect3DResource9))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IUnknown))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	return E_NOINTERFACE;
@@ -338,7 +338,7 @@ HRESULT STDMETHODCALLTYPE CTexture9::GetDevice(IDirect3DDevice9** ppDevice)
 {
 	mDevice->AddRef();
 	(*ppDevice) = (IDirect3DDevice9*)mDevice;
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CTexture9::FreePrivateData(REFGUID refguid)
@@ -495,7 +495,7 @@ HRESULT STDMETHODCALLTYPE CTexture9::SetAutoGenFilterType(D3DTEXTUREFILTERTYPE F
 {
 	mMipFilter = FilterType; //revisit
 
-	return S_OK;
+	return D3D_OK;
 }
 
 DWORD STDMETHODCALLTYPE CTexture9::SetLOD(DWORD LODNew)
@@ -524,7 +524,7 @@ HRESULT STDMETHODCALLTYPE CTexture9::AddDirtyRect(const RECT* pDirtyRect)
 
 	Log(warning) << "CTexture9::AddDirtyRect is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CTexture9::GetLevelDesc(UINT Level, D3DSURFACE_DESC* pDesc)
@@ -544,7 +544,7 @@ HRESULT STDMETHODCALLTYPE CTexture9::GetSurfaceLevel(UINT Level, IDirect3DSurfac
 
 	(*ppSurfaceLevel) = surface;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CTexture9::LockRect(UINT Level, D3DLOCKED_RECT* pLockedRect, const RECT* pRect, DWORD Flags)

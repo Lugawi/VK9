@@ -116,21 +116,21 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::QueryInterface(REFIID riid, void  **pp
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IDirect3DResource9))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IUnknown))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	return E_NOINTERFACE;
@@ -152,7 +152,7 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::GetDevice(IDirect3DDevice9** ppDevice)
 {
 	mDevice->AddRef();
 	(*ppDevice) = (IDirect3DDevice9*)mDevice;
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CVertexBuffer9::FreePrivateData(REFGUID refguid)
@@ -229,7 +229,7 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::GetDesc(D3DVERTEXBUFFER_DESC* pDesc)
 	pDesc->Size = mLength;
 	pDesc->FVF = mFVF;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CVertexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLock, VOID** ppbData, DWORD Flags)
@@ -274,7 +274,7 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLoc
 
 	(*ppbData) = mDevice->mDevice->mapMemory(mCurrentStagingBufferMemory, OffsetToLock, VK_WHOLE_SIZE);
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CVertexBuffer9::Unlock()
@@ -290,5 +290,5 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::Unlock()
 
 	InterlockedDecrement(&mLockCount);
 
-	return S_OK;
+	return D3D_OK;
 }

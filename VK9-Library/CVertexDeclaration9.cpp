@@ -416,21 +416,21 @@ HRESULT STDMETHODCALLTYPE CVertexDeclaration9::QueryInterface(REFIID riid,void  
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IDirect3DResource9))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IUnknown))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	return E_NOINTERFACE;
@@ -468,5 +468,5 @@ HRESULT STDMETHODCALLTYPE CVertexDeclaration9::GetDevice(IDirect3DDevice9** ppDe
 { 
 	mDevice->AddRef(); 
 	(*ppDevice) = (IDirect3DDevice9*)mDevice; 
-	return S_OK; 
+	return D3D_OK; 
 }

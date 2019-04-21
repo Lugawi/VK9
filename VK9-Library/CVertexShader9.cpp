@@ -84,21 +84,21 @@ HRESULT STDMETHODCALLTYPE CVertexShader9::QueryInterface(REFIID riid,void  **ppv
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IDirect3DResource9))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IUnknown))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	return E_NOINTERFACE;
@@ -120,7 +120,7 @@ HRESULT STDMETHODCALLTYPE CVertexShader9::GetDevice(IDirect3DDevice9** ppDevice)
 { 
 	mDevice->AddRef(); 
 	(*ppDevice) = (IDirect3DDevice9*)mDevice; 
-	return S_OK; 
+	return D3D_OK; 
 }
 
 HRESULT STDMETHODCALLTYPE CVertexShader9::FreePrivateData(REFGUID refguid)
@@ -197,12 +197,12 @@ HRESULT STDMETHODCALLTYPE CVertexShader9::GetFunction(void* pData, UINT* pSizeOf
 
 	if (pData==nullptr)
 	{
-		return S_OK;
+		return D3D_OK;
 	}
 
 	//Log(warn) << "CVertexShader9::GetFunction" << std::endl;
 
 	memcpy(pData, mFunction, mSize);
 
-	return S_OK;
+	return D3D_OK;
 }

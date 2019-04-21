@@ -565,14 +565,14 @@ HRESULT STDMETHODCALLTYPE C9::QueryInterface(REFIID riid, void  **ppv)
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IUnknown))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	(*ppv) = nullptr;
@@ -1233,7 +1233,7 @@ HRESULT STDMETHODCALLTYPE C9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, 
 		return D3DERR_INVALIDCALL;
 	}
 
-	HRESULT result = S_OK;
+	HRESULT result = D3D_OK;
 
 	CDevice9* obj = new CDevice9(this, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, nullptr);
 
@@ -1301,7 +1301,7 @@ HRESULT STDMETHODCALLTYPE C9::GetAdapterDisplayMode(UINT Adapter, D3DDISPLAYMODE
 		Log(info) << "C9::GetAdapterDisplayMode Unknown pixel bit format : " << monitor.PixelBits << std::endl; //Revisit
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE C9::GetAdapterIdentifier(UINT Adapter, DWORD Flags, D3DADAPTER_IDENTIFIER9 *pIdentifier)
@@ -1340,7 +1340,7 @@ HRESULT STDMETHODCALLTYPE C9::GetAdapterIdentifier(UINT Adapter, DWORD Flags, D3
 	CustomGUID guid = { 0xD7B71EE2 , 0x249F , 0x11CF , 0x3275 , 0x17B57BC2D835 };
 	pIdentifier->DeviceIdentifier = bit_cast<GUID>(guid);
 
-	return S_OK;
+	return D3D_OK;
 }
 
 UINT STDMETHODCALLTYPE C9::GetAdapterModeCount(UINT Adapter, D3DFORMAT Format)
@@ -1741,7 +1741,7 @@ HRESULT STDMETHODCALLTYPE C9::GetDeviceCaps(UINT Adapter, D3DDEVTYPE DeviceType,
 	pCaps->MaxVShaderInstructionsExecuted = std::max((DWORD)65535, pCaps->MaxVertexShader30InstructionSlots * 32);
 	pCaps->MaxPShaderInstructionsExecuted = std::max((DWORD)65535, pCaps->MaxPixelShader30InstructionSlots * 32);
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE C9::RegisterSoftwareDevice(void *pInitializeFunction)
@@ -1750,7 +1750,7 @@ HRESULT STDMETHODCALLTYPE C9::RegisterSoftwareDevice(void *pInitializeFunction)
 
 	Log(warning) << "C9::RegisterSoftwareDevice is not implemented!" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 UINT STDMETHODCALLTYPE C9::GetAdapterModeCountEx(UINT Adapter, const D3DDISPLAYMODEFILTER *pFilter)
@@ -1821,14 +1821,14 @@ HRESULT STDMETHODCALLTYPE C9::GetAdapterDisplayModeEx(UINT Adapter, D3DDISPLAYMO
 		Log(info) << "C9::GetAdapterDisplayModeEx Unknown pixel bit format : " << monitor.PixelBits << std::endl; //Revisit
 	}
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE C9::CreateDeviceEx(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, D3DDISPLAYMODEEX *pFullscreenDisplayMode, IDirect3DDevice9Ex **ppReturnedDeviceInterface)
 {
 	Log(info) << "C9::CreateDeviceEx Adapter: " << Adapter << std::endl;
 
-	HRESULT result = S_OK;
+	HRESULT result = D3D_OK;
 
 	CDevice9* obj = new CDevice9(this, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, pFullscreenDisplayMode);
 
@@ -1850,5 +1850,5 @@ HRESULT STDMETHODCALLTYPE C9::GetAdapterLUID(UINT Adapter, LUID *pLUID)
 
 	(*pLUID) = monitor.LUID;
 
-	return S_OK;
+	return D3D_OK;
 }

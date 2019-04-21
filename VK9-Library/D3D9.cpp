@@ -38,7 +38,7 @@ HRESULT WINAPI Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** out)
 
 	(*out) = (IDirect3D9Ex*)instance;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 int WINAPI D3DPERF_BeginEvent(DWORD col, LPCWSTR wszName)

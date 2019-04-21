@@ -94,14 +94,14 @@ HRESULT STDMETHODCALLTYPE CVolume9::QueryInterface(REFIID riid, void  **ppv)
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	if (IsEqualGUID(riid, IID_IUnknown))
 	{
 		(*ppv) = this;
 		this->AddRef();
-		return S_OK;
+		return D3D_OK;
 	}
 
 	return E_NOINTERFACE;
@@ -129,7 +129,7 @@ HRESULT STDMETHODCALLTYPE CVolume9::GetDevice(IDirect3DDevice9** ppDevice)
 {
 	mDevice->AddRef();
 	(*ppDevice) = (IDirect3DDevice9*)mDevice;
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CVolume9::SetPrivateData(REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags)
@@ -179,7 +179,7 @@ HRESULT STDMETHODCALLTYPE CVolume9::GetDesc(D3DVOLUME_DESC *pDesc)
 	pDesc->Height = this->mHeight;
 	pDesc->Depth = this->mDepth;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CVolume9::LockBox(D3DLOCKED_BOX* pLockedVolume, CONST D3DBOX* pBox, DWORD Flags)
@@ -189,7 +189,7 @@ HRESULT STDMETHODCALLTYPE CVolume9::LockBox(D3DLOCKED_BOX* pLockedVolume, CONST 
 
 	Log(info) << "CVolume9::LockBox" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CVolume9::UnlockBox()
@@ -200,5 +200,5 @@ HRESULT STDMETHODCALLTYPE CVolume9::UnlockBox()
 
 	Log(info) << "CVolume9::UnlockBox" << std::endl;
 
-	return S_OK;
+	return D3D_OK;
 }
