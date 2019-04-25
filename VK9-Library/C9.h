@@ -58,7 +58,7 @@ VKAPI_ATTR void VKAPI_CALL vkDebugReportMessageEXT(
 	VkDebugReportFlagsEXT                       flags,
 	VkDebugReportObjectTypeEXT                  objectType,
 	uint64_t                                    object,
-	size_t                                      location,
+	int32_t                                      location,
 	int32_t                                     messageCode,
 	const char*                                 pLayerPrefix,
 	const char*                                 pMessage);
@@ -115,11 +115,11 @@ public:
 	vk::UniqueInstance mInstance;
 	vk::UniqueDebugReportCallbackEXT mCallback;
 	std::vector<vk::PhysicalDevice> mPhysicalDevices;
-	size_t mPhysicalDeviceIndex;
+	int32_t mPhysicalDeviceIndex;
 	vk::PhysicalDeviceProperties mPhysicalDeviceProperties;
 	vk::PhysicalDeviceMemoryProperties mPhysicalDeviceMemoryProperties;
 	std::vector<vk::QueueFamilyProperties> mQueueFamilyProperties;
-	size_t mGraphicsQueueFamilyIndex;
+	int32_t mGraphicsQueueFamilyIndex;
 
 	//RenderDoc
 	HMODULE mRenderDocDll = nullptr;

@@ -37,11 +37,8 @@ CVertexBuffer9::CVertexBuffer9(CDevice9* device, UINT Length, DWORD Usage, DWORD
 	AddStagingBuffer();
 	AddVertexBuffer();
 
-	mCurrentStagingBuffer = mStagingBuffers[0].get();
-	mCurrentStagingBufferMemory = mStagingBufferMemories[0].get();
-
-	mCurrentVertexBuffer = mVertexBuffers[0].get();
-	mCurrentVertexBufferMemory = mVertexBufferMemories[0].get();
+	mCurrentVertexBuffer = mVertexBuffers[mDevice->mFrameIndex][0].get();
+	mCurrentVertexBufferMemory = mVertexBufferMemories[mDevice->mFrameIndex][0].get();
 }
 
 CVertexBuffer9::~CVertexBuffer9()
@@ -70,34 +67,34 @@ void CVertexBuffer9::AddStagingBuffer()
 {
 	auto const bufferInfo = vk::BufferCreateInfo().setSize(mLength + 192 + 1024).setUsage(vk::BufferUsageFlagBits::eTransferSrc);
 
-	mStagingBuffers.push_back(mDevice->mDevice->createBufferUnique(bufferInfo));
+	mStagingBuffer = mDevice->mDevice->createBufferUnique(bufferInfo);
 
 	vk::MemoryRequirements mem_reqs;
-	mDevice->mDevice->getBufferMemoryRequirements(mStagingBuffers[mStagingBuffers.size() - 1].get(), &mem_reqs);
+	mDevice->mDevice->getBufferMemoryRequirements(mStagingBuffer.get(), &mem_reqs);
 
 	auto mem_alloc = vk::MemoryAllocateInfo().setAllocationSize(mem_reqs.size).setMemoryTypeIndex(0);
 	mDevice->FindMemoryTypeFromProperties(mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, &mem_alloc.memoryTypeIndex);
 
-	mStagingBufferMemories.push_back(mDevice->mDevice->allocateMemoryUnique(mem_alloc));
+	mStagingBufferMemory = mDevice->mDevice->allocateMemoryUnique(mem_alloc);
 
-	mDevice->mDevice->bindBufferMemory(mStagingBuffers[mStagingBuffers.size() - 1].get(), mStagingBufferMemories[mStagingBufferMemories.size() - 1].get(), 0);
+	mDevice->mDevice->bindBufferMemory(mStagingBuffer.get(), mStagingBufferMemory.get(), 0);
 }
 
 void CVertexBuffer9::AddVertexBuffer()
 {
 	auto const bufferInfo = vk::BufferCreateInfo().setSize(mLength + 192 + 1024).setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst);
 
-	mVertexBuffers.push_back(mDevice->mDevice->createBufferUnique(bufferInfo));
+	mVertexBuffers[mDevice->mFrameIndex].push_back(mDevice->mDevice->createBufferUnique(bufferInfo));
 
 	vk::MemoryRequirements mem_reqs;
-	mDevice->mDevice->getBufferMemoryRequirements(mVertexBuffers[mVertexBuffers.size() - 1].get(), &mem_reqs);
+	mDevice->mDevice->getBufferMemoryRequirements(mVertexBuffers[mDevice->mFrameIndex][mVertexBuffers[mDevice->mFrameIndex].size() - 1].get(), &mem_reqs);
 
 	auto mem_alloc = vk::MemoryAllocateInfo().setAllocationSize(mem_reqs.size).setMemoryTypeIndex(0);
 	mDevice->FindMemoryTypeFromProperties(mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, &mem_alloc.memoryTypeIndex);
 
-	mVertexBufferMemories.push_back(mDevice->mDevice->allocateMemoryUnique(mem_alloc));
+	mVertexBufferMemories[mDevice->mFrameIndex].push_back(mDevice->mDevice->allocateMemoryUnique(mem_alloc));
 
-	mDevice->mDevice->bindBufferMemory(mVertexBuffers[mVertexBuffers.size() - 1].get(), mVertexBufferMemories[mVertexBufferMemories.size() - 1].get(), 0);
+	mDevice->mDevice->bindBufferMemory(mVertexBuffers[mDevice->mFrameIndex][mVertexBuffers[mDevice->mFrameIndex].size() - 1].get(), mVertexBufferMemories[mDevice->mFrameIndex][mVertexBufferMemories[mDevice->mFrameIndex].size() - 1].get(), 0);
 }
 
 ULONG STDMETHODCALLTYPE CVertexBuffer9::AddRef(void)
@@ -260,33 +257,31 @@ HRESULT STDMETHODCALLTYPE CVertexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLoc
 		}
 	}
 
-	if (mIndex > mVertexBuffers.size() - 1)
+	if (mIndex > (int32_t)mVertexBuffers[mDevice->mFrameIndex].size() - 1)
 	{
-		//AddStagingBuffer();
 		AddVertexBuffer();
 	}
 
-	mCurrentStagingBuffer = mStagingBuffers[0].get(); //mIndex
-	mCurrentStagingBufferMemory = mStagingBufferMemories[0].get(); //mIndex
+	mCurrentVertexBuffer = mVertexBuffers[mDevice->mFrameIndex][mIndex].get();
+	mCurrentVertexBufferMemory = mVertexBufferMemories[mDevice->mFrameIndex][mIndex].get();
 
-	mCurrentVertexBuffer = mVertexBuffers[mIndex].get();
-	mCurrentVertexBufferMemory = mVertexBufferMemories[mIndex].get();
-
-	(*ppbData) = mDevice->mDevice->mapMemory(mCurrentStagingBufferMemory, OffsetToLock, VK_WHOLE_SIZE);
+	(*ppbData) = mDevice->mDevice->mapMemory(mStagingBufferMemory.get(), OffsetToLock, VK_WHOLE_SIZE);
 
 	return D3D_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CVertexBuffer9::Unlock()
 {
-	mDevice->mDevice->unmapMemory(mCurrentStagingBufferMemory);
+	mDevice->mDevice->unmapMemory(mStagingBufferMemory.get());
 
 	mDevice->BeginRecordingUtilityCommands();
 	{
 		auto const region = vk::BufferCopy().setSize(mLength + 192 + 1024);
-		mDevice->mCurrentUtilityCommandBuffer.copyBuffer(mCurrentStagingBuffer, mCurrentVertexBuffer, 1, &region);
+		mDevice->mCurrentUtilityCommandBuffer.copyBuffer(mStagingBuffer.get(), mCurrentVertexBuffer, 1, &region);
 	}
 	mDevice->StopRecordingUtilityCommands();
+
+	//mDevice->mDevice->waitIdle();
 
 	InterlockedDecrement(&mLockCount);
 

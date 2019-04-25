@@ -245,7 +245,7 @@ private:
 	std::vector<uint32_t> mFunctionDefinitionInstructions;
 
 	std::stack<uint32_t> mFalseLabels;
-	size_t mFalseLabelCount = 0;
+	int32_t mFalseLabelCount = 0;
 	std::stack<uint32_t> mEndIfLabels;
 
 	std::stack<LoopIds> mLoopIds;

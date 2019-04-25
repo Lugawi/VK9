@@ -58,7 +58,7 @@ public:
 	BOOL mHasBlendIndices = 0;
 	BOOL mHasNormal = 0;
 	BOOL mHasPSize = 0;
-	size_t mTextureCount = 0;
+	int32_t mTextureCount = 0;
 	BOOL mHasTangent = 0;
 	BOOL mHasBinormal = 0;
 	BOOL mHasTessfactor = 0;

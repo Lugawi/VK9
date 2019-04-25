@@ -177,7 +177,7 @@ vk::Format ConvertFormat(D3DFORMAT format) noexcept
 	}
 }
 
-size_t SizeOf(vk::Format format) noexcept
+int32_t SizeOf(vk::Format format) noexcept
 {
 	switch (format)
 	{
@@ -1019,7 +1019,7 @@ HRESULT STDMETHODCALLTYPE CSurface9::LockRect(D3DLOCKED_RECT* pLockedRect, const
 		mData = mDevice->mDevice->mapMemory(mStagingBufferMemory.get(), (vk::DeviceSize)0, VK_WHOLE_SIZE);
 	}
 
-	size_t formatSize = SizeOf(ConvertFormat(mFormat));
+	int32_t formatSize = SizeOf(ConvertFormat(mFormat));
 
 	pLockedRect->Pitch = mWidth * formatSize;
 

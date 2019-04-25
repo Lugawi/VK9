@@ -177,7 +177,7 @@ VKAPI_ATTR void VKAPI_CALL vkDebugReportMessageEXT(
 	VkDebugReportFlagsEXT                       flags,
 	VkDebugReportObjectTypeEXT                  objectType,
 	uint64_t                                    object,
-	size_t                                      location,
+	int32_t                                      location,
 	int32_t                                     messageCode,
 	const char*                                 pLayerPrefix,
 	const char*                                 pMessage)
@@ -420,14 +420,14 @@ C9::C9()
 	mGameName = fullPath;
 	
 	//Remove the path from the name
-	const size_t last_slash_idx = mGameName.find_last_of("\\/");
+	const int32_t last_slash_idx = mGameName.find_last_of("\\/");
 	if (std::string::npos != last_slash_idx)
 	{
 		mGameName.erase(0, last_slash_idx + 1);
 	}
 
 	//Remove extension from the name
-	const size_t period_idx = mGameName.rfind('.');
+	const int32_t period_idx = mGameName.rfind('.');
 	if (std::string::npos != period_idx)
 	{
 		mGameName.erase(period_idx);
@@ -467,12 +467,12 @@ C9::C9()
 
 	//Count VRAM to try to to guess the most powerful GPU.
 	vk::DeviceSize largestSize = 0;
-	for (size_t i = 0; i < mPhysicalDevices.size(); i++)
+	for (int32_t i = 0; i < (int32_t)mPhysicalDevices.size(); i++)
 	{
 		vk::PhysicalDeviceMemoryProperties physicalDeviceMemoryProperties;
 		mPhysicalDevices[mPhysicalDeviceIndex].getMemoryProperties(&physicalDeviceMemoryProperties);
 		vk::DeviceSize size = 0;
-		for (size_t j = 0; j < physicalDeviceMemoryProperties.memoryHeapCount; j++)
+		for (int32_t j = 0; j < (int32_t)physicalDeviceMemoryProperties.memoryHeapCount; j++)
 		{
 			size += physicalDeviceMemoryProperties.memoryHeaps[j].size;
 		}
@@ -1270,7 +1270,7 @@ HRESULT STDMETHODCALLTYPE C9::EnumAdapterModes(UINT Adapter, D3DFORMAT Format, U
 
 UINT STDMETHODCALLTYPE C9::GetAdapterCount()
 {
-	size_t monitorCount = mMonitors.size();
+	int32_t monitorCount = mMonitors.size();
 
 	Log(info) << "C9::GetAdapterCount MonitorCount: " << monitorCount << std::endl;
 

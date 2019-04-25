@@ -33,7 +33,7 @@ public:
 	~CQuery9();
 		
 	void* mData = nullptr;
-	size_t mSize = 4;
+	int32_t mSize = 4;
 
 	CDevice9* mDevice;
 	D3DQUERYTYPE mType;

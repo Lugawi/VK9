@@ -24,7 +24,7 @@ template <class TargetType, class SourceType>
 inline TargetType bit_cast(const SourceType& source) noexcept
 {
 	static_assert(!std::is_same<TargetType, SourceType>::value, "You've made a mistake, you don't need to bit cast if the types are the same.");
-	constexpr size_t size = std::min(sizeof(TargetType), sizeof(SourceType));
+	constexpr int32_t size = std::min(sizeof(TargetType), sizeof(SourceType));
 	TargetType returnValue;
 	memcpy(&returnValue, &source, size);
 	return returnValue;

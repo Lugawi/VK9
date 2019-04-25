@@ -36,7 +36,7 @@ misrepresented as being the original software.
 #include <cerrno>
 #include <chrono>
 #include <cstdint>
-#include <cstdlib>		// For malloc/free/abort & size_t
+#include <cstdlib>		// For malloc/free/abort & int32_t
 #include <cstring>
 #include <ctime>
 #include <iostream>

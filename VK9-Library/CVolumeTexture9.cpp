@@ -55,7 +55,7 @@ CVolumeTexture9::CVolumeTexture9(CDevice9* device, UINT Width, UINT Height, UINT
 
 	mVolumes.reserve(mLevels);
 	UINT width = mWidth, height = mHeight, depth = mDepth;
-	for (size_t i = 0; i < mLevels; i++)
+	for (int32_t i = 0; i < (int32_t)mLevels; i++)
 	{
 		CVolume9* ptr = new CVolume9(device, this, width, height, depth, mUsage, mFormat, mPool, mSharedHandle);
 
@@ -73,7 +73,7 @@ CVolumeTexture9::~CVolumeTexture9()
 {
 	Log(info) << "CVolumeTexture9::~CVolumeTexture9" << std::endl;
 
-	for (size_t i = 0; i < mVolumes.size(); i++)
+	for (int32_t i = 0; i < (int32_t)mVolumes.size(); i++)
 	{
 		mVolumes[i]->Release();
 	}
@@ -287,7 +287,7 @@ HRESULT STDMETHODCALLTYPE CVolumeTexture9::UnlockBox(UINT Level)
 
 void CVolumeTexture9::Flush()
 {
-	for (size_t i = 0; i < mVolumes.size(); i++)
+	for (int32_t i = 0; i < (int32_t)mVolumes.size(); i++)
 	{
 		mVolumes[i]->Flush();
 	}

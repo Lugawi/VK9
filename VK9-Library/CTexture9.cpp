@@ -57,7 +57,7 @@ CTexture9::CTexture9(CDevice9* device, UINT Width, UINT Height, UINT Levels, DWO
 
 	mSurfaces.reserve(mLevels);
 	UINT width = mWidth, height = mHeight;
-	for (size_t i = 0; i < mLevels; i++)
+	for (int32_t i = 0; i < (int32_t)mLevels; i++)
 	{
 		CSurface9* ptr = new CSurface9(mDevice, this, width, height, mUsage, 1 /*Levels*/, mFormat, D3DMULTISAMPLE_NONE, 0 /*MultisampleQuality*/, false /*Discard*/, false /*Lockable*/, mPool, mSharedHandle);
 		ptr->mMipIndex = i;
@@ -155,7 +155,7 @@ CTexture9::~CTexture9()
 {
 	Log(info) << "CTexture9::~CTexture9" << std::endl;
 
-	for (size_t i = 0; i < mSurfaces.size(); i++)
+	for (int32_t i = 0; i < (int32_t)mSurfaces.size(); i++)
 	{
 		mSurfaces[i]->Release();
 	}

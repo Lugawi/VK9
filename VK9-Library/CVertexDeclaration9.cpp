@@ -366,7 +366,7 @@ CVertexDeclaration9::CVertexDeclaration9(CDevice9* device, DWORD fvf)
 		offset += sizeof(uint32_t);
 	}
 
-	for (size_t j = 0; j < mTextureCount; j++)
+	for (int32_t j = 0; j < mTextureCount; j++)
 	{
 		mVertexInputAttributeDescription.push_back(vk::VertexInputAttributeDescription(
 			UsageOffsets[D3DDECLUSAGE_TEXCOORD] + j,
@@ -454,7 +454,7 @@ HRESULT STDMETHODCALLTYPE CVertexDeclaration9::GetDeclaration(D3DVERTEXELEMENT9*
 
 	if (pDecl!=nullptr) //If null only return the count so the caller can use it to construct an array of the correct size.
 	{
-		for (size_t i = 0; i < mVertexElements.size(); i++)
+		for (int32_t i = 0; i < (int32_t)mVertexElements.size(); i++)
 		{
 			pDecl[i] = mVertexElements[i];
 		}

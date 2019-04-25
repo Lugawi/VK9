@@ -41,7 +41,7 @@ public:
 
 	//Creation Parameters
 	DWORD* mFunction = nullptr;
-	size_t mSize = 0;
+	int32_t mSize = 0;
 
 	//Misc
 	vk::UniqueShaderModule mShader;

@@ -40,17 +40,14 @@ public:
 	ULONG PrivateRelease(void);
 
 	//Buffers (Staging and Vertex)
-	std::vector<vk::UniqueBuffer> mStagingBuffers;
-	std::vector<vk::UniqueDeviceMemory> mStagingBufferMemories;
+	std::array<std::vector<vk::UniqueBuffer>, 2> mVertexBuffers;
+	std::array<std::vector<vk::UniqueDeviceMemory>,2> mVertexBufferMemories;
 
-	std::vector<vk::UniqueBuffer> mVertexBuffers;
-	std::vector<vk::UniqueDeviceMemory> mVertexBufferMemories;
+	int32_t mLastFrameIndex = 0;
+	int32_t mIndex = 0;
 
-	size_t mLastFrameIndex = 0;
-	size_t mIndex = 0;
-
-	vk::Buffer mCurrentStagingBuffer;	
-	vk::DeviceMemory mCurrentStagingBufferMemory;
+	vk::UniqueBuffer mStagingBuffer;
+	vk::UniqueDeviceMemory mStagingBufferMemory;
 
 	vk::Buffer mCurrentVertexBuffer;
 	vk::DeviceMemory mCurrentVertexBufferMemory;

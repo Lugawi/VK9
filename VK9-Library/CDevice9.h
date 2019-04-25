@@ -45,7 +45,7 @@ class SamplerContainer;
 template <typename T1>
 struct Pair
 {
-	size_t first=0;
+	int32_t first=0;
 	T1 second;
 };
 
@@ -112,7 +112,7 @@ public:
 
 	std::array<std::vector<vk::UniquePipeline>, 3> mPipelines;
 	std::array<std::vector<vk::DescriptorSet>, 3> mDescriptorSets;
-	size_t mDescriptorSetIndex=0;
+	int32_t mDescriptorSetIndex=0;
 	vk::DescriptorSet mLastDescriptorSet;
 
 	vk::DescriptorBufferInfo mDescriptorBufferInfo[9];
@@ -207,7 +207,7 @@ public:
 
 	bool FindMemoryTypeFromProperties(uint32_t typeBits, vk::MemoryPropertyFlags requirements_mask, uint32_t* typeIndex);
 
-	template < typename T, size_t arraySize>
+	template < typename T, int32_t arraySize>
 	vk::UniqueShaderModule LoadShaderFromConst(const T(&data)[arraySize])
 	{
 		const vk::ShaderModuleCreateInfo moduleCreateInfo(vk::ShaderModuleCreateFlags(), arraySize * sizeof(T), (const uint32_t*)data);

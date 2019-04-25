@@ -58,7 +58,7 @@ CSwapChain9::CSwapChain9(CDevice9* Device, D3DPRESENT_PARAMETERS *pPresentationP
 	if (mPresentQueueFamilyIndex == mDevice->mC9->mQueueFamilyProperties.size())
 	{
 		//No present support here move along.
-		for (size_t i = 0; i < mDevice->mC9->mQueueFamilyProperties.size(); i++)
+		for (int32_t i = 0; i < (int32_t)mDevice->mC9->mQueueFamilyProperties.size(); i++)
 		{
 			if ((mDevice->mC9->mQueueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics) && mDevice->mC9->mPhysicalDevices[mDevice->mC9->mPhysicalDeviceIndex].getSurfaceSupportKHR(static_cast<uint32_t>(i), mSurface.get()))
 			{
@@ -69,7 +69,7 @@ CSwapChain9::CSwapChain9(CDevice9* Device, D3DPRESENT_PARAMETERS *pPresentationP
 		if (mPresentQueueFamilyIndex == mDevice->mC9->mQueueFamilyProperties.size())
 		{
 			//Couldn't find graphics and present so we'll just grab two different queue families.
-			for (size_t i = 0; i < mDevice->mC9->mQueueFamilyProperties.size(); i++)
+			for (int32_t i = 0; i < (int32_t)mDevice->mC9->mQueueFamilyProperties.size(); i++)
 			{
 				if (mDevice->mC9->mPhysicalDevices[mDevice->mC9->mPhysicalDeviceIndex].getSurfaceSupportKHR(static_cast<uint32_t>(i), mSurface.get()))
 				{

@@ -29,7 +29,7 @@ class CTexture9;
 class CCubeTexture9;
 
 vk::Format ConvertFormat(D3DFORMAT format) noexcept;
-size_t SizeOf(vk::Format format) noexcept;
+int32_t SizeOf(vk::Format format) noexcept;
 
 class CSurface9 : public IDirect3DSurface9
 {

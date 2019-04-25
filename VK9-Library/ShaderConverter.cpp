@@ -221,7 +221,7 @@ uint32_t Pack(uint32_t wordCount, spv::Op opcode)
 void PutStringInVector(std::string& text, std::vector<uint32_t>& words)
 {
 	const char* value = text.c_str();
-	for (size_t i = 0; i < text.length(); i += 4)
+	for (int32_t i = 0; i < (int32_t)text.length(); i += 4)
 	{
 		uint32_t difference = text.length() - (i);
 
@@ -665,7 +665,7 @@ uint32_t ShaderConverter::GetSpirVTypeId(TypeDescription& registerType, uint32_t
 		mTypeInstructions.push_back(returnTypeId); //Return Type (Id)
 
 		//Right now there is no comparison on arguments so we are assuming that functions with the same return type are the same. This will need to be expanded later when we're using functions other than the default entry point.
-		for (size_t i = 0; i < registerType.Arguments.size(); i++)
+		for (int32_t i = 0; i < (int32_t)registerType.Arguments.size(); i++)
 		{
 			mTypeInstructions.push_back(registerType.Arguments[i]); //Argument Id
 		}
@@ -2014,7 +2014,7 @@ void ShaderConverter::GenerateConstantIndices()
 	intType.PrimaryType = spv::OpTypeInt;
 	uint32_t intTypeId = GetSpirVTypeId(intType);
 
-	for (size_t i = 0; i < 17; i++)
+	for (int32_t i = 0; i < 17; i++)
 	{
 		mConstantIntegerIds[i] = GetNextId();
 		mIdTypePairs[mConstantIntegerIds[i]] = intType;
@@ -2312,7 +2312,7 @@ void ShaderConverter::GenerateConstantBlock()
 
 	uint32_t memberIndex = 0;
 	uint32_t memberOffset = 0;
-	for (size_t i = 0; i < mNumberOfIntegerVectorsInUbo; i++)
+	for (int32_t i = 0; i < (int32_t)mNumberOfIntegerVectorsInUbo; i++)
 	{
 		mTypeInstructions.push_back(integerVectorTypeId);
 
@@ -2326,7 +2326,7 @@ void ShaderConverter::GenerateConstantBlock()
 		memberOffset += (sizeof(int) * 4);
 	}
 
-	for (size_t i = 0; i < mNumberOfBooleansInUbo; i++)
+	for (int32_t i = 0; i < (int32_t)mNumberOfBooleansInUbo; i++)
 	{
 		mTypeInstructions.push_back(integerTypeId);
 
@@ -2340,7 +2340,7 @@ void ShaderConverter::GenerateConstantBlock()
 		memberOffset += sizeof(int); //using int to avoid extr alignment troubles.
 	}
 
-	for (size_t i = 0; i < mNumberOfFloatVectorsInUbo; i++)
+	for (int32_t i = 0; i < (int32_t)mNumberOfFloatVectorsInUbo; i++)
 	{
 		mTypeInstructions.push_back(floatVectorTypeId);
 
@@ -2409,7 +2409,7 @@ void ShaderConverter::GenerateRenderStateBlock()
 
 	uint32_t memberIndex = 0;
 	uint32_t memberOffset = 0;
-	for (size_t i = 0; i < numberofMembers; i++)
+	for (int32_t i = 0; i < numberofMembers; i++)
 	{
 		//if (i < 18)
 		//{
@@ -2543,9 +2543,9 @@ void ShaderConverter::GenerateTextureStageBlock()
 
 	uint32_t memberIndex = 0;
 	uint32_t memberOffset = 0;
-	for (size_t i = 0; i < numberofMembers; i++)
+	for (int32_t i = 0; i < numberofMembers; i++)
 	{
-		size_t offset = 0;
+		int32_t offset = 0;
 
 		//if (i < 1)
 		//{
@@ -3911,7 +3911,7 @@ void ShaderConverter::Process_DEF()
 	_D3DSHADER_PARAM_REGISTER_TYPE registerType = GetRegisterType(token.i);
 	DestinationParameterToken  destinationParameterToken = token.DestinationParameterToken;
 
-	for (size_t i = 0; i < 4; i++)
+	for (int32_t i = 0; i < 4; i++)
 	{
 		literalValue = GetNextToken().i;
 		//mShaderConstantSlots.FloatConstants[token.DestinationParameterToken.RegisterNumber * 4 + i] = bit_cast(literalValue);
@@ -3927,7 +3927,7 @@ void ShaderConverter::Process_DEFI()
 	_D3DSHADER_PARAM_REGISTER_TYPE registerType = GetRegisterType(token.i);
 	DestinationParameterToken  destinationParameterToken = token.DestinationParameterToken;
 
-	for (size_t i = 0; i < 4; i++)
+	for (int32_t i = 0; i < 4; i++)
 	{
 		literalValue = GetNextToken().i;
 		//mShaderConstantSlots.IntegerConstants[token.DestinationParameterToken.RegisterNumber * 4 + i] = literalValue;

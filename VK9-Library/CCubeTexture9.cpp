@@ -41,12 +41,12 @@ CCubeTexture9::CCubeTexture9(CDevice9* device, UINT EdgeLength, UINT Levels, DWO
 		mLevels = (UINT)std::log2(mEdgeLength) + 1;
 	}
 
-	for (size_t i = 0; i < 6; i++)
+	for (int32_t i = 0; i < 6; i++)
 	{
 		UINT width = mEdgeLength;
 		UINT height = mEdgeLength;
 		std::vector<CSurface9*> surfaces;
-		for (size_t j = 0; j < mLevels; j++)
+		for (int32_t j = 0; j < (int32_t)mLevels; j++)
 		{
 			CSurface9* ptr = new CSurface9(mDevice, this, width, height, mUsage, 1 /*Levels*/, mFormat, D3DMULTISAMPLE_NONE, 0 /*MultisampleQuality*/, false /*Discard*/, false /*Lockable*/, mPool, mSharedHandle);
 
@@ -139,9 +139,9 @@ CCubeTexture9::~CCubeTexture9()
 {
 	Log(info) << "CCubeTexture9::~CCubeTexture9" << std::endl;
 
-	for (size_t i = 0; i < 6; i++)
+	for (int32_t i = 0; i < 6; i++)
 	{
-		for (size_t j = 0; j < mSurfaces[i].size(); j++)
+		for (int32_t j = 0; j < (int32_t)mSurfaces[i].size(); j++)
 		{
 			mSurfaces[i][j]->Release();
 		}		

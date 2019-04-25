@@ -27,7 +27,7 @@ misrepresented as being the original software.
 struct WorkItem
 {
 	WorkItemType WorkItemType = WorkItemType::None;
-	size_t Id = 0;
+	int32_t Id = 0;
 	void* Argument1 = nullptr;
 	void* Argument2 = nullptr;
 	void* Argument3 = nullptr;

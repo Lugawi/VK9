@@ -52,7 +52,7 @@ public:
 
 	}
 
-	bool Push(ElementType* item, size_t& count)
+	bool Push(ElementType* item, int32_t& count)
 	{
 		bool result = false;
 
@@ -77,7 +77,7 @@ public:
 		return result;
 	}
 
-	bool Pop(ElementType*& item, size_t& count)
+	bool Pop(ElementType*& item, int32_t& count)
 	{
 		bool result = false;
 

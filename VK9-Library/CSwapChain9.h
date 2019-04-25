@@ -47,7 +47,7 @@ public:
 
 	//Vulkan Swapchain
 	vk::UniqueSurfaceKHR mSurface;
-	size_t mPresentQueueFamilyIndex;
+	int32_t mPresentQueueFamilyIndex;
 	std::vector<vk::SurfaceFormatKHR> mFormats;
 	vk::SurfaceCapabilitiesKHR mSurfaceCapabilities;
 	vk::PresentModeKHR mSwapchainPresentMode;

@@ -634,9 +634,9 @@ vk::SamplerMipmapMode ConvertMipmapMode(D3DTEXTUREFILTERTYPE input) noexcept
 //{
 //	std::array<std::array<float, 4>, 4> newMatrix;
 //
-//	for (size_t i = 0; i < 4; i++)
+//	for (int32_t i = 0; i < 4; i++)
 //	{
-//		for (size_t j = 0; j < 4; j++)
+//		for (int32_t j = 0; j < 4; j++)
 //		{
 //			newMatrix[i][j] = matrix.m[j][i];
 //		}
@@ -717,7 +717,7 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 
 	{
 		D3DLIGHT9 light = {};
-		for (size_t i = 0; i < 8; i++)
+		for (int32_t i = 0; i < 8; i++)
 		{
 			mInternalDeviceState.SetLight(i, &light);
 		}
@@ -946,7 +946,7 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 	SetSamplerState(0, D3DSAMP_ELEMENTINDEX, 0);
 	SetSamplerState(0, D3DSAMP_DMAPOFFSET, 0);
 
-	for (size_t i = 1; i < 16; i++)
+	for (int32_t i = 1; i < 16; i++)
 	{
 		SetTextureStageState(i, D3DTSS_COLOROP, D3DTOP_DISABLE);
 		SetTextureStageState(i, D3DTSS_COLORARG1, D3DTA_TEXTURE);
@@ -986,17 +986,20 @@ CDevice9::CDevice9(C9* c9, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 
 CDevice9::~CDevice9()
 {
-	for (size_t i = 0; i < mDrawCommandBuffers.size(); i++)
+	for (int32_t i = 0; i < (int32_t)mDrawCommandBuffers.size(); i++)
 	{
 		mDevice->waitForFences(1, &mDrawFences[mFrameIndex].get(), VK_TRUE, UINT64_MAX);
 	}
 
 	mDevice->waitIdle();
 
-	for (size_t i = 0; i < 16; i++)
+	for (int32_t i = 0; i < 16; i++)
 	{
+		if (mInternalDeviceState.mDeviceState.mTexture[i])
+		{
+			mInternalDeviceState.mDeviceState.mTexture[i]->Release();
+		}
 		SetTexture(i, nullptr);
-		mInternalDeviceState.mDeviceState.mTexture[i]->Release();
 	}
 
 	if (mDepthStencilSurface)
@@ -1005,10 +1008,13 @@ CDevice9::~CDevice9()
 	}
 	SetDepthStencilSurface(nullptr);
 
-	for (size_t i = 0; i < 4; i++)
+	for (int32_t i = 0; i < 4; i++)
 	{
+		//if (mRenderTargets[i])
+		//{
+		//	mRenderTargets[i]->Release();
+		//}
 		SetRenderTarget(i, nullptr);
-		mRenderTargets[i]->Release();
 	}
 
 	for (auto& swapChain : mSwapChains)
@@ -1369,7 +1375,7 @@ void CDevice9::ResetVulkanDevice()
 		mWriteDescriptorSet[5].pBufferInfo = &mDescriptorBufferInfo[5];
 
 		//Image/Sampler
-		//for (size_t i = 0; i < textureCount; i++)
+		//for (int32_t i = 0; i < textureCount; i++)
 		//{
 		//	//mDescriptorImageInfo[i].sampler = mSampler;
 		//	//mDescriptorImageInfo[i].imageView = mImageView;
@@ -1483,8 +1489,8 @@ void CDevice9::ResetVulkanDevice()
 	vk::SemaphoreCreateInfo semaphoreCreateInfo;
 	vk::FenceCreateInfo fenceCreateInfo(vk::FenceCreateFlagBits::eSignaled);
 
-	mDrawCommandBuffers = mDevice->allocateCommandBuffersUnique(vk::CommandBufferAllocateInfo(mCommandPool.get(), vk::CommandBufferLevel::ePrimary, 3));
-	for (size_t i = 0; i < mDrawCommandBuffers.size(); i++)
+	mDrawCommandBuffers = mDevice->allocateCommandBuffersUnique(vk::CommandBufferAllocateInfo(mCommandPool.get(), vk::CommandBufferLevel::ePrimary, 2));
+	for (int32_t i = 0; i < (int32_t)mDrawCommandBuffers.size(); i++)
 	{
 		mDrawFences.push_back(mDevice->createFenceUnique(fenceCreateInfo));
 		mImageAvailableSemaphores.push_back(mDevice->createSemaphoreUnique(semaphoreCreateInfo));
@@ -1492,7 +1498,7 @@ void CDevice9::ResetVulkanDevice()
 	}
 
 	mUtilityCommandBuffers = mDevice->allocateCommandBuffersUnique(vk::CommandBufferAllocateInfo(mCommandPool.get(), vk::CommandBufferLevel::ePrimary, 7));
-	for (size_t i = 0; i < mUtilityCommandBuffers.size(); i++)
+	for (int32_t i = 0; i < (int32_t)mUtilityCommandBuffers.size(); i++)
 	{
 		mUtilityFences.push_back(mDevice->createFenceUnique(fenceCreateInfo));
 	}
@@ -1519,7 +1525,7 @@ void CDevice9::ResetVulkanDevice()
 	mBlankTexture = std::make_unique<CTexture9>(this, 1, 1, 1, D3DUSAGE_RENDERTARGET, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, nullptr);
 
 	vk::ClearColorValue clearColorValue;
-	for (size_t i = 0; i < 4; i++)
+	for (int32_t i = 0; i < 4; i++)
 	{
 		clearColorValue.float32[i] = 1.0f;
 	}
@@ -1533,7 +1539,7 @@ void CDevice9::BeginRecordingCommands()
 		return;
 	}
 
-	mFrameIndex = (mFrameIndex++) % mDrawCommandBuffers.size();
+	mFrameIndex = (++mFrameIndex) % mDrawCommandBuffers.size();
 	mDescriptorSetIndex = 0;
 
 	mDevice->waitForFences(1, &mDrawFences[mFrameIndex].get(), VK_TRUE, UINT64_MAX);
@@ -1943,7 +1949,7 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 		}
 
 		std::vector<vk::VertexInputBindingDescription> vertexInputBindingDescription;
-		for (size_t i = 0; i < MAX_VERTEX_INPUTS; i++)
+		for (int32_t i = 0; i < MAX_VERTEX_INPUTS; i++)
 		{
 			auto& streamSource = deviceState.mStreamSource[i];
 			if (streamSource.vertexBuffer && streamSource.vertexBuffer->mCurrentVertexBuffer)
@@ -2111,7 +2117,7 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 	if (deviceState.mCapturedAnyTexture || deviceState.mCapturedAnySamplerState) //1==1 || 
 	{
 		//If we're out of descriptor sets to write into then allocate a new one.
-		if (mDescriptorSetIndex >= mDescriptorSets[mFrameIndex].size())
+		if (mDescriptorSetIndex >= (int32_t)mDescriptorSets[mFrameIndex].size())
 		{
 			vk::DescriptorSet descriptorSet;
 			vk::DescriptorSetAllocateInfo descriptorSetInfo(mDescriptorPool.get(), 1, &mDescriptorLayout.get());
@@ -2124,7 +2130,7 @@ void CDevice9::BeginDraw(D3DPRIMITIVETYPE primitiveType)
 			mDescriptorSets[mFrameIndex].push_back(descriptorSet);
 		}
 
-		for (size_t i = 0; i < 16; i++)
+		for (int32_t i = 0; i < 16; i++)
 		{
 			//Bind the current set texture or if null bind a dummy texture.
 			if (deviceState.mTexture[i])
@@ -4259,25 +4265,25 @@ RenderContainer::RenderContainer(vk::Device& device, CSurface9* depthStencilSurf
 	framebufferCreateInfo.height = height;
 	framebufferCreateInfo.layers = 1;
 
-	for (size_t i = 0; i < 3; i++)
+	for (int32_t i = 0; i < 3; i++)
 	{
 		mFrameBuffers.push_back(device.createFramebufferUnique(framebufferCreateInfo, nullptr));
 	}
 
 	framebufferCreateInfo.renderPass = mClearColorRenderPass.get();
-	for (size_t i = 0; i < 3; i++)
+	for (int32_t i = 0; i < 3; i++)
 	{
 		mClearColorFrameBuffers.push_back(device.createFramebufferUnique(framebufferCreateInfo, nullptr));
 	}
 
 	framebufferCreateInfo.renderPass = mClearDepthRenderPass.get();
-	for (size_t i = 0; i < 3; i++)
+	for (int32_t i = 0; i < 3; i++)
 	{
 		mClearDepthFrameBuffers.push_back(device.createFramebufferUnique(framebufferCreateInfo, nullptr));
 	}
 
 	framebufferCreateInfo.renderPass = mClearBothRenderPass.get();
-	for (size_t i = 0; i < 3; i++)
+	for (int32_t i = 0; i < 3; i++)
 	{
 		mClearBothFrameBuffers.push_back(device.createFramebufferUnique(framebufferCreateInfo, nullptr));
 	}
