@@ -995,17 +995,17 @@ CDevice9::~CDevice9()
 
 	for (int32_t i = 0; i < 16; i++)
 	{
-		if (mInternalDeviceState.mDeviceState.mTexture[i])
-		{
-			mInternalDeviceState.mDeviceState.mTexture[i]->Release();
-		}
+		//if (mInternalDeviceState.mDeviceState.mTexture[i])
+		//{
+		//	mInternalDeviceState.mDeviceState.mTexture[i]->Release();
+		//}
 		SetTexture(i, nullptr);
 	}
 
-	if (mDepthStencilSurface)
-	{
-		mDepthStencilSurface->Release(); //delete
-	}
+	//if (mAutoDepthStencilSurface)
+	//{
+	//	mAutoDepthStencilSurface->Release();
+	//}
 	SetDepthStencilSurface(nullptr);
 
 	for (int32_t i = 0; i < 4; i++)
@@ -1519,6 +1519,9 @@ void CDevice9::ResetVulkanDevice()
 
 	//Add implicit stencil buffer surface.
 	CSurface9* depth = new CSurface9(this, (CTexture9*)nullptr, mPresentationParameters.BackBufferWidth, mPresentationParameters.BackBufferHeight, D3DUSAGE_DEPTHSTENCIL, 1, mPresentationParameters.AutoDepthStencilFormat, mPresentationParameters.MultiSampleType, mPresentationParameters.MultiSampleQuality, false, false, D3DPOOL_DEFAULT, nullptr);
+	
+	mAutoDepthStencilSurface = depth; //Grab seperate handle so we can clean up auto stencil even if the user sets a different one later.
+
 	SetDepthStencilSurface(depth);
 	depth->Release();
 
@@ -3293,30 +3296,29 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetCursorProperties(UINT XHotSpot, UINT YHot
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetDepthStencilSurface(IDirect3DSurface9* pNewZStencil)
 {
-	if (pNewZStencil == nullptr)
+	if (mDepthStencilSurface != pNewZStencil)
 	{
-		Log(warning) << "CDevice9::SetDepthStencilSurface passing null should disable the stencil operation but this isn't supported yet." << std::endl;
-
 		if (mDepthStencilSurface != nullptr)
 		{
 			mDepthStencilSurface->PrivateRelease();
 		}
 
-		mDepthStencilSurface = nullptr;
+		if (pNewZStencil == nullptr)
+		{
+			Log(warning) << "CDevice9::SetDepthStencilSurface passing null should disable the stencil operation but this isn't supported yet." << std::endl;
 
-		return D3D_OK;
+			mDepthStencilSurface = nullptr;
+
+			return D3D_OK;
+		}
+		else
+		{
+			((CSurface9*)pNewZStencil)->PrivateAddRef();
+			mDepthStencilSurface = (CSurface9*)pNewZStencil;
+		}
+
+		RebuildRenderPass();
 	}
-
-	((CSurface9*)pNewZStencil)->PrivateAddRef();
-
-	if (mDepthStencilSurface != nullptr)
-	{
-		mDepthStencilSurface->PrivateRelease();
-	}
-
-	mDepthStencilSurface = (CSurface9*)pNewZStencil;
-
-	RebuildRenderPass();
 
 	return D3D_OK;
 }
@@ -3591,29 +3593,30 @@ HRESULT STDMETHODCALLTYPE CDevice9::SetRenderState(D3DRENDERSTATETYPE State, DWO
 
 HRESULT STDMETHODCALLTYPE CDevice9::SetRenderTarget(DWORD RenderTargetIndex, IDirect3DSurface9* pRenderTarget)
 {
-	if (mRenderTargets[RenderTargetIndex] != nullptr)
+	if (mRenderTargets[RenderTargetIndex] != pRenderTarget)
 	{
-		mRenderTargets[RenderTargetIndex]->PrivateRelease();
-	}
-	CSurface9* surface = (CSurface9*)pRenderTarget;
-	mRenderTargets[RenderTargetIndex] = surface;
-	if (mRenderTargets[RenderTargetIndex] != nullptr)
-	{
-		mRenderTargets[RenderTargetIndex]->PrivateAddRef();
-	}
+		if (mRenderTargets[RenderTargetIndex] != nullptr)
+		{
+			mRenderTargets[RenderTargetIndex]->PrivateRelease();
+		}
 
-	//Set the viewport to the size of the new render target.
-	if (surface != nullptr)
-	{
-		D3DVIEWPORT9 viewport = {};
-		viewport.Width = surface->mWidth;
-		viewport.Height = surface->mHeight;
-		viewport.MaxZ = 1;
-		SetViewport(&viewport);
+		CSurface9* surface = (CSurface9*)pRenderTarget;
+		mRenderTargets[RenderTargetIndex] = surface;
+
+		//Set the viewport to the size of the new render target.
+		if (surface != nullptr)
+		{
+			surface->PrivateAddRef();
+
+			D3DVIEWPORT9 viewport = {};
+			viewport.Width = surface->mWidth;
+			viewport.Height = surface->mHeight;
+			viewport.MaxZ = 1;
+			SetViewport(&viewport);
+
+			RebuildRenderPass();
+		}
 	}
-
-	RebuildRenderPass();
-
 	return D3D_OK;
 }
 

@@ -333,34 +333,38 @@ void CStateBlock9::SetTexture(unsigned long index, IDirect3DBaseTexture9* textur
 		return;
 	}
 
-	if (texture)
+	//Don't grab a private handle if the texture is the same (otherwise we'll leak the texture)
+	if (texture != mDeviceState.mTexture[sampler])
 	{
-		switch (texture->GetType())
+		if (texture)
 		{
-		case D3DRTYPE_TEXTURE:
-			reinterpret_cast <CTexture9*>(texture)->PrivateAddRef();
-			break;
-		case D3DRTYPE_VOLUMETEXTURE:
-			reinterpret_cast <CVolumeTexture9*>(texture)->PrivateAddRef();
-			break;
-		case D3DRTYPE_CUBETEXTURE:
-			reinterpret_cast <CCubeTexture9*>(texture)->PrivateAddRef();
-			break;
+			switch (texture->GetType())
+			{
+			case D3DRTYPE_TEXTURE:
+				reinterpret_cast <CTexture9*>(texture)->PrivateAddRef();
+				break;
+			case D3DRTYPE_VOLUMETEXTURE:
+				reinterpret_cast <CVolumeTexture9*>(texture)->PrivateAddRef();
+				break;
+			case D3DRTYPE_CUBETEXTURE:
+				reinterpret_cast <CCubeTexture9*>(texture)->PrivateAddRef();
+				break;
+			}
 		}
-	}
-	if (mDeviceState.mTexture[sampler])
-	{
-		switch (mDeviceState.mTexture[sampler]->GetType())
+		if (mDeviceState.mTexture[sampler])
 		{
-		case D3DRTYPE_TEXTURE:
-			reinterpret_cast <CTexture9*>(mDeviceState.mTexture[sampler])->PrivateRelease();
-			break;
-		case D3DRTYPE_VOLUMETEXTURE:
-			reinterpret_cast <CVolumeTexture9*>(mDeviceState.mTexture[sampler])->PrivateRelease();
-			break;
-		case D3DRTYPE_CUBETEXTURE:
-			reinterpret_cast <CCubeTexture9*>(mDeviceState.mTexture[sampler])->PrivateRelease();
-			break;
+			switch (mDeviceState.mTexture[sampler]->GetType())
+			{
+			case D3DRTYPE_TEXTURE:
+				reinterpret_cast <CTexture9*>(mDeviceState.mTexture[sampler])->PrivateRelease();
+				break;
+			case D3DRTYPE_VOLUMETEXTURE:
+				reinterpret_cast <CVolumeTexture9*>(mDeviceState.mTexture[sampler])->PrivateRelease();
+				break;
+			case D3DRTYPE_CUBETEXTURE:
+				reinterpret_cast <CCubeTexture9*>(mDeviceState.mTexture[sampler])->PrivateRelease();
+				break;
+			}
 		}
 	}
 

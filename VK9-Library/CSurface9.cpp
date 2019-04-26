@@ -595,14 +595,14 @@ CSurface9::CSurface9(CDevice9* Device, CTexture9* Texture, UINT Width, UINT Heig
 		mUsage = D3DUSAGE_DEPTHSTENCIL;
 	}
 
-	if (mCubeTexture != nullptr)
-	{
-		mCubeTexture->AddRef();
-	}
-	else if (mTexture != nullptr)
-	{
-		mTexture->AddRef();
-	}
+	//if (mCubeTexture != nullptr)
+	//{
+	//	mCubeTexture->AddRef();
+	//}
+	//else if (mTexture != nullptr)
+	//{
+	//	mTexture->AddRef();
+	//}
 
 	{
 		const vk::ImageTiling tiling = vk::ImageTiling::eOptimal;
@@ -664,14 +664,14 @@ CSurface9::CSurface9(CDevice9* Device, CCubeTexture9* Texture, UINT Width, UINT 
 		mUsage = D3DUSAGE_DEPTHSTENCIL;
 	}
 
-	if (mCubeTexture != nullptr)
-	{
-		mCubeTexture->AddRef();
-	}
-	else if (mTexture != nullptr)
-	{
-		mTexture->AddRef();
-	}
+	//if (mCubeTexture != nullptr)
+	//{
+	//	mCubeTexture->AddRef();
+	//}
+	//else if (mTexture != nullptr)
+	//{
+	//	mTexture->AddRef();
+	//}
 
 	{
 		const vk::ImageTiling tiling = vk::ImageTiling::eOptimal;
@@ -732,14 +732,14 @@ CSurface9::CSurface9(CDevice9* Device, vk::Image& image, UINT Width, UINT Height
 		mUsage = D3DUSAGE_DEPTHSTENCIL;
 	}
 
-	if (mCubeTexture != nullptr)
-	{
-		mCubeTexture->AddRef();
-	}
-	else if (mTexture != nullptr)
-	{
-		mTexture->AddRef();
-	}
+	//if (mCubeTexture != nullptr)
+	//{
+	//	mCubeTexture->AddRef();
+	//}
+	//else if (mTexture != nullptr)
+	//{
+	//	mTexture->AddRef();
+	//}
 
 	//Now transition this thing from init to attachment ready.
 	SetImageLayout(((mUsage == D3DUSAGE_DEPTHSTENCIL) ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal));
@@ -749,17 +749,17 @@ CSurface9::CSurface9(CDevice9* Device, vk::Image& image, UINT Width, UINT Height
 
 CSurface9::~CSurface9()
 {
-	if (mUsage != D3DUSAGE_DEPTHSTENCIL) //Depth stencil doesn't have a texture.
-	{
-		if (mCubeTexture != nullptr)
-		{
-			mCubeTexture->Release();
-		}
-		else if (mTexture != nullptr)
-		{
-			mTexture->Release();
-		}
-	}
+	//if (mUsage != D3DUSAGE_DEPTHSTENCIL) //Depth stencil doesn't have a texture.
+	//{
+	//	if (mCubeTexture != nullptr)
+	//	{
+	//		mCubeTexture->Release();
+	//	}
+	//	else if (mTexture != nullptr)
+	//	{
+	//		mTexture->Release();
+	//	}
+	//}
 }
 
 ULONG CSurface9::PrivateAddRef(void)

@@ -232,6 +232,8 @@ public:
 	//Misc
 	PAINTSTRUCT* mPaintInformation = {};
 
+	CSurface9* mAutoDepthStencilSurface = nullptr;
+
 	CSurface9* mDepthStencilSurface = nullptr;
 	std::array<CSurface9*, 4> mRenderTargets = {};
 	UINT mMaxLatency = 0;
