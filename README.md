@@ -1,4 +1,4 @@
-VK9 (Formerly SchaeferGL)
+VK9 (Formerly SchaeferGL) - Inactive
 ==========
 [![Build status](https://ci.appveyor.com/api/projects/status/jpugvv36dr61t3hi/branch/master?svg=true)](https://ci.appveyor.com/project/disks86/vk9/branch/master)
 
@@ -12,7 +12,7 @@ Join the discord server (VKx) to communicate with the community. https://discord
 
 For the latest project news visit my blog. http://techtinker.blogspot.com/
 
-Special thanks to my patrons over on Patreon. https://www.patreon.com/sketchy_gaming
+Special thanks to my patrons over on Patreon. https://www.patreon.com/techtinker
 
 ---
 
